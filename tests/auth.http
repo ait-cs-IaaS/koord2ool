@@ -7,3 +7,15 @@ Accept: application/json
     "params": [ "admin", "!.AITLimeAdmin" ],
     "id": 1
 }
+
+---
+
+POST https://lime.cyberrange.rocks/index.php/admin/remotecontrol
+Content-Type: application/json
+Accept: application/json
+
+{
+"method": "get_session_key",
+"params": [ "admin", "!.AITLimeAdmin" ],
+"id": 1
+}
