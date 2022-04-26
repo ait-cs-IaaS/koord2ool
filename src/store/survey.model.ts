@@ -9,5 +9,9 @@ export default interface SurveyModel {
 
   active: "Y" | "N";
 
+  details?: any;
+
+  responses?: any;
+
   [key: string]: unknown;
 }

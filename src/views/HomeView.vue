@@ -25,10 +25,19 @@ export default defineComponent({
   components: {},
   methods: {
     doTheThing() {
-      this.$store.dispatch("authenticate", {
-        username: "admin",
-        password: "!.AITLimeAdmin",
-      });
+      this.$store
+        .dispatch("authenticate", {
+          username: "admin",
+          password: "!.AITLimeAdmin",
+        })
+        .then(() => {
+          for (const survey of this.$store.state.surveys) {
+            console.debug(`Updating ${survey.sid}`);
+            this.$store.dispatch("refreshSurvey", survey.sid).then(() => {
+              console.debug(`Survey ${survey.sid} updated`);
+            });
+          }
+        });
     },
   },
 });

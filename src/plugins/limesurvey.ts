@@ -1,5 +1,7 @@
 import SurveyModel from "@/store/survey.model";
 
+// https://api.limesurvey.org/classes/remotecontrol_handle.html
+
 export class LimesurveyApi {
   private session?: string;
   private nextId = 1;
@@ -29,6 +31,10 @@ export class LimesurveyApi {
 
   async listSurveys(): Promise<SurveyModel[]> {
     return this.call("list_surveys");
+  }
+
+  async getSurvey(sid: number): Promise<any> {
+    return this.call("get_survey_properties", true, sid);
   }
 
   private requireAuth(): void {

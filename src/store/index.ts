@@ -19,6 +19,14 @@ export default createStore<KoordStore>({
       // TODO: elaborate merging?
       state.surveys = surveys;
     },
+
+    updateSurvey(state, payload: SurveyModel) {
+      if (!state.surveys[payload.sid]) {
+        throw new Error("Survey not found");
+      }
+
+      state.surveys[payload.sid].details = payload;
+    },
   },
   actions: {
     async authenticate(state, payload: { username: string; password: string }) {
@@ -37,6 +45,15 @@ export default createStore<KoordStore>({
         state.commit(
           "setSurveyList",
           await state.state.limesurvey.listSurveys()
+        );
+      }
+    },
+
+    async refreshSurvey(state, sid: number) {
+      if (state.state.limesurvey) {
+        state.commit(
+          "updateSurvey",
+          await state.state.limesurvey.getSurvey(sid)
         );
       }
     },
