@@ -2,13 +2,14 @@ import { createStore } from "vuex";
 import KoordStore from "@/store/koord.store";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
+import ResponseModel from "@/store/response.model";
 
 export default createStore<KoordStore>({
   state: {
-    surveys: [],
+    surveys: new Map<number, SurveyModel>(),
   },
   getters: {
-    getSurveyCount: (state) => state.surveys.length,
+    getSurveyCount: (state) => state.surveys.size,
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {
@@ -17,30 +18,46 @@ export default createStore<KoordStore>({
 
     setSurveyList(state, surveys: SurveyModel[] = []) {
       // TODO: elaborate merging?
-      state.surveys = surveys;
+      state.surveys = new Map<number, SurveyModel>(
+        surveys.map((survey) => [survey.sid, survey])
+      );
+    },
+
+    updateResponses(
+      state,
+      payload: { sid: number; responses: ResponseModel[] }
+    ) {
+      const survey = state.surveys.get(payload.sid);
+      if (!survey) {
+        throw new Error(`Survey ${payload.sid} not found`);
+      }
+      survey.responses = payload.responses;
     },
 
     updateSurvey(state, payload: SurveyModel) {
-      if (!state.surveys[payload.sid]) {
-        throw new Error("Survey not found");
+      const survey = state.surveys.get(payload.sid);
+      if (!survey) {
+        throw new Error(`Survey ${payload.sid} not found`);
       }
-
-      state.surveys[payload.sid].details = payload;
+      survey.details = payload.details;
     },
   },
   actions: {
-    async authenticate(state, payload: { username: string; password: string }) {
+    async authenticate(
+      state,
+      payload: { username: string; password: string }
+    ): Promise<void> {
       const api = new LimesurveyApi();
       const okay = await api.authenticate(payload.username, payload.password);
       console.debug("Authenticated with LimeSurvey", okay);
 
       if (okay) {
         state.commit("setApi", okay ? api : undefined);
-        state.dispatch("refreshSurveys");
+        await state.dispatch("refreshSurveys");
       }
     },
 
-    async refreshSurveys(state) {
+    async refreshSurveys(state): Promise<void> {
       if (state.state.limesurvey) {
         state.commit(
           "setSurveyList",
@@ -49,12 +66,25 @@ export default createStore<KoordStore>({
       }
     },
 
-    async refreshSurvey(state, sid: number) {
+    async refreshSurvey(state, sid: number): Promise<void> {
       if (state.state.limesurvey) {
         state.commit(
           "updateSurvey",
           await state.state.limesurvey.getSurvey(sid)
         );
+      }
+    },
+
+    async refreshResponses(state, sid: number): Promise<void> {
+      if (state.state.limesurvey) {
+        const responses = await state.state.limesurvey.getResponses(sid);
+        console.debug(`Responses ${sid}:`, responses);
+        if (typeof responses !== "undefined") {
+          state.commit("updateResponses", {
+            sid,
+            responses,
+          });
+        }
       }
     },
   },

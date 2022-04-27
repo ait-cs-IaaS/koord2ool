@@ -8,8 +8,8 @@
   <div>
     <h2>Surveys</h2>
     <ul>
-      <li v-for="survey in $store.state.surveys" :key="survey.sid">
-        <span class="survey-id">{{ survey.sid }}</span
+      <li v-for="[sid, survey] in $store.state.surveys.entries()" :key="sid">
+        <span class="survey-id">{{ sid }}</span
         >:
         <span class="survey-title">{{ survey.surveyls_title }}</span>
       </li>
@@ -31,11 +31,18 @@ export default defineComponent({
           password: "!.AITLimeAdmin",
         })
         .then(() => {
-          for (const survey of this.$store.state.surveys) {
+          console.debug("Fetching details for all surveys");
+          for (const survey of this.$store.state.surveys.values()) {
             console.debug(`Updating ${survey.sid}`);
-            this.$store.dispatch("refreshSurvey", survey.sid).then(() => {
-              console.debug(`Survey ${survey.sid} updated`);
-            });
+            this.$store
+              .dispatch("refreshSurvey", survey.sid)
+              .then(() => {
+                console.debug(`Survey ${survey.sid} updated`);
+                this.$store.dispatch("refreshResponses", survey.sid);
+              })
+              .catch((e) => {
+                console.warn(e);
+              });
           }
         });
     },
