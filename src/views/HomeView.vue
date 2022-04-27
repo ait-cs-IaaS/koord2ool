@@ -19,10 +19,16 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import ResponseModel, { strip } from "@/store/response.model";
 
 export default defineComponent({
   name: "HomeView",
   components: {},
+  computed: {
+    surveys(): number[] {
+      return this.$store.getters.getSurveys();
+    },
+  },
   methods: {
     doTheThing() {
       this.$store
@@ -35,13 +41,12 @@ export default defineComponent({
           for (const survey of this.$store.state.surveys.values()) {
             console.debug(`Updating ${survey.sid}`);
             this.$store
-              .dispatch("refreshSurvey", survey.sid)
-              .then(() => {
-                console.debug(`Survey ${survey.sid} updated`);
-                this.$store.dispatch("refreshResponses", survey.sid);
-              })
-              .catch((e) => {
-                console.warn(e);
+              .dispatch("refreshResponses", survey.sid)
+              .then((responses: ResponseModel[]) => {
+                if (typeof responses !== "undefined") {
+                  const pruned = responses.map((response) => strip(response));
+                  console.log(`Pruned responses for ${survey.sid}`, pruned);
+                }
               });
           }
         });

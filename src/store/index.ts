@@ -6,9 +6,13 @@ import ResponseModel from "@/store/response.model";
 
 export default createStore<KoordStore>({
   state: {
+    responses: new Map<number, ResponseModel[]>(),
+
     surveys: new Map<number, SurveyModel>(),
   },
   getters: {
+    getSurveys: (state) => state.surveys.keys(),
+
     getSurveyCount: (state) => state.surveys.size,
   },
   mutations: {
@@ -17,29 +21,20 @@ export default createStore<KoordStore>({
     },
 
     setSurveyList(state, surveys: SurveyModel[] = []) {
-      // TODO: elaborate merging?
-      state.surveys = new Map<number, SurveyModel>(
-        surveys.map((survey) => [survey.sid, survey])
-      );
+      if (state.surveys.size === 0) {
+        state.surveys = new Map<number, SurveyModel>(
+          surveys.map((survey) => [survey.sid, survey])
+        );
+      } else {
+        // merging required
+      }
     },
 
     updateResponses(
       state,
       payload: { sid: number; responses: ResponseModel[] }
     ) {
-      const survey = state.surveys.get(payload.sid);
-      if (!survey) {
-        throw new Error(`Survey ${payload.sid} not found`);
-      }
-      survey.responses = payload.responses;
-    },
-
-    updateSurvey(state, payload: SurveyModel) {
-      const survey = state.surveys.get(payload.sid);
-      if (!survey) {
-        throw new Error(`Survey ${payload.sid} not found`);
-      }
-      survey.details = payload.details;
+      state.responses.set(payload.sid, payload.responses);
     },
   },
   actions: {
@@ -66,24 +61,18 @@ export default createStore<KoordStore>({
       }
     },
 
-    async refreshSurvey(state, sid: number): Promise<void> {
-      if (state.state.limesurvey) {
-        state.commit(
-          "updateSurvey",
-          await state.state.limesurvey.getSurvey(sid)
-        );
-      }
-    },
-
-    async refreshResponses(state, sid: number): Promise<void> {
+    async refreshResponses(
+      state,
+      sid: number
+    ): Promise<ResponseModel[] | undefined> {
       if (state.state.limesurvey) {
         const responses = await state.state.limesurvey.getResponses(sid);
-        console.debug(`Responses ${sid}:`, responses);
         if (typeof responses !== "undefined") {
           state.commit("updateResponses", {
             sid,
             responses,
           });
+          return responses;
         }
       }
     },
