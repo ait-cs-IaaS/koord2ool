@@ -34,10 +34,6 @@ export class LimesurveyApi {
     return this.call("list_surveys");
   }
 
-  async getSurvey(sid: number): Promise<SurveyModel> {
-    return this.call("get_survey_properties", true, sid);
-  }
-
   async getResponses(sid: number): Promise<undefined | ResponseModel[]> {
     const data = await this.call(
       "export_responses",
