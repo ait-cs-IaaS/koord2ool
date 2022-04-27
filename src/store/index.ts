@@ -14,6 +14,8 @@ export default createStore<KoordStore>({
     getSurveys: (state) => state.surveys.keys(),
 
     getSurveyCount: (state) => state.surveys.size,
+
+    isAuthenticated: (state) => typeof state.limesurvey !== "undefined",
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {
@@ -21,13 +23,9 @@ export default createStore<KoordStore>({
     },
 
     setSurveyList(state, surveys: SurveyModel[] = []) {
-      if (state.surveys.size === 0) {
-        state.surveys = new Map<number, SurveyModel>(
-          surveys.map((survey) => [survey.sid, survey])
-        );
-      } else {
-        // merging required
-      }
+      state.surveys = new Map<number, SurveyModel>(
+        surveys.map((survey) => [survey.sid, survey])
+      );
     },
 
     updateResponses(

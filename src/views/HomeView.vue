@@ -1,8 +1,24 @@
 <template>
   <div class="home">
     <h1>Koordon Bleu</h1>
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <button @click="doTheThing">Do the thing!</button>
+
+    <div v-if="!$store.getters.isAuthenticated">
+      <p class="text-red-800">Please authenticate first.</p>
+
+      <form>
+        <div>Username: <input type="text" v-model="username" /></div>
+        <div>Password: <input type="password" v-model="password" /></div>
+        <div>
+          <button
+            type="button"
+            @click="authenticate"
+            :disabled="!canAuthenticate"
+          >
+            Log in
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div>
@@ -12,17 +28,6 @@
         { name: 'B', value: 3 },
       ]"
     />
-  </div>
-
-  <div>
-    <h2>Surveys</h2>
-    <ul>
-      <li v-for="[sid, survey] in $store.state.surveys.entries()" :key="sid">
-        <span class="survey-id">{{ sid }}</span
-        >:
-        <span class="survey-title">{{ survey.surveyls_title }}</span>
-      </li>
-    </ul>
   </div>
 </template>
 
@@ -37,16 +42,33 @@ export default defineComponent({
     PieChartComponent,
   },
   computed: {
-    surveys(): number[] {
+    canAuthenticate(): boolean {
+      return (
+        !this.authenticating &&
+        !this.$store.getters.isAuthenticated &&
+        this.username !== "" &&
+        this.password !== ""
+      );
+    },
+
+    surveyIds(): number[] {
       return this.$store.getters.getSurveys();
     },
   },
+  data() {
+    return {
+      authenticating: false,
+      username: "",
+      password: "",
+    };
+  },
   methods: {
-    doTheThing() {
+    authenticate() {
+      this.authenticating = true;
       this.$store
         .dispatch("authenticate", {
-          username: "admin",
-          password: "!.AITLimeAdmin",
+          username: this.username,
+          password: this.password,
         })
         .then(() => {
           console.debug("Fetching details for all surveys");
@@ -61,6 +83,9 @@ export default defineComponent({
                 }
               });
           }
+        })
+        .finally(() => {
+          this.authenticating = false;
         });
     },
   },
