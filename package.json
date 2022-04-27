@@ -9,13 +9,18 @@
     "lint": "vue-cli-service lint ./src"
   },
   "dependencies": {
+    "chart.js": "^3.7.1",
     "core-js": "^3.8.3",
+    "uuid": "^8.3.2",
     "vue": "^3.2.13",
+    "vue-chartjs": "^4.0.7",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.37",
     "@types/jest": "^27.0.1",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "~5.0.0",

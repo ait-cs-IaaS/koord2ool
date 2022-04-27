@@ -6,6 +6,15 @@
   </div>
 
   <div>
+    <pie-chart-component
+      :counters="[
+        { name: 'A', value: 2 },
+        { name: 'B', value: 3 },
+      ]"
+    />
+  </div>
+
+  <div>
     <h2>Surveys</h2>
     <ul>
       <li v-for="[sid, survey] in $store.state.surveys.entries()" :key="sid">
@@ -20,10 +29,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import ResponseModel, { strip } from "@/store/response.model";
+import PieChartComponent from "@/components/pie-chart.vue";
 
 export default defineComponent({
   name: "HomeView",
-  components: {},
+  components: {
+    PieChartComponent,
+  },
   computed: {
     surveys(): number[] {
       return this.$store.getters.getSurveys();
