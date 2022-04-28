@@ -17,4 +17,8 @@
   #top-nav {
     @apply px-4 py-1 rounded rounded-full shadow-md bg-slate-500 text-slate-100 shadow-slate-400/30;
   }
+
+  h1 {
+    @apply font-bold text-xl;
+  }
 }
