@@ -5,7 +5,7 @@ import ResponseModel from "@/store/response.model";
 export default interface KoordStore {
   limesurvey?: LimesurveyApi;
 
-  responses: Map<number, ResponseModel[]>;
+  responses: Record<number, ResponseModel[]>;
 
-  surveys: Map<number, SurveyModel>;
+  surveys: Record<number, SurveyModel>;
 }

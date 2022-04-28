@@ -6,14 +6,11 @@ import ResponseModel from "@/store/response.model";
 
 export default createStore<KoordStore>({
   state: {
-    responses: new Map<number, ResponseModel[]>(),
-
-    surveys: new Map<number, SurveyModel>(),
+    responses: {},
+    surveys: {},
   },
   getters: {
-    getSurveys: (state) => state.surveys.keys(),
-
-    getSurveyCount: (state) => state.surveys.size,
+    getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
 
     isAuthenticated: (state) => typeof state.limesurvey !== "undefined",
   },
@@ -23,16 +20,21 @@ export default createStore<KoordStore>({
     },
 
     setSurveyList(state, surveys: SurveyModel[] = []) {
-      state.surveys = new Map<number, SurveyModel>(
-        surveys.map((survey) => [survey.sid, survey])
-      );
+      const newSurveys: Record<number, SurveyModel> = {};
+      for (const survey of surveys) {
+        newSurveys[survey.sid] = {
+          ...survey,
+          details: state.surveys[survey.sid]?.details,
+        };
+      }
+      state.surveys = newSurveys;
     },
 
     updateResponses(
       state,
       payload: { sid: number; responses: ResponseModel[] }
     ) {
-      state.responses.set(payload.sid, payload.responses);
+      state.responses[payload.sid] = payload.responses;
     },
   },
   actions: {

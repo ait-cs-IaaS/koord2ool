@@ -20,16 +20,16 @@ export default defineComponent({
   },
   computed: {
     surveyLinks() {
-      return Array.from(this.$store.state.surveys.keys())
+      return Array.from(Object.keys(this.$store.state.surveys))
+        .map((surveyId) => Number(surveyId))
         .filter(
-          (surveyId) =>
-            this.$store.state.responses.get(surveyId)?.length ?? 0 !== 0
+          (surveyId) => this.$store.state.responses[surveyId]?.length ?? 0 !== 0
         )
         .sort()
         .map((surveyId) => ({
           key: surveyId,
           label: `${surveyId} (${
-            this.$store.state.responses.get(surveyId)?.length ?? 0
+            this.$store.state.responses[surveyId]?.length ?? 0
           })`,
           to: { name: "survey", params: { surveyId } },
         }));

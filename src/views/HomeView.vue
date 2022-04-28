@@ -73,7 +73,7 @@ export default defineComponent({
         })
         .then(() => {
           console.debug("Fetching details for all surveys");
-          for (const survey of this.$store.state.surveys.values()) {
+          for (const survey of Object.values(this.$store.state.surveys)) {
             console.debug(`Updating ${survey.sid}`);
             this.$store
               .dispatch("refreshResponses", survey.sid)
