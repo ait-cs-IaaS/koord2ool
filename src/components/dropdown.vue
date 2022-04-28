@@ -52,8 +52,19 @@ export default defineComponent({
   },
   props: {
     dropdownItems: {
-      type: Object,
+      type: Array,
       required: true,
+      validator(value: unknown): boolean {
+        return (
+          Array.isArray(value) &&
+          value.every(
+            (entry) =>
+              typeof entry.to !== "undefined" &&
+              typeof entry.key !== "undefined" &&
+              entry.label === "string"
+          )
+        );
+      },
     },
   },
 });

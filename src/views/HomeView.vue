@@ -56,10 +56,11 @@ export default defineComponent({
     },
   },
   data() {
+    const { VUE_APP_LIME_LOGIN, VUE_APP_LIME_PASSWORD } = process.env;
     return {
       authenticating: false,
-      username: "",
-      password: "",
+      username: VUE_APP_LIME_LOGIN ?? "",
+      password: VUE_APP_LIME_PASSWORD ?? "",
     };
   },
   methods: {
