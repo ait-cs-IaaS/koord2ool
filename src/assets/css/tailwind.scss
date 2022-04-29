@@ -40,6 +40,22 @@
     @apply font-bold text-xl my-2;
   }
 
+  h2 {
+    @apply font-semibold my-1;
+  }
+
+  .question-group {
+    @apply px-1 py-0.5 my-2 ring-2 ring-stone-200 hover:ring-stone-300 rounded-lg shadow-md break-inside-avoid;
+
+    h2 {
+      @apply px-1.5 inline-block ring-2 ring-stone-200 bg-stone-100 rounded-lg;
+    }
+  }
+
+  .response-group {
+    @apply ml-1.5;
+  }
+
   form {
     @apply p-2 shadow-md ring-2 ring-stone-400 bg-stone-100 rounded-md;
 
