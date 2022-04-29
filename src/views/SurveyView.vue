@@ -7,13 +7,14 @@
     }"
   >
     <h1>
-      <span class="survey-id">{{ surveyId }}</span>
+      <span class="survey-id">#{{ surveyId }}</span>
       <span class="survey-title" v-if="survey">{{
         survey.surveyls_title
       }}</span>
     </h1>
 
-    <p>{{ responses.length }} responses gathered.</p>
+    <p v-if="responses.length">{{ responses.length }} responses gathered.</p>
+    <p v-else>No responses gathered yet.</p>
   </main>
 </template>
 
@@ -56,20 +57,18 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style lang="scss">
 .survey-id {
-  @apply font-mono;
+  @apply font-mono mr-2 px-1.5;
 }
 
-.survey-title {
-  @apply ml-2;
+.survey-active .survey-id::before {
+  @apply inline-block bg-green-800 w-3 h-3 rounded-full mr-1;
+  content: " ";
 }
 
-.survey-active .survey-id {
-  @apply text-green-800 px-1.5 bg-green-200 rounded-xl;
-}
-
-.survey-inactive .survey-id {
-  @apply text-red-800 px-1.5 bg-red-200 rounded-xl;
+.survey-inactive .survey-id::before {
+  @apply inline-block ring-red-800 w-3 h-3 rounded-full mr-1;
+  content: " ";
 }
 </style>

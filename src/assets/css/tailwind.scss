@@ -1,0 +1,58 @@
+@import "print.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply px-4 py-1 m-1 rounded shadow-md bg-stone-500 hover:bg-stone-600 text-stone-700;
+
+    &[type="submit"] {
+      @apply ring-2 ring-green-500 bg-green-300 hover:bg-green-200 hover:ring-green-400;
+    }
+
+    &:disabled {
+      @apply bg-gray-400 text-stone-400 ring-stone-300 bg-stone-200 hover:bg-stone-300 hover:text-stone-500 hover:ring-stone-500;
+      cursor: not-allowed;
+    }
+  }
+
+  #top-nav {
+    @apply mt-1 mb-1 lg:mb-3;
+
+    & > a,
+    & > div, {
+      @apply p-2 mr-1 md:px-2 md:mr-2 bg-stone-300 rounded-sm shadow-md text-stone-700;
+    }
+
+    a.router-link-active {
+      @apply bg-slate-400 text-stone-900;
+    }
+
+    .logged-in {
+      @apply text-sm text-stone-400 inline-block ml-auto mr-0 ring-1 ring-stone-400 px-1 rounded-lg;
+      // TODO: position right
+    }
+  }
+
+  h1 {
+    @apply font-bold text-xl my-2;
+  }
+
+  form {
+    @apply p-2 shadow-md ring-2 ring-stone-400 bg-stone-100 rounded-md;
+
+    .flex-row {
+      @apply px-2 py-1 items-center;
+
+      label {
+        @apply font-semibold pr-2;
+      }
+
+      input {
+        @apply px-2 py-1 border-2 border-stone-400 hover:border-stone-500 rounded-md shadow-md text-stone-500 hover:text-stone-700;
+      }
+    }
+  }
+}
