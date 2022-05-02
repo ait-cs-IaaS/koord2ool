@@ -64,13 +64,22 @@ export default defineComponent({
     },
   },
   data() {
-    const { VUE_APP_LIMESURVEY_LOGIN, VUE_APP_LIMESURVEY_PASSWORD } =
-      process.env;
     return {
       authenticating: false,
-      username: VUE_APP_LIMESURVEY_LOGIN ?? "",
-      password: VUE_APP_LIMESURVEY_PASSWORD ?? "",
+      username: "",
+      password: "",
     };
+  },
+  mounted() {
+    const { VUE_APP_LIMESURVEY_LOGIN, VUE_APP_LIMESURVEY_PASSWORD } =
+      process.env;
+    if (VUE_APP_LIMESURVEY_LOGIN && VUE_APP_LIMESURVEY_PASSWORD) {
+      this.username = VUE_APP_LIMESURVEY_LOGIN;
+      this.password = VUE_APP_LIMESURVEY_PASSWORD;
+      this.$nextTick(() => {
+        if (this.canAuthenticate) this.authenticate();
+      });
+    }
   },
   methods: {
     authenticate() {
