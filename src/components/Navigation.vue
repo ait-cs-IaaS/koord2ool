@@ -5,7 +5,7 @@
     <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
     <b-collapse id="nav-collapse" is-nav>
-      <b-navbar-nav>
+      <b-navbar-nav class="ml-auto">
         <b-nav-item v-if="!isAuthenticated" to="/login">Log-in</b-nav-item>
         <b-nav-item-dropdown v-else text="Surveys" right>
           <b-dropdown-item
@@ -15,16 +15,11 @@
             >{{ label }}</b-dropdown-item
           >
         </b-nav-item-dropdown>
-      </b-navbar-nav>
 
-      <b-nav-item-dropdown
-        v-if="isAuthenticated"
-        :text="username"
-        class="ml-auto"
-        right
-      >
-        <b-dropdown-item to="/logout">Log out</b-dropdown-item>
-      </b-nav-item-dropdown>
+        <b-nav-item-dropdown v-if="isAuthenticated" text="User" right>
+          <b-dropdown-item to="/logout">Log out</b-dropdown-item>
+        </b-nav-item-dropdown>
+      </b-navbar-nav>
     </b-collapse>
   </b-navbar>
 </template>
@@ -45,16 +40,19 @@ export default class NavigationComponent extends Vue {
   get surveyLinks(): unknown[] {
     const surveyIds: number[] = [...this.$store.getters.getSurveys];
     console.debug("Surveys", surveyIds);
-    return surveyIds.sort().map((surveyId) => ({
-      key: surveyId,
-      label: `${surveyId} (${
-        Array.isArray(this.$store.state.responses[surveyId]) &&
-        this.$store.state.responses[surveyId].length
-          ? this.$store.state.responses[surveyId].length
-          : 0
-      })`,
-      to: { name: "survey", params: { surveyId } },
-    }));
+    return surveyIds.sort().map((surveyId) => {
+      const title = this.$store.state.surveys[surveyId].surveyls_title;
+      return {
+        key: surveyId,
+        label: `${surveyId} - ${title} (${
+          Array.isArray(this.$store.state.responses[surveyId]) &&
+          this.$store.state.responses[surveyId].length
+            ? this.$store.state.responses[surveyId].length
+            : 0
+        })`,
+        to: { name: "survey", params: { surveyId } },
+      };
+    });
   }
 }
 </script>
