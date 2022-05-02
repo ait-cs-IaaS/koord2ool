@@ -3,11 +3,14 @@
     <thead>
       <tr>
         <th>Participant</th>
-        <th v-for="key in questionKeys" :key="key">{{ key }}</th>
+        <th v-for="key in showKeys" :key="key">{{ key }}</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="response in responses" :key="response.token">
+      <tr
+        v-for="response in sortedResponses"
+        :key="`${response.token}-${response.TIME}`"
+      >
         <th class="response-token">{{ response.token }}</th>
         <td
           v-for="key in questionKeys"
@@ -21,7 +24,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <td :colspan="questionKeys.length + 1" class="text-right">
+        <td :colspan="showKeys.length + 1" class="text-right">
           {{ responses.length }} response(s)
         </td>
       </tr>
@@ -31,14 +34,25 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ResponseModel, { ignoreKeys } from "@/store/response.model";
+import ResponseModel from "@/store/response.model";
 
 export default defineComponent({
   name: "TabularComponent",
   props: {
-    ignore: {
+    showKeys: {
       type: Array,
-      default: () => [...ignoreKeys, "TIME", "token"],
+      default: () => ["TIME"],
+    },
+
+    sortDirection: {
+      type: Number,
+      default: () => 1,
+      validator: (value: number) => value === 1 || value === -1,
+    },
+
+    sortKey: {
+      type: String,
+      required: false,
     },
 
     responses: {
@@ -47,29 +61,17 @@ export default defineComponent({
     },
   },
   computed: {
-    questionKeys() {
-      if (typeof this.responses !== "undefined" && this.responses.length) {
-        return Array.from(
-          new Set<string>(
-            (this.responses as ResponseModel[])
-              .map((response) => Object.keys(response))
-              .flat()
-          )
-        )
-          .filter((key) => !this.ignore.includes(key))
-          .sort((a, b) =>
-            this.getSortingKey(a).localeCompare(this.getSortingKey(b))
-          );
+    sortedResponses() {
+      if (typeof this.sortKey === "string") {
+        return [...(this.responses as ResponseModel[])].sort(
+          (a: ResponseModel, b: ResponseModel) => {
+            const left = a[this.sortKey ?? ""] ?? "";
+            const right = b[this.sortKey ?? ""] ?? "";
+            return left.localeCompare(right) * this.sortDirection;
+          }
+        );
       }
-      return [];
-    },
-  },
-  methods: {
-    getSortingKey(key: string): string {
-      const matches = /^[Qq]0*([0-9]+)(.*)$/i.exec(key);
-      return matches
-        ? `q${matches[1].padStart(8, "0")}-${matches[2]}`
-        : key.toLowerCase();
+      return this.responses;
     },
   },
 });

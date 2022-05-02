@@ -15,14 +15,20 @@
 
     <hr class="my-2 lg:my-4" />
 
-    <tabular v-if="responses.length" class="responses" :responses="responses">
-    </tabular>
+    <tabular
+      v-if="responses.length"
+      class="responses"
+      :responses="responses"
+      :show-keys="questionKeys"
+      sort-key="token"
+    />
+    <p v-else class="text-red-800">No responses yet.</p>
   </main>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ResponseModel from "@/store/response.model";
+import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
 import Tabular from "@/components/tabular.vue";
 //import PieChartComponent from "@/components/pie-chart.vue";
@@ -35,13 +41,11 @@ export default defineComponent({
   },
   computed: {
     questionKeys(): string[] {
-      const seen = new Set<string>();
-      this.responses.forEach((response) => {
-        Object.keys(response)
-          .filter((key) => /^Q\d+/i.test(key))
-          .forEach((key) => seen.add(key));
-      });
-      return Array.from(seen);
+      return Array.from(
+        new Set<string>(
+          this.responses.map((response) => Object.keys(strip(response))).flat()
+        )
+      ).sort();
     },
 
     responses(): ResponseModel[] {
