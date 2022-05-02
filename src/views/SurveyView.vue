@@ -1,41 +1,63 @@
 <template>
   <main class="survey">
-    <h1>
-      <b-badge
-        pill
-        :variant="survey.active === 'Y' ? 'success' : 'danger'"
-        class="mr-2"
-      >
-        {{ surveyId }}
-      </b-badge>
-      <span class="survey-title" v-if="survey">{{
-        survey.surveyls_title
-      }}</span>
-      <small v-if="survey.active === 'Y'" class="text-muted"> (active) </small>
-      <small v-else class="text-muted">(inactive)</small>
-    </h1>
+    <b-row
+      class="survey-header"
+      :class="{
+        'survey-active': survey.active === 'Y',
+        'survey-inactive': survey.active === 'N',
+      }"
+    >
+      <b-col cols="12" md="6">
+        <b-badge
+          pill
+          :variant="survey.active === 'Y' ? 'success' : 'danger'"
+          class="mr-2"
+        >
+          {{ surveyId }}
+        </b-badge>
+        <span class="survey-title" v-if="survey">{{
+          survey.surveyls_title
+        }}</span>
+      </b-col>
+      <b-col cols="12" md="6"> Time slider goes here </b-col>
+    </b-row>
+    <b-row class="survey-details">
+      <b-col>
+        <b-card no-body v-if="responses.length">
+          <b-tabs card>
+            <b-tab title="Charts" active>
+              <b-container fluid>
+                <b-row>
+                  <b-col
+                    cols="12"
+                    md="6"
+                    lg="4"
+                    v-for="question of questionKeysOnly"
+                    :key="question"
+                  >
+                    <b-card :title="question">
+                      <pie-chart
+                        class="pie-chart"
+                        :counters="countResponsesFor(question)"
+                      />
+                    </b-card>
+                  </b-col>
+                </b-row>
+              </b-container>
+            </b-tab>
 
-    <b-card no-body v-if="responses.length">
-      <b-tabs card>
-        <b-tab title="Charts" active>
-          <pie-chart
-            :counters="[
-              { name: 'A', value: 12 },
-              { name: 'B', value: 3 },
-            ]"
-          />
-        </b-tab>
-
-        <b-tab title="Tabular">
-          <tabular
-            :show-keys="questionKeys"
-            :responses="responses"
-            sort-key="token"
-          />
-        </b-tab>
-      </b-tabs>
-    </b-card>
-    <p v-else class="text-red-800">No responses yet.</p>
+            <b-tab title="Tabular">
+              <tabular
+                :show-keys="questionKeys"
+                :responses="responses"
+                sort-key="token"
+              />
+            </b-tab>
+          </b-tabs>
+        </b-card>
+        <p v-else class="text-red-800">No responses yet.</p>
+      </b-col>
+    </b-row>
   </main>
 </template>
 
@@ -61,6 +83,10 @@ export default class SurveyView extends Vue {
     ).sort();
   }
 
+  get questionKeysOnly(): string[] {
+    return this.questionKeys.filter((key) => key !== "TIME" && key !== "token");
+  }
+
   get responses(): ResponseModel[] {
     return this.$store.state.responses[this.surveyId] || [];
   }
@@ -74,9 +100,29 @@ export default class SurveyView extends Vue {
     return Number(surveyId);
   }
 
+  private countResponsesFor(questionKey: string) {
+    const map = new Map<string, number>();
+    this.responses.forEach((response) => {
+      const value = response[questionKey] || "N/A";
+      map.set(value, (map.get(value) || 0) + 1);
+    });
+    const asAry: any[] = [];
+    map.forEach((value, key) => asAry.push({ name: key, value }));
+    return asAry;
+  }
+
   async beforeMount(): Promise<void> {
     await this.$store.dispatch("refreshResponses", this.surveyId);
     console.debug(`beforeMount hook: ${this.surveyId} updated`);
   }
 }
 </script>
+
+<style>
+@media print {
+  .pie-chart {
+    max-height: 16rem;
+    max-width: 16rem;
+  }
+}
+</style>

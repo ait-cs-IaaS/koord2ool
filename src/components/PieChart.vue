@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Chart } from "chart.js";
+import { Chart, ChartDataset, ChartOptions } from "chart.js";
 
 const colors = [
   "rgb(255, 99, 132)",
@@ -13,6 +13,16 @@ const colors = [
   "rgb(255, 205, 86)",
   "rgb(43, 194, 98)",
 ];
+
+export const DefaultChartOptions: ChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      display: true,
+      position: "bottom",
+    },
+  },
+};
 
 @Component({})
 export default class PieChartComponent extends Vue {
@@ -22,8 +32,8 @@ export default class PieChartComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   counters!: { name: string; value: number }[];
 
-  @Prop({ type: Object, default: () => ({ responsive: true }) })
-  chartOptions!: unknown;
+  @Prop({ type: Object, default: () => DefaultChartOptions })
+  chartOptions!: ChartOptions;
 
   private chartJsInstance?: Chart;
 
@@ -31,9 +41,9 @@ export default class PieChartComponent extends Vue {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }
 
-  get forChartJs(): { labels: string[]; datasets: any[] } {
+  get forChartJs(): { labels: string[]; datasets: ChartDataset[] } {
     const labels: string[] = [];
-    const datasets: any[] = [];
+    const datasets: ChartDataset[] = [];
     if (Array.isArray(this.counters)) {
       const dataset = {
         data: [] as number[],
@@ -62,7 +72,7 @@ export default class PieChartComponent extends Vue {
     this.chartJsInstance = new Chart(this.domElement, {
       type: "pie",
       data: this.forChartJs,
-      options: this.chartOptions as any,
+      options: this.chartOptions,
     });
     return this.chartJsInstance;
   }
