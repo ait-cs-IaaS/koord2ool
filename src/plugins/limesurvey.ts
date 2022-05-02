@@ -4,6 +4,8 @@ import ResponseModel from "@/store/response.model";
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
 export class LimesurveyApi {
+  username?: string;
+
   private session?: string;
   private nextId = 1;
 
@@ -23,7 +25,11 @@ export class LimesurveyApi {
         username,
         password
       );
-      return Boolean(this.session);
+      if (this.session) {
+        this.username = username;
+        return true;
+      }
+      return false;
     } catch (e) {
       console.warn(`LimeSurvey authentication failed: ${e}`);
       return false;

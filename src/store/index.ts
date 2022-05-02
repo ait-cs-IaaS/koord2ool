@@ -13,6 +13,8 @@ export default createStore<KoordStore>({
     getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
 
     isAuthenticated: (state) => typeof state.limesurvey !== "undefined",
+
+    username: (state) => state.limesurvey?.username,
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {

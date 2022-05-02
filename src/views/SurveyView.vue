@@ -7,15 +7,13 @@
     }"
   >
     <h1>
-      <span class="survey-id">{{ surveyId }}</span>
+      <span class="survey-id">#{{ surveyId }}</span>
       <span class="survey-title" v-if="survey">{{
         survey.surveyls_title
       }}</span>
     </h1>
 
-    <p>{{ responses.length }} responses gathered.</p>
-
-    <hr />
+    <hr class="my-2 lg:my-4" />
 
     <tabular v-if="responses.length" class="responses" :responses="responses">
     </tabular>
@@ -24,7 +22,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import ResponseModel, { strip } from "@/store/response.model";
+import ResponseModel from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
 import Tabular from "@/components/tabular.vue";
 //import PieChartComponent from "@/components/pie-chart.vue";
@@ -36,12 +34,18 @@ export default defineComponent({
     Tabular,
   },
   computed: {
-    responses(): ResponseModel[] {
-      return this.$store.state.responses[this.surveyId] ?? [];
+    questionKeys(): string[] {
+      const seen = new Set<string>();
+      this.responses.forEach((response) => {
+        Object.keys(response)
+          .filter((key) => /^Q\d+/i.test(key))
+          .forEach((key) => seen.add(key));
+      });
+      return Array.from(seen);
     },
 
-    strippedResponses(): Record<string, string>[] {
-      return this.responses.map((response) => strip(response));
+    responses(): ResponseModel[] {
+      return this.$store.state.responses[this.surveyId] ?? [];
     },
 
     survey(): SurveyModel | undefined {
@@ -63,20 +67,18 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style lang="scss">
 .survey-id {
-  @apply font-mono;
+  @apply font-mono mr-2 px-1.5;
 }
 
-.survey-title {
-  @apply ml-2;
+.survey-active .survey-id::before {
+  @apply inline-block bg-green-800 w-3 h-3 rounded-full mr-1;
+  content: " ";
 }
 
-.survey-active .survey-id {
-  @apply text-green-800 px-1.5 bg-green-200 rounded-xl;
-}
-
-.survey-inactive .survey-id {
-  @apply text-red-800 px-1.5 bg-red-200 rounded-xl;
+.survey-inactive .survey-id::before {
+  @apply inline-block ring-red-800 w-3 h-3 rounded-full mr-1;
+  content: " ";
 }
 </style>
