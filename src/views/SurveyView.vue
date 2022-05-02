@@ -15,15 +15,26 @@
       <small v-else class="text-muted">(inactive)</small>
     </h1>
 
-    <hr class="my-2 lg:my-4" />
+    <b-card no-body v-if="responses.length">
+      <b-tabs card>
+        <b-tab title="Charts" active>
+          <pie-chart
+            :counters="[
+              { name: 'A', value: 12 },
+              { name: 'B', value: 3 },
+            ]"
+          />
+        </b-tab>
 
-    <tabular
-      v-if="responses.length"
-      class="responses"
-      :responses="responses"
-      :show-keys="questionKeys"
-      sort-key="token"
-    />
+        <b-tab title="Tabular">
+          <tabular
+            :show-keys="questionKeys"
+            :responses="responses"
+            sort-key="token"
+          />
+        </b-tab>
+      </b-tabs>
+    </b-card>
     <p v-else class="text-red-800">No responses yet.</p>
   </main>
 </template>
@@ -33,10 +44,11 @@ import { Vue, Component } from "vue-property-decorator";
 import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
 import Tabular from "@/components/Tabular.vue";
-//import PieChartComponent from "@/components/pie-chart.vue";
+import PieChart from "@/components/PieChart.vue";
 
 @Component({
   components: {
+    PieChart,
     Tabular,
   },
 })
@@ -64,7 +76,7 @@ export default class SurveyView extends Vue {
 
   async beforeMount(): Promise<void> {
     await this.$store.dispatch("refreshResponses", this.surveyId);
-    console.debug(`${this.surveyId} updated`);
+    console.debug(`beforeMount hook: ${this.surveyId} updated`);
   }
 }
 </script>

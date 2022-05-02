@@ -1,18 +1,11 @@
 <template>
-  <Pie
-    :chart-id="chartId"
-    :chart-data="forChartJs"
-    :chart-options="chartOptions"
-  />
+  <canvas :id="chartId" ref="chartCanvas" class="pie-chart" />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Pie } from "vue-chartjs";
-import { Chart, ArcElement, Tooltip } from "chart.js";
-
-Chart.register(ArcElement, Tooltip);
+import { Chart } from "chart.js";
 
 const colors = [
   "rgb(255, 99, 132)",
@@ -21,22 +14,24 @@ const colors = [
   "rgb(43, 194, 98)",
 ];
 
-@Component({
-  components: {
-    Pie,
-  },
-})
+@Component({})
 export default class PieChartComponent extends Vue {
   @Prop({ type: String, default: () => `chart-${v4()}` })
   chartId!: string;
 
   @Prop({ type: Array, default: () => [] })
-  counters!: { name: string; value: number; }[];
+  counters!: { name: string; value: number }[];
 
-  @Prop({ type: Object, default: () => ({ responsive: true })})
+  @Prop({ type: Object, default: () => ({ responsive: true }) })
   chartOptions!: unknown;
 
-  get forChartJs(): unknown {
+  private chartJsInstance?: Chart;
+
+  get domElement(): HTMLCanvasElement {
+    return this.$refs.chartCanvas as HTMLCanvasElement;
+  }
+
+  get forChartJs(): { labels: string[]; datasets: any[] } {
     const labels: string[] = [];
     const datasets: any[] = [];
     if (Array.isArray(this.counters)) {
@@ -57,12 +52,26 @@ export default class PieChartComponent extends Vue {
     };
   }
 
-  createChart() {
-    console.debug("TODO");
+  mounted(): void {
+    this.$nextTick(() => this.create());
   }
 
-  destroyChart() {
-    console.debug("TODO");
+  @Watch("counters")
+  private create(): Chart {
+    this.destroy();
+    this.chartJsInstance = new Chart(this.domElement, {
+      type: "pie",
+      data: this.forChartJs,
+      options: this.chartOptions as any,
+    });
+    return this.chartJsInstance;
+  }
+
+  private destroy(): void {
+    if (typeof this.chartJsInstance !== "undefined") {
+      this.chartJsInstance.destroy();
+      this.chartJsInstance = undefined;
+    }
   }
 }
 </script>
