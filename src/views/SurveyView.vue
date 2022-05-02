@@ -14,6 +14,11 @@
     </h1>
 
     <p>{{ responses.length }} responses gathered.</p>
+
+    <hr />
+
+    <tabular v-if="responses.length" class="responses" :responses="responses">
+    </tabular>
   </main>
 </template>
 
@@ -21,12 +26,14 @@
 import { defineComponent } from "vue";
 import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
+import Tabular from "@/components/tabular.vue";
 //import PieChartComponent from "@/components/pie-chart.vue";
 
 export default defineComponent({
   name: "SurveyView",
   components: {
     //PieChartComponent,
+    Tabular,
   },
   computed: {
     responses(): ResponseModel[] {

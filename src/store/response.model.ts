@@ -18,7 +18,7 @@ export default interface ResponseModel {
   [key: string]: string | null | undefined;
 }
 
-const ignoreKeys: (keyof ResponseModel)[] = [
+export const ignoreKeys: (keyof ResponseModel)[] = [
   "id",
   "ipaddr",
   "lastpage",
