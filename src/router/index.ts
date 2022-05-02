@@ -1,11 +1,15 @@
-import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+import Vue from "vue";
+import VueRouter, { RouteConfig } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
 import AboutView from "@/views/AboutView.vue";
 import SurveyView from "@/views/SurveyView.vue";
 import LoginView from "@/views/LoginView.vue";
+import LogoutView from "@/views/LogoutView.vue";
 import requiresAuthGuard from "@/router/requires-auth.guard";
 
-const routes: Array<RouteRecordRaw> = [
+Vue.use(VueRouter);
+
+const routes: RouteConfig[] = [
   {
     path: "/",
     name: "home",
@@ -15,6 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/login",
     name: "login",
     component: LoginView,
+  },
+  {
+    path: "/logout",
+    name: "logout",
+    component: LogoutView,
   },
   {
     path: "/about",
@@ -29,8 +38,7 @@ const routes: Array<RouteRecordRaw> = [
   },
 ];
 
-const router = createRouter({
-  history: createWebHashHistory(),
+const router = new VueRouter({
   routes,
 });
 

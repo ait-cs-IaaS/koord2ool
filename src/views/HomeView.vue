@@ -1,22 +1,21 @@
 <template>
-  <div class="home">
-    <h1>Koordon Bleu</h1>
-
-    <div v-if="!isAuthenticated" class="text-center">
-      <p class="text-red-800">Please authenticate first.</p>
-      <router-link to="/login">Log in</router-link>
-    </div>
-  </div>
+  <b-row class="home">
+    <b-col v-if="!isAuthenticated">
+      <div class="text-center">
+        <p class="text-red-800">Please authenticate first.</p>
+        <router-link to="/login">Log in</router-link>
+      </div>
+    </b-col>
+  </b-row>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { mapGetters } from "vuex";
+import { Vue, Component } from "vue-property-decorator";
 
-export default defineComponent({
-  name: "HomeView",
-  computed: {
-    ...mapGetters(["isAuthenticated"]),
-  },
-});
+@Component({})
+export default class HomeView extends Vue {
+  get isAuthenticated(): boolean {
+    return this.$store.getters.isAuthenticated;
+  }
+}
 </script>

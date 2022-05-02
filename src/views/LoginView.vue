@@ -1,112 +1,78 @@
 <template>
-  <div class="login">
-    <h1>Log in</h1>
+  <b-row class="login">
+    <b-col>
+      <h1>Log in</h1>
 
-    <div v-if="$store.getters.isAuthenticated">
-      You are logged in as {{ $store.getters.username }}.
-    </div>
-    <div v-else>
-      <form @submit.prevent="authenticate">
-        <!-- login -->
-        <div class="flex flex-row justify-center">
-          <div class="basis-1/3 text-right">
-            <label for="username">Log-in</label>
-          </div>
-          <div class="basis-2/3">
-            <input
-              type="text"
-              id="username"
-              v-model="username"
-              placeholder="Log-in name&hellip;"
-            />
-          </div>
-        </div>
+      <div v-if="$store.getters.isAuthenticated">
+        You are logged in as {{ $store.getters.username }}.
+      </div>
+      <b-form v-else @submit.prevent="authenticate">
+        <b-form-group id="username" label="Log-in" label-for="username-input">
+          <b-form-input id="username-input" v-model="username" required />
+        </b-form-group>
 
-        <!-- password -->
-        <div class="flex flex-row justify-center">
-          <div class="basis-1/3 text-right">
-            <label for="password">Password</label>
-          </div>
-          <div class="basis-2/3">
-            <input
-              type="password"
-              id="password"
-              v-model="password"
-              placeholder="Password&hellip;"
-            />
-          </div>
-        </div>
+        <b-form-group id="password" label="Password" label-for="password-input">
+          <b-form-input
+            id="password-input"
+            v-model="password"
+            type="password"
+            required
+          />
+        </b-form-group>
 
-        <div class="flex flex-row justify-center">
-          <div class="basis-auto">
-            <button type="submit" class="btn" :disabled="!canAuthenticate">
-              Log in
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
+        <b-button type="submit" variant="primary" :disabled="!canAuthenticate"
+          >Log in</b-button
+        >
+      </b-form>
+    </b-col>
+  </b-row>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import ResponseModel, { strip } from "@/store/response.model";
-export default defineComponent({
-  computed: {
-    canAuthenticate(): boolean {
-      return (
-        !this.authenticating &&
-        !this.$store.getters.isAuthenticated &&
-        this.username !== "" &&
-        this.password !== ""
-      );
-    },
-  },
-  data() {
-    return {
-      authenticating: false,
-      username: "",
-      password: "",
-    };
-  },
-  mounted() {
+import { Vue, Component } from "vue-property-decorator";
+
+@Component({})
+export default class LoginView extends Vue {
+  private authenticating = false;
+  private username = "";
+  private password = "";
+
+  get canAuthenticate(): boolean {
+    return !this.authenticating && this.username !== "" && this.password !== "";
+  }
+
+  get isAuthenticated(): boolean {
+    return this.$store.getters.isAuthenticated;
+  }
+
+  mounted(): void {
     const { VUE_APP_LIMESURVEY_LOGIN, VUE_APP_LIMESURVEY_PASSWORD } =
       process.env;
     if (VUE_APP_LIMESURVEY_LOGIN && VUE_APP_LIMESURVEY_PASSWORD) {
-      this.username = VUE_APP_LIMESURVEY_LOGIN;
-      this.password = VUE_APP_LIMESURVEY_PASSWORD;
       this.$nextTick(() => {
-        if (this.canAuthenticate) this.authenticate();
+        this.authenticate(
+          VUE_APP_LIMESURVEY_LOGIN,
+          VUE_APP_LIMESURVEY_PASSWORD
+        );
       });
     }
-  },
-  methods: {
-    authenticate() {
-      this.authenticating = true;
-      this.$store
-        .dispatch("authenticate", {
-          username: this.username,
-          password: this.password,
-        })
-        .then(() => {
-          console.debug("Fetching details for all surveys");
-          for (const survey of Object.values(this.$store.state.surveys)) {
-            console.debug(`Updating ${survey.sid}`);
-            this.$store
-              .dispatch("refreshResponses", survey.sid)
-              .then((responses: ResponseModel[]) => {
-                if (typeof responses !== "undefined") {
-                  const pruned = responses.map((response) => strip(response));
-                  console.log(`Pruned responses for ${survey.sid}`, pruned);
-                }
-              });
-          }
-        })
-        .finally(() => {
-          this.authenticating = false;
+  }
+
+  private async authenticate(login?: string, password?: string): Promise<void> {
+    this.authenticating = true;
+    try {
+      const okay = await this.$store.dispatch("authenticate", {
+        username: login || this.username,
+        password: password || this.password,
+      });
+      if (okay) {
+        this.$nextTick(() => {
+          this.$router.push("/");
         });
-    },
-  },
-});
+      }
+    } finally {
+      this.authenticating = false;
+    }
+  }
+}
 </script>

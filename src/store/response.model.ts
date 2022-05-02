@@ -25,7 +25,6 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
   "seed",
   "startlanguage",
   "submitdate",
-  "token",
 ];
 
 export function strip(response: ResponseModel): Record<string, string> {

@@ -1,19 +1,21 @@
 <template>
-  <div class="container mx-auto">
+  <div>
     <nav-component />
 
-    <router-view />
+    <b-container fluid>
+      <router-view />
+    </b-container>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import NavComponent from "@/components/nav.vue";
+import { Component, Vue } from "vue-property-decorator";
+import NavComponent from "@/components/Navigation.vue";
 
-export default defineComponent({
-  name: "App",
+@Component({
   components: {
     NavComponent,
   },
-});
+})
+export default class App extends Vue {}
 </script>

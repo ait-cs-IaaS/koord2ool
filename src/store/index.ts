@@ -1,20 +1,27 @@
-import { createStore } from "vuex";
+import Vue from "vue";
+import Vuex from "vuex";
 import KoordStore from "@/store/koord.store";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 
-export default createStore<KoordStore>({
+Vue.use(Vuex);
+
+export default new Vuex.Store<KoordStore>({
   state: {
+    limesurvey: undefined,
     responses: {},
     surveys: {},
   },
   getters: {
     getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
 
-    isAuthenticated: (state) => typeof state.limesurvey !== "undefined",
+    isAuthenticated: (state) =>
+      typeof state.limesurvey !== "undefined" &&
+      typeof state.limesurvey.username !== "undefined",
 
-    username: (state) => state.limesurvey?.username,
+    username: (state) =>
+      typeof state.limesurvey !== "undefined" ? state.limesurvey.username : "",
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {
@@ -26,48 +33,56 @@ export default createStore<KoordStore>({
       for (const survey of surveys) {
         newSurveys[survey.sid] = {
           ...survey,
-          details: state.surveys[survey.sid]?.details,
+          ...(typeof state.surveys[survey.sid] !== "undefined"
+            ? { details: state.surveys[survey.sid].details }
+            : {}),
         };
       }
-      state.surveys = newSurveys;
+      Vue.set(state, "surveys", newSurveys);
     },
 
     updateResponses(
       state,
       payload: { sid: number; responses: ResponseModel[] }
     ) {
-      state.responses[payload.sid] = payload.responses;
+      Vue.set(state.responses, payload.sid, payload.responses);
     },
   },
   actions: {
     async authenticate(
       state,
       payload: { username: string; password: string }
-    ): Promise<void> {
+    ): Promise<boolean> {
+      console.debug(`Authenticating as ${payload.username}`);
       const api = new LimesurveyApi();
       const okay = await api.authenticate(payload.username, payload.password);
-      console.debug("Authenticated with LimeSurvey", okay);
+      console.debug(`Authentication result: ${okay}`);
 
       if (okay) {
         state.commit("setApi", okay ? api : undefined);
         await state.dispatch("refreshSurveys");
+        return true;
       }
+
+      return false;
     },
 
-    async refreshSurveys(state): Promise<void> {
+    async refreshSurveys(state): Promise<SurveyModel[]> {
       if (state.state.limesurvey) {
-        state.commit(
-          "setSurveyList",
-          await state.state.limesurvey.listSurveys()
+        console.debug("Refreshing surveys");
+        const surveys = await state.state.limesurvey.listSurveys();
+        state.commit("setSurveyList", surveys);
+        await Promise.all(
+          surveys.map(({ sid }) => state.dispatch("refreshResponses", sid))
         );
+        return surveys;
       }
+      return [];
     },
 
-    async refreshResponses(
-      state,
-      sid: number
-    ): Promise<ResponseModel[] | undefined> {
+    async refreshResponses(state, sid: number): Promise<ResponseModel[]> {
       if (state.state.limesurvey) {
+        console.debug(`Refreshing responses for ${sid}`);
         const responses = await state.state.limesurvey.getResponses(sid);
         if (typeof responses !== "undefined") {
           state.commit("updateResponses", {
@@ -77,6 +92,7 @@ export default createStore<KoordStore>({
           return responses;
         }
       }
+      return [];
     },
   },
   modules: {},

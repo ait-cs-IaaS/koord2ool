@@ -5,6 +5,7 @@
     "strict": true,
     "jsx": "preserve",
     "moduleResolution": "node",
+    "experimentalDecorators": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -37,5 +38,9 @@
   ],
   "exclude": [
     "node_modules"
+  ],
+  "typeRoots": [
+    "src/typings",
+    "node_modules/@types/"
   ]
 }
