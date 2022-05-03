@@ -8,16 +8,18 @@
       }"
     >
       <b-col cols="12" md="6">
-        <b-badge
-          pill
-          :variant="survey.active === 'Y' ? 'success' : 'danger'"
-          class="mr-2"
-        >
-          {{ surveyId }}
-        </b-badge>
-        <span class="survey-title" v-if="survey">{{
-          survey.surveyls_title
-        }}</span>
+        <h2>
+          <b-badge
+            pill
+            :variant="survey.active === 'Y' ? 'success' : 'danger'"
+            class="mr-2"
+          >
+            {{ surveyId }}
+          </b-badge>
+          <span class="survey-title" v-if="survey">{{
+            survey.surveyls_title
+          }}</span>
+        </h2>
       </b-col>
       <b-col cols="12" md="6"> Time slider goes here </b-col>
     </b-row>

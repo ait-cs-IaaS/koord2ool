@@ -1,5 +1,5 @@
 <template>
-  <b-navbar toggleable="lg" type="dark" variant="primary" id="top-nav">
+  <b-navbar toggleable="lg" type="dark" variant="gradient-primary" id="top-nav">
     <b-navbar-brand to="/">Koord2ool</b-navbar-brand>
 
     <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
