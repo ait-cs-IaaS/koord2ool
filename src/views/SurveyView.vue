@@ -72,8 +72,8 @@
 import { Vue, Component } from "vue-property-decorator";
 import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
-import Tabular from "@/components/Tabular.vue";
-import PieChart from "@/components/PieChart.vue";
+import Tabular from "@/components/surveys/Tabular.vue";
+import PieChart from "@/components/surveys/PieChart.vue";
 import QuestionModel from "@/store/question.model";
 
 @Component({
