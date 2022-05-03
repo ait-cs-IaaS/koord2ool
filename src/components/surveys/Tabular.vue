@@ -24,7 +24,7 @@ export default class TabularComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];
 
-  get fields() {
+  get fields(): { key: string; sortable: boolean; label?: string }[] {
     return this.showKeys.map((key) => ({
       key,
       sortable: true,

@@ -26,6 +26,13 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
+import { RawLocation } from "vue-router";
+
+type SurveyLink = {
+  key: string | number;
+  label: string;
+  to: RawLocation;
+};
 
 @Component({})
 export default class NavigationComponent extends Vue {
@@ -37,7 +44,7 @@ export default class NavigationComponent extends Vue {
     return this.$store.getters.username;
   }
 
-  get surveyLinks(): unknown[] {
+  get surveyLinks(): SurveyLink[] {
     const surveyIds: number[] = [...this.$store.getters.getSurveys];
     return surveyIds.sort().map((surveyId) => {
       const title = this.$store.state.surveys[surveyId].surveyls_title;
@@ -49,7 +56,7 @@ export default class NavigationComponent extends Vue {
             ? this.$store.state.responses[surveyId].length
             : 0
         })`,
-        to: { name: "survey", params: { surveyId } },
+        to: { name: "survey", params: { surveyId: surveyId.toString() } },
       };
     });
   }
