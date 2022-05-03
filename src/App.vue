@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav-component />
+    <nav-component class="mb-4" />
 
     <b-container fluid>
       <router-view />
