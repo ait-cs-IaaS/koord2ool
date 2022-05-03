@@ -13,6 +13,7 @@ export default new Vuex.Store<KoordStore>({
     limesurvey: undefined,
     responses: {},
     surveys: {},
+    syncing: false,
   },
   getters: {
     getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
@@ -27,6 +28,10 @@ export default new Vuex.Store<KoordStore>({
   mutations: {
     setApi(state, api?: LimesurveyApi) {
       state.limesurvey = api;
+    },
+
+    setSyncState(state, syncing = true) {
+      state.syncing = syncing;
     },
 
     setSurveyList(state, surveys: SurveyModel[] = []) {
@@ -75,6 +80,8 @@ export default new Vuex.Store<KoordStore>({
       payload: { username: string; password: string }
     ): Promise<boolean> {
       console.debug(`Authenticating as ${payload.username}`);
+      state.commit("setSyncState", true);
+
       const api = new LimesurveyApi();
       const okay = await api.authenticate(payload.username, payload.password);
       console.debug(`Authentication result: ${okay}`);
@@ -82,10 +89,10 @@ export default new Vuex.Store<KoordStore>({
       if (okay) {
         state.commit("setApi", okay ? api : undefined);
         await state.dispatch("refreshSurveys");
-        return true;
       }
 
-      return false;
+      state.commit("setSyncState", false);
+      return okay;
     },
 
     async refreshSurveys(state): Promise<SurveyModel[]> {

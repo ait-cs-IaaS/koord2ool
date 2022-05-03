@@ -8,4 +8,6 @@ export default interface KoordStore {
   responses: Record<number, ResponseModel[]>;
 
   surveys: Record<number, SurveyModel>;
+
+  syncing: boolean;
 }
