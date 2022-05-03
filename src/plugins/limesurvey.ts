@@ -1,5 +1,6 @@
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
+import QuestionModel from "@/store/question.model";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -38,6 +39,10 @@ export class LimesurveyApi {
 
   async listSurveys(): Promise<SurveyModel[]> {
     return this.call("list_surveys");
+  }
+
+  async getQuestions(sid: number): Promise<QuestionModel[]> {
+    return this.call("list_questions", true, sid);
   }
 
   async getResponses(sid: number): Promise<undefined | ResponseModel[]> {

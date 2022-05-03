@@ -1,3 +1,5 @@
+import QuestionModel from "@/store/question.model";
+
 export default interface SurveyModel {
   sid: number;
 
@@ -10,6 +12,8 @@ export default interface SurveyModel {
   active: "Y" | "N";
 
   details?: Record<string, string | null>;
+
+  questions?: Record<string, QuestionModel>;
 
   [key: string]: unknown;
 }
