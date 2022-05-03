@@ -3,15 +3,15 @@
     <b-row
       class="survey-header"
       :class="{
-        'survey-active': survey.active === 'Y',
-        'survey-inactive': survey.active === 'N',
+        'survey-active': surveyActive,
+        'survey-inactive': !surveyActive,
       }"
     >
       <b-col cols="12" md="6">
         <h2>
           <b-badge
             pill
-            :variant="survey.active === 'Y' ? 'success' : 'danger'"
+            :variant="surveyActive ? 'success' : 'danger'"
             class="mr-2"
           >
             {{ surveyId }}
@@ -23,46 +23,26 @@
       </b-col>
       <b-col cols="12" md="6"> Time slider goes here </b-col>
     </b-row>
-    <b-row class="survey-details">
+    <b-row class="survey-meta">
+      <b-col cols="12" md="6">
+        <!-- left side -->
+        <ul class="list-unstyled">
+          <li v-if="survey.startdate">Start: {{ survey.startdate }}</li>
+          <li v-if="survey.expires">Expiry: {{ survey.expires }}</li>
+        </ul>
+      </b-col>
+      <b-col cols="12" md="6">
+        <!-- right side -->
+        <ul class="list-unstyled">
+          <li>{{ questionCount }} answer(s)</li>
+          <!-- TODO: add response count, or other metadata? -->
+        </ul>
+      </b-col>
+    </b-row>
+    <b-row class="survey-responses">
       <b-col>
-        <b-card no-body v-if="responses.length">
-          <b-tabs card>
-            <b-tab title="Charts" active>
-              <b-container fluid>
-                <b-row>
-                  <b-col
-                    cols="12"
-                    md="6"
-                    lg="4"
-                    class="avoid-page-break"
-                    v-for="question of questionKeysOnly"
-                    :key="question"
-                  >
-                    <!-- actual chart -->
-                    <b-card
-                      :title="question"
-                      :sub-title="questions[question].question"
-                    >
-                      <pie-chart
-                        class="pie-chart"
-                        :counters="countResponsesFor(question)"
-                      />
-                    </b-card>
-                  </b-col>
-                </b-row>
-              </b-container>
-            </b-tab>
-
-            <b-tab title="Tabular">
-              <tabular
-                :show-keys="questionKeys"
-                :responses="responses"
-                sort-key="token"
-              />
-            </b-tab>
-          </b-tabs>
-        </b-card>
-        <p v-else class="text-red-800">No responses yet.</p>
+        <survey v-if="hasResponses" :survey-id="surveyId" />
+        <b-alert v-else variant="danger">No responses yet.</b-alert>
       </b-col>
     </b-row>
   </main>
@@ -70,29 +50,18 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
-import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
-import Tabular from "@/components/surveys/Tabular.vue";
-import PieChart from "@/components/surveys/PieChart.vue";
 import QuestionModel from "@/store/question.model";
+import Survey from "@/components/surveys/Survey.vue";
 
 @Component({
   components: {
-    PieChart,
-    Tabular,
+    Survey,
   },
 })
 export default class SurveyView extends Vue {
-  get questionKeys(): string[] {
-    return Array.from(
-      new Set<string>(
-        this.responses.map((response) => Object.keys(strip(response))).flat()
-      )
-    ).sort();
-  }
-
-  get questionKeysOnly(): string[] {
-    return this.questionKeys.filter((key) => key !== "TIME" && key !== "token");
+  get questionCount(): number {
+    return Object.keys(this.questions).length;
   }
 
   get questions(): Record<string, QuestionModel> {
@@ -106,37 +75,24 @@ export default class SurveyView extends Vue {
     return {};
   }
 
-  get responses(): ResponseModel[] {
-    return this.$store.state.responses[this.surveyId] || [];
+  get hasResponses(): boolean {
+    return (
+      Array.isArray(this.$store.state.responses[this.surveyId]) &&
+      this.$store.state.responses[this.surveyId].length > 0
+    );
   }
 
   get survey(): SurveyModel | undefined {
     return this.$store.state.surveys[this.surveyId];
   }
 
+  get surveyActive(): boolean {
+    return typeof this.survey !== "undefined" && this.survey.active === "Y";
+  }
+
   get surveyId(): number {
     const { surveyId } = this.$route.params;
     return Number(surveyId);
-  }
-
-  private getQuestionFor(questionKey: string): QuestionModel | undefined {
-    return this.questions[questionKey];
-  }
-
-  private countResponsesFor(questionKey: string) {
-    const map = new Map<string, number>();
-    this.responses.forEach((response) => {
-      const value = response[questionKey] || "N/A";
-      map.set(value, (map.get(value) || 0) + 1);
-    });
-    const asAry: any[] = [];
-    map.forEach((value, key) => asAry.push({ name: key, value }));
-    return asAry;
-  }
-
-  async beforeMount(): Promise<void> {
-    await this.$store.dispatch("refreshResponses", this.surveyId);
-    console.debug(`beforeMount hook: ${this.surveyId} updated`);
   }
 }
 </script>
