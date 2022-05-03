@@ -7,7 +7,11 @@
     <b-collapse id="nav-collapse" is-nav>
       <b-navbar-nav class="ml-auto">
         <b-nav-item v-if="!isAuthenticated" to="/login">Log-in</b-nav-item>
-        <b-nav-item-dropdown v-else text="Surveys" right>
+        <b-nav-item-dropdown v-else text="Surveys" right :disabled="isSyncing">
+          <template #button-content>
+            <b-spinner v-if="isSyncing" small variant="light" />
+            <span v-else>Surveys</span>
+          </template>
           <b-dropdown-item
             v-for="{ key, label, to } in surveyLinks"
             :key="key"
@@ -40,8 +44,8 @@ export default class NavigationComponent extends Vue {
     return this.$store.getters.isAuthenticated;
   }
 
-  get username(): string | undefined {
-    return this.$store.getters.username;
+  get isSyncing(): boolean {
+    return this.$store.state.syncing;
   }
 
   get surveyLinks(): SurveyLink[] {
