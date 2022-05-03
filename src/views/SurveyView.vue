@@ -47,7 +47,12 @@
     </b-row>
     <b-row class="survey-responses">
       <b-col>
-        <survey v-if="hasResponses" :survey-id="surveyId" />
+        <survey
+          v-if="hasResponses"
+          :survey="survey"
+          :responses="responsesInTimeline"
+          :questions="questions"
+        />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
       </b-col>
     </b-row>
@@ -55,7 +60,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import SurveyModel from "@/store/survey.model";
 import QuestionModel from "@/store/question.model";
 import Survey from "@/components/surveys/Survey.vue";
@@ -94,6 +99,12 @@ export default class SurveyView extends Vue {
       : [];
   }
 
+  get responsesInTimeline(): ResponseModel[] {
+    return this.responses.filter(
+      (response) => new Date(response.TIME) <= this.showResponsesUntil
+    );
+  }
+
   get survey(): SurveyModel | undefined {
     return this.$store.state.surveys[this.surveyId];
   }
@@ -109,25 +120,21 @@ export default class SurveyView extends Vue {
 
   get minResponseDate(): Date {
     return this.responses
-      .map((response) =>
-        response.TIME
-          ? new Date(response.TIME)
-          : new Date(response.submitdate || new Date())
-      )
+      .map((response) => new Date(response.TIME))
       .reduce((min, date) => (date < min ? date : min), new Date());
   }
 
   get maxResponseDate(): Date {
     return this.responses
-      .map((response) =>
-        response.TIME
-          ? new Date(response.TIME)
-          : new Date(response.submitdate || new Date())
-      )
+      .map((response) => new Date(response.TIME))
       .reduce((max, date) => (date > max ? date : max), new Date());
   }
 
   showResponsesUntil = new Date();
+
+  async beforeMount(): Promise<void> {
+    await this.$store.dispatch("refreshResponses", this.surveyId);
+  }
 }
 </script>
 

@@ -19,7 +19,7 @@ export default class TabularComponent extends Vue {
   sortDirection!: -1 | 1;
 
   @Prop({ type: String, required: false })
-  sortKey?: string;
+  sortKey?: keyof ResponseModel;
 
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];

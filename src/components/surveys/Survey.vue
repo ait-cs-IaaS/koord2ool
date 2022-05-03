@@ -65,27 +65,14 @@ export default class Survey extends Vue {
     return this.questionKeys.filter((key) => key !== "TIME" && key !== "token");
   }
 
-  get questions(): Record<string, QuestionModel> {
-    const survey = this.survey;
-    if (
-      typeof survey !== "undefined" &&
-      typeof survey.questions !== "undefined"
-    ) {
-      return survey.questions;
-    }
-    return {};
-  }
+  @Prop({ type: Object, default: () => [] })
+  questions!: Record<string, QuestionModel>;
 
-  get responses(): ResponseModel[] {
-    return this.$store.state.responses[this.surveyId] || [];
-  }
+  @Prop({ type: Array, default: () => [] })
+  responses!: ResponseModel[];
 
-  get survey(): SurveyModel | undefined {
-    return this.$store.state.surveys[this.surveyId];
-  }
-
-  @Prop({ type: Number, required: true })
-  surveyId!: number;
+  @Prop({ type: Object, required: true })
+  survey!: SurveyModel;
 
   private countResponsesFor(questionKey: string) {
     const map = new Map<string, number>();
@@ -96,10 +83,6 @@ export default class Survey extends Vue {
     const asAry: any[] = [];
     map.forEach((value, key) => asAry.push({ name: key, value }));
     return asAry;
-  }
-
-  async beforeMount(): Promise<void> {
-    await this.$store.dispatch("refreshResponses", this.surveyId);
   }
 }
 </script>

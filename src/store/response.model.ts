@@ -11,11 +11,9 @@ export default interface ResponseModel {
 
   submitdate?: string;
 
-  token?: string;
+  token: string;
 
-  TIME?: string;
-
-  [key: string]: string | null | undefined;
+  TIME: string;
 }
 
 export const ignoreKeys: (keyof ResponseModel)[] = [
@@ -30,7 +28,10 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
 export function strip(response: ResponseModel): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {
-    if (!ignoreKeys.includes(key) && typeof value === "string") {
+    if (
+      !ignoreKeys.includes(key as keyof ResponseModel) &&
+      typeof value === "string"
+    ) {
       result[key] = value;
     }
   });

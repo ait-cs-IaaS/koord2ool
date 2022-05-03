@@ -57,7 +57,16 @@ export class LimesurveyApi {
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
       if (Array.isArray(asObj.responses)) {
-        return asObj.responses;
+        return asObj.responses.map((response: ResponseModel) => {
+          if (
+            typeof response.TIME === "undefined" &&
+            typeof response.submitdate === "string"
+          ) {
+            // inject TIME if unset
+            response.TIME = response.submitdate;
+          }
+          return response;
+        });
       }
     }
   }
