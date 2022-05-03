@@ -39,7 +39,6 @@ export default class NavigationComponent extends Vue {
 
   get surveyLinks(): unknown[] {
     const surveyIds: number[] = [...this.$store.getters.getSurveys];
-    console.debug("Surveys", surveyIds);
     return surveyIds.sort().map((surveyId) => {
       const title = this.$store.state.surveys[surveyId].surveyls_title;
       return {

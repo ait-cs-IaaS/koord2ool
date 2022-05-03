@@ -100,7 +100,6 @@ export default class Survey extends Vue {
 
   async beforeMount(): Promise<void> {
     await this.$store.dispatch("refreshResponses", this.surveyId);
-    console.debug(`beforeMount hook: ${this.surveyId} updated`);
   }
 }
 </script>

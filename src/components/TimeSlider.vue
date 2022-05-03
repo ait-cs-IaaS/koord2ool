@@ -46,14 +46,12 @@ export default class TimeSlider extends Vue {
   }
 
   protected emitUpdate(value?: Date | string | number): void {
-    console.debug("TimeSlider.emitUpdate", value);
     if (typeof value === "string") {
       value = /^\d+$/i.test(value) ? new Date(Number(value)) : new Date(value);
     } else if (typeof value === "number") {
       value = new Date(value);
     }
 
-    console.debug("TimeSlider.emitUpdate (after coercion)", value);
     this.$emit("input", value);
   }
 }

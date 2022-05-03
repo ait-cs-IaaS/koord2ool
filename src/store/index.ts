@@ -90,7 +90,6 @@ export default new Vuex.Store<KoordStore>({
 
     async refreshSurveys(state): Promise<SurveyModel[]> {
       if (state.state.limesurvey) {
-        console.debug("Refreshing surveys");
         const surveys = await state.state.limesurvey.listSurveys();
         state.commit("setSurveyList", surveys);
         await Promise.all([
@@ -104,7 +103,6 @@ export default new Vuex.Store<KoordStore>({
 
     async refreshQuestions(state, sid: number): Promise<QuestionModel[]> {
       if (state.state.limesurvey) {
-        console.debug(`Refreshing questions for ${sid}`);
         const questions = await state.state.limesurvey.getQuestions(sid);
         state.commit("updateQuestions", { sid, questions });
         return questions;
@@ -114,7 +112,6 @@ export default new Vuex.Store<KoordStore>({
 
     async refreshResponses(state, sid: number): Promise<ResponseModel[]> {
       if (state.state.limesurvey) {
-        console.debug(`Refreshing responses for ${sid}`);
         const responses = await state.state.limesurvey.getResponses(sid);
         if (typeof responses !== "undefined") {
           state.commit("updateResponses", {
