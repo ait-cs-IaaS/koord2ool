@@ -34,14 +34,14 @@
         <!-- left side -->
         <ul class="list-unstyled">
           <li v-if="survey.startdate">Start: {{ survey.startdate }}</li>
-          <li v-if="survey.expires">Expiry: {{ survey.expires }}</li>
+          <li v-if="survey.expires">Expires: {{ survey.expires }}</li>
         </ul>
       </b-col>
       <b-col cols="12" md="6">
         <!-- right side -->
         <ul class="list-unstyled">
-          <li>{{ questionCount }} answer(s)</li>
-          <!-- TODO: add response count, or other metadata? -->
+          <li>{{ questionCount }} question(s)</li>
+          <li>{{ responsesInTimeline.length }} answer(s)</li>
         </ul>
       </b-col>
     </b-row>
