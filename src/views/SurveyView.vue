@@ -21,7 +21,13 @@
           }}</span>
         </h2>
       </b-col>
-      <b-col cols="12" md="6"> Time slider goes here </b-col>
+      <b-col cols="12" md="6">
+        <time-slider
+          v-model="showResponsesUntil"
+          :min="minResponseDate"
+          :max="maxResponseDate"
+        />
+      </b-col>
     </b-row>
     <b-row class="survey-meta">
       <b-col cols="12" md="6">
@@ -53,10 +59,13 @@ import { Vue, Component } from "vue-property-decorator";
 import SurveyModel from "@/store/survey.model";
 import QuestionModel from "@/store/question.model";
 import Survey from "@/components/surveys/Survey.vue";
+import TimeSlider from "@/components/TimeSlider.vue";
+import ResponseModel from "@/store/response.model";
 
 @Component({
   components: {
     Survey,
+    TimeSlider,
   },
 })
 export default class SurveyView extends Vue {
@@ -76,10 +85,13 @@ export default class SurveyView extends Vue {
   }
 
   get hasResponses(): boolean {
-    return (
-      Array.isArray(this.$store.state.responses[this.surveyId]) &&
-      this.$store.state.responses[this.surveyId].length > 0
-    );
+    return this.responses.length > 0;
+  }
+
+  get responses(): ResponseModel[] {
+    return Array.isArray(this.$store.state.responses[this.surveyId])
+      ? this.$store.state.responses[this.surveyId]
+      : [];
   }
 
   get survey(): SurveyModel | undefined {
@@ -94,6 +106,28 @@ export default class SurveyView extends Vue {
     const { surveyId } = this.$route.params;
     return Number(surveyId);
   }
+
+  get minResponseDate(): Date {
+    return this.responses
+      .map((response) =>
+        response.TIME
+          ? new Date(response.TIME)
+          : new Date(response.submitdate || new Date())
+      )
+      .reduce((min, date) => (date < min ? date : min), new Date());
+  }
+
+  get maxResponseDate(): Date {
+    return this.responses
+      .map((response) =>
+        response.TIME
+          ? new Date(response.TIME)
+          : new Date(response.submitdate || new Date())
+      )
+      .reduce((max, date) => (date > max ? date : max), new Date());
+  }
+
+  showResponsesUntil = new Date();
 }
 </script>
 
