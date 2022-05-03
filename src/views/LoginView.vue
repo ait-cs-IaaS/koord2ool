@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Prop } from "vue-property-decorator";
 
 @Component({})
 export default class LoginView extends Vue {
@@ -44,6 +44,9 @@ export default class LoginView extends Vue {
   get isAuthenticated(): boolean {
     return this.$store.getters.isAuthenticated;
   }
+
+  @Prop({ type: String, required: false })
+  returnTo?: string;
 
   mounted(): void {
     const { VUE_APP_LIMESURVEY_LOGIN, VUE_APP_LIMESURVEY_PASSWORD } =
@@ -66,8 +69,13 @@ export default class LoginView extends Vue {
         password: password || this.password,
       });
       if (okay) {
+        console.debug("ReturnTo is", this.returnTo);
+        const destination =
+          typeof this.returnTo !== "undefined"
+            ? JSON.parse(this.returnTo)
+            : "/";
         this.$nextTick(() => {
-          this.$router.push("/");
+          this.$router.push(destination);
         });
       }
     } finally {

@@ -19,6 +19,7 @@ const routes: RouteConfig[] = [
     path: "/login",
     name: "login",
     component: LoginView,
+    props: true,
   },
   {
     path: "/logout",
