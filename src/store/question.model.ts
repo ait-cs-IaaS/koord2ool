@@ -1,5 +1,5 @@
 export default interface QuestionModel {
-  key: string;
+  title: string;
 
   order?: number;
 

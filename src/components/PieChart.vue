@@ -12,14 +12,18 @@ const colors = [
   "rgb(54, 162, 235)",
   "rgb(255, 205, 86)",
   "rgb(43, 194, 98)",
+  "rgb(255,131,48)",
+  "rgb(136,80,255)",
+  "rgb(173,232,108)",
+  "rgb(98,220,171)",
 ];
 
-export const DefaultChartOptions: ChartOptions = {
-  responsive: true,
+export const PieChartOptions: ChartOptions = {
   plugins: {
     legend: {
       display: true,
       position: "bottom",
+      align: "center",
     },
   },
 };
@@ -31,9 +35,6 @@ export default class PieChartComponent extends Vue {
 
   @Prop({ type: Array, default: () => [] })
   counters!: { name: string; value: number }[];
-
-  @Prop({ type: Object, default: () => DefaultChartOptions })
-  chartOptions!: ChartOptions;
 
   private chartJsInstance?: Chart;
 
@@ -72,7 +73,7 @@ export default class PieChartComponent extends Vue {
     this.chartJsInstance = new Chart(this.domElement, {
       type: "pie",
       data: this.forChartJs,
-      options: this.chartOptions,
+      options: { ...PieChartOptions },
     });
     return this.chartJsInstance;
   }

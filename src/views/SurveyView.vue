@@ -34,10 +34,15 @@
                     cols="12"
                     md="6"
                     lg="4"
+                    class="avoid-page-break"
                     v-for="question of questionKeysOnly"
                     :key="question"
                   >
-                    <b-card :title="question">
+                    <!-- actual chart -->
+                    <b-card
+                      :title="question"
+                      :sub-title="questions[question].question"
+                    >
                       <pie-chart
                         class="pie-chart"
                         :counters="countResponsesFor(question)"
@@ -69,6 +74,7 @@ import ResponseModel, { strip } from "@/store/response.model";
 import SurveyModel from "@/store/survey.model";
 import Tabular from "@/components/Tabular.vue";
 import PieChart from "@/components/PieChart.vue";
+import QuestionModel from "@/store/question.model";
 
 @Component({
   components: {
@@ -89,6 +95,17 @@ export default class SurveyView extends Vue {
     return this.questionKeys.filter((key) => key !== "TIME" && key !== "token");
   }
 
+  get questions(): Record<string, QuestionModel> {
+    const survey = this.survey;
+    if (
+      typeof survey !== "undefined" &&
+      typeof survey.questions !== "undefined"
+    ) {
+      return survey.questions;
+    }
+    return {};
+  }
+
   get responses(): ResponseModel[] {
     return this.$store.state.responses[this.surveyId] || [];
   }
@@ -100,6 +117,10 @@ export default class SurveyView extends Vue {
   get surveyId(): number {
     const { surveyId } = this.$route.params;
     return Number(surveyId);
+  }
+
+  private getQuestionFor(questionKey: string): QuestionModel | undefined {
+    return this.questions[questionKey];
   }
 
   private countResponsesFor(questionKey: string) {
@@ -123,8 +144,12 @@ export default class SurveyView extends Vue {
 <style>
 @media print {
   .pie-chart {
-    max-height: 16rem;
-    max-width: 16rem;
+    max-height: 8rem;
+    max-width: 8rem;
+  }
+
+  .avoid-page-break {
+    page-break-inside: avoid;
   }
 }
 </style>

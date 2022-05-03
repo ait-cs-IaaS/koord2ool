@@ -4,6 +4,7 @@ import KoordStore from "@/store/koord.store";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
+import QuestionModel from "@/store/question.model";
 
 Vue.use(Vuex);
 
@@ -34,11 +35,31 @@ export default new Vuex.Store<KoordStore>({
         newSurveys[survey.sid] = {
           ...survey,
           ...(typeof state.surveys[survey.sid] !== "undefined"
-            ? { details: state.surveys[survey.sid].details }
+            ? {
+                details: state.surveys[survey.sid].details,
+                questions: state.surveys[survey.sid].questions,
+              }
             : {}),
         };
       }
       Vue.set(state, "surveys", newSurveys);
+    },
+
+    updateQuestions(
+      state,
+      payload: { sid: number; questions: QuestionModel[] }
+    ) {
+      if (typeof state.surveys[payload.sid] !== "undefined") {
+        const asRecord: Record<string, QuestionModel> = {};
+        for (const question of payload.questions) {
+          asRecord[question.title] = question;
+        }
+        Vue.set(state.surveys[payload.sid], "questions", asRecord);
+      } else {
+        console.warn(
+          `Survey ${payload.sid} not found in the store; can't update questions.`
+        );
+      }
     },
 
     updateResponses(
@@ -72,10 +93,21 @@ export default new Vuex.Store<KoordStore>({
         console.debug("Refreshing surveys");
         const surveys = await state.state.limesurvey.listSurveys();
         state.commit("setSurveyList", surveys);
-        await Promise.all(
-          surveys.map(({ sid }) => state.dispatch("refreshResponses", sid))
-        );
+        await Promise.all([
+          ...surveys.map(({ sid }) => state.dispatch("refreshQuestions", sid)),
+          ...surveys.map(({ sid }) => state.dispatch("refreshResponses", sid)),
+        ]);
         return surveys;
+      }
+      return [];
+    },
+
+    async refreshQuestions(state, sid: number): Promise<QuestionModel[]> {
+      if (state.state.limesurvey) {
+        console.debug(`Refreshing questions for ${sid}`);
+        const questions = await state.state.limesurvey.getQuestions(sid);
+        state.commit("updateQuestions", { sid, questions });
+        return questions;
       }
       return [];
     },
