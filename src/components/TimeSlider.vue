@@ -5,7 +5,9 @@
       :min="minRange"
       :max="maxRange"
       :step="step"
-      @change="emitUpdate"
+      :disabled="disabled"
+      :readonly="disabled"
+      @input="emitUpdate"
     ></b-form-input>
     <div class="text-muted text-right small">
       {{ label }}
@@ -18,6 +20,9 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 
 @Component({})
 export default class TimeSlider extends Vue {
+  @Prop({ type: Boolean, default: () => false })
+  disabled!: boolean;
+
   @Prop({ type: Date, required: false })
   min?: Date;
 

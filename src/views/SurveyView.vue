@@ -26,6 +26,7 @@
           v-model="showResponsesUntil"
           :min="minResponseDate"
           :max="maxResponseDate"
+          :disabled="!hasResponses"
         />
       </b-col>
     </b-row>
