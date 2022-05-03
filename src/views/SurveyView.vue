@@ -42,7 +42,10 @@
         <!-- right side -->
         <ul class="list-unstyled">
           <li>{{ questionCount }} question(s)</li>
-          <li>{{ responsesInTimeline.length }} answer(s)</li>
+          <li v-if="hasResponses">
+            showing {{ responsesInTimeline.length }} of
+            {{ responses.length }} answer(s)
+          </li>
         </ul>
       </b-col>
     </b-row>
