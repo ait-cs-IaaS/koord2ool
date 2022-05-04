@@ -5,7 +5,9 @@
     <b-container fluid>
       <router-view />
 
-      <footer class="small text-muted text-right font-italic">AWAKE</footer>
+      <footer class="d-print-none small text-muted text-right font-italic">
+        AWAKE
+      </footer>
     </b-container>
   </div>
 </template>
