@@ -1,25 +1,33 @@
 <template>
-  <div class="time-slider">
+  <b-form-group class="time-slider" label="Show until" :label-for="id">
+    <template #description>
+      <div class="text-lg-right">
+        {{ label }}
+      </div>
+    </template>
     <b-form-input
       type="range"
+      :id="id"
       :min="minRange"
       :max="maxRange"
       :step="step"
+      :value="valueAsNumber"
       :disabled="disabled"
       :readonly="disabled"
       @input="emitUpdate"
     ></b-form-input>
-    <div class="text-muted text-right small">
-      {{ label }}
-    </div>
-  </div>
+  </b-form-group>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import { v4 } from "uuid";
 
 @Component({})
 export default class TimeSlider extends Vue {
+  @Prop({ type: String, default: () => `timeslider-${v4()}` })
+  id!: string;
+
   @Prop({ type: Boolean, default: () => false })
   disabled!: boolean;
 
@@ -27,18 +35,22 @@ export default class TimeSlider extends Vue {
   min?: Date;
 
   private get minRange(): number {
-    return this.min ? this.min.valueOf() : 0;
+    return typeof this.min !== "undefined" ? this.min.valueOf() : 0;
   }
 
   @Prop({ type: Date, required: false })
   max?: Date;
 
   private get maxRange(): number {
-    return this.max ? this.max.valueOf() : 1;
+    return typeof this.max !== "undefined" ? this.max.valueOf() : 1;
   }
 
   @Prop({ type: Date, required: false })
   value?: Date;
+
+  private get valueAsNumber(): number {
+    return typeof this.value !== "undefined" ? this.value.valueOf() : 0;
+  }
 
   @Prop({ type: Number, default: () => 1000 * 60 * 30 }) // 30 minutes
   step!: number;
