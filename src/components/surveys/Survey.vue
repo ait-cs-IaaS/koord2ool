@@ -17,10 +17,9 @@
                 :title="question"
                 :sub-title="questions[question].question"
               >
-                <pie-chart
-                  class="pie-chart"
-                  :counters="countResponsesFor(question)"
-                />
+                <pie-chart :counters="countResponsesFor(question)" />
+
+                <line-chart :data="createTimelineFor(question)" />
               </b-card>
             </b-col>
           </b-row>
@@ -40,14 +39,17 @@
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
+import LineChart from "@/components/surveys/LineChart.vue";
 import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
 import ResponseModel, { strip } from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
+import { ChartData, ChartDataset } from "chart.js";
 
 @Component({
   components: {
+    LineChart,
     PieChart,
     Tabular,
   },
@@ -80,9 +82,64 @@ export default class Survey extends Vue {
       const value = response[questionKey] || "N/A";
       map.set(value, (map.get(value) || 0) + 1);
     });
-    const asAry: any[] = [];
+    const asAry: { name: string; value: number }[] = [];
     map.forEach((value, key) => asAry.push({ name: key, value }));
+
+    this.createTimelineFor(questionKey);
+
     return asAry;
+  }
+
+  private createTimelineFor(questionKey: string): ChartData<"line"> {
+    const labels: Date[] = [];
+    const timeline = new Map<string, { x: number; y: number }[]>();
+    const lastChoice = new Map<string, string>();
+    this.responses
+      .filter(
+        (r) => typeof r[questionKey] === "string" && r[questionKey] !== ""
+      )
+      .map((r) => ({
+        token: r.token,
+        time: new Date(r.TIME),
+        value: String(r[questionKey]),
+      }))
+      .sort((a, b) => a.time.valueOf() - b.time.valueOf())
+      .forEach(({ token, time, value }, index) => {
+        labels.push(time);
+        const timelineForAnswer = timeline.get(value) || [];
+        const newRecord = {
+          x: index,
+          y: timelineForAnswer.length
+            ? timelineForAnswer[timelineForAnswer.length - 1].y + 1
+            : 1,
+        };
+        timelineForAnswer.push(newRecord);
+        timeline.set(value, timelineForAnswer);
+
+        const oldAnswer = lastChoice.get(token);
+        if (typeof oldAnswer !== "undefined") {
+          const oldTimelineForAnswer = timeline.get(oldAnswer) || [];
+          const newRecord = {
+            x: index,
+            y: oldTimelineForAnswer[oldTimelineForAnswer.length - 1].y - 1,
+          };
+          oldTimelineForAnswer.push(newRecord);
+          timeline.set(oldAnswer, oldTimelineForAnswer);
+        }
+        lastChoice.set(token, value);
+      });
+
+    const datasets: ChartDataset<"line">[] = [];
+    for (const [key, answerTimeline] of timeline.entries()) {
+      const dataset = {
+        data: answerTimeline,
+        label: key,
+        fill: true,
+      };
+      datasets.push(dataset);
+    }
+    console.debug(questionKey, datasets);
+    return { labels, datasets };
   }
 }
 </script>

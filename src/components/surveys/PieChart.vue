@@ -6,19 +6,9 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
 import { Chart, ChartDataset, ChartOptions } from "chart.js";
+import colors from "./colors";
 
-const colors = [
-  "rgb(255, 99, 132)",
-  "rgb(54, 162, 235)",
-  "rgb(255, 205, 86)",
-  "rgb(43, 194, 98)",
-  "rgb(255, 131, 48)",
-  "rgb(136, 80, 255)",
-  "rgb(173, 232, 108)",
-  "rgb(98, 220, 171)",
-];
-
-export const PieChartOptions: ChartOptions = {
+export const PieChartOptions: ChartOptions<"pie"> = {
   plugins: {
     legend: {
       display: true,
@@ -30,7 +20,7 @@ export const PieChartOptions: ChartOptions = {
 
 @Component({})
 export default class PieChartComponent extends Vue {
-  @Prop({ type: String, default: () => `chart-${v4()}` })
+  @Prop({ type: String, default: () => `pie-${v4()}` })
   chartId!: string;
 
   @Prop({ type: Array, default: () => [] })

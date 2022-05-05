@@ -14,6 +14,8 @@ export default interface ResponseModel {
   token: string;
 
   TIME: string;
+
+  [question: string]: string | null | undefined;
 }
 
 export const ignoreKeys: (keyof ResponseModel)[] = [
