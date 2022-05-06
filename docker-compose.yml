@@ -1,0 +1,27 @@
+services:
+  koordtool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - web
+    ports:
+      - "8080:80"
+    volumes:  # needed due to read-only file system
+      - nginx-pid:/var/run
+      - nginx-cache:/var/cache/nginx
+    read_only: true
+    restart: unless-stopped
+
+volumes:
+  nginx-pid:
+  nginx-cache:
+
+networks:
+  web:
+    external:
+      name: docker_web
