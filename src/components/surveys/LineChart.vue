@@ -51,7 +51,7 @@ export default class LineChartComponent extends Vue {
     this.$nextTick(() => this.create());
   }
 
-  @Watch("counters")
+  @Watch("data")
   private create(): Chart<"line"> {
     if (typeof this.chartJsInstance === "undefined") {
       const config = {
