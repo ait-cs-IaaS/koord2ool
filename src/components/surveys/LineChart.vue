@@ -54,12 +54,6 @@ export default class LineChartComponent extends Vue {
   @Watch("data")
   private create(): Chart<"line"> {
     if (typeof this.chartJsInstance === "undefined") {
-      const config = {
-        type: "line",
-        data: this.data,
-        options: { ...LineChartOptions },
-      };
-      console.debug(config);
       this.chartJsInstance = new Chart<"line">(this.domElement, {
         type: "line",
         data: this.data,

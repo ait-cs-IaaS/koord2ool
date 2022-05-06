@@ -138,7 +138,6 @@ export default class Survey extends Vue {
       };
       datasets.push(dataset);
     }
-    console.debug(questionKey, datasets);
     return { labels, datasets };
   }
 }

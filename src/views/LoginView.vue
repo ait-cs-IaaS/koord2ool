@@ -69,7 +69,6 @@ export default class LoginView extends Vue {
         password: password || this.password,
       });
       if (okay) {
-        console.debug("ReturnTo is", this.returnTo);
         const destination =
           typeof this.returnTo !== "undefined"
             ? JSON.parse(this.returnTo)

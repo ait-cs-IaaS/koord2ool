@@ -79,12 +79,10 @@ export default new Vuex.Store<KoordStore>({
       state,
       payload: { username: string; password: string }
     ): Promise<boolean> {
-      console.debug(`Authenticating as ${payload.username}`);
       state.commit("setSyncState", true);
 
       const api = new LimesurveyApi();
       const okay = await api.authenticate(payload.username, payload.password);
-      console.debug(`Authentication result: ${okay}`);
 
       if (okay) {
         state.commit("setApi", okay ? api : undefined);
