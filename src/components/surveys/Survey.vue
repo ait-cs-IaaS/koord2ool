@@ -39,13 +39,14 @@
 
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
+import { ChartData, ChartDataset } from "chart.js";
 import LineChart from "@/components/surveys/LineChart.vue";
 import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
 import ResponseModel, { strip } from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
-import { ChartData, ChartDataset } from "chart.js";
+import { MinMax } from "@/helpers/min-max";
 
 @Component({
   components: {
@@ -94,6 +95,8 @@ export default class Survey extends Vue {
     const labels: Date[] = [];
     const timeline = new Map<string, { x: number; y: number }[]>();
     const lastChoice = new Map<string, string>();
+    const timeRange = new MinMax();
+
     this.responses
       .filter(
         (r) => typeof r[questionKey] === "string" && r[questionKey] !== ""
@@ -104,11 +107,13 @@ export default class Survey extends Vue {
         value: String(r[questionKey]),
       }))
       .sort((a, b) => a.time.valueOf() - b.time.valueOf())
-      .forEach(({ token, time, value }, index) => {
+      .forEach(({ token, time, value }) => {
         labels.push(time);
+        timeRange.observe(time.valueOf());
+
         const timelineForAnswer = timeline.get(value) || [];
         const newRecord = {
-          x: index,
+          x: time.valueOf(),
           y: timelineForAnswer.length
             ? timelineForAnswer[timelineForAnswer.length - 1].y + 1
             : 1,
@@ -120,7 +125,7 @@ export default class Survey extends Vue {
         if (typeof oldAnswer !== "undefined") {
           const oldTimelineForAnswer = timeline.get(oldAnswer) || [];
           const newRecord = {
-            x: index,
+            x: time.valueOf(),
             y: oldTimelineForAnswer[oldTimelineForAnswer.length - 1].y - 1,
           };
           oldTimelineForAnswer.push(newRecord);
@@ -129,8 +134,23 @@ export default class Survey extends Vue {
         lastChoice.set(token, value);
       });
 
+    const { min, max } = timeRange;
     const datasets: ChartDataset<"line">[] = [];
     for (const [key, answerTimeline] of timeline.entries()) {
+      if (!answerTimeline.length) continue;
+      if (typeof min === "number" && answerTimeline[0].x > min) {
+        answerTimeline.unshift({ x: min, y: 0 });
+      }
+      if (
+        typeof max === "number" &&
+        answerTimeline[answerTimeline.length - 1].x < max
+      ) {
+        answerTimeline.push({
+          x: max,
+          y: answerTimeline[answerTimeline.length - 1].y,
+        });
+      }
+
       const dataset = {
         data: answerTimeline,
         label: key,

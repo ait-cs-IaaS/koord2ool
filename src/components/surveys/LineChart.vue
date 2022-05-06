@@ -20,7 +20,7 @@ export const LineChartOptions: ChartOptions<"line"> = {
     x: {
       type: "time",
       time: {
-        tooltipFormat: "YYYY-MM-DD",
+        tooltipFormat: "MMM DD",
       },
       title: {
         display: true,
@@ -28,7 +28,11 @@ export const LineChartOptions: ChartOptions<"line"> = {
       },
     },
     y: {
-      stacked: true,
+      beginAtZero: true,
+      stacked: "single",
+      ticks: {
+        precision: 0,
+      },
     },
   },
 };
@@ -47,6 +51,14 @@ export default class LineChartComponent extends Vue {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }
 
+  get forChartJs(): ChartData<"line"> {
+    const replica = { ...this.data };
+    replica.datasets.forEach((dataset, index) => {
+      dataset.backgroundColor = colors[index % colors.length];
+    });
+    return replica;
+  }
+
   mounted(): void {
     this.$nextTick(() => this.create());
   }
@@ -56,7 +68,7 @@ export default class LineChartComponent extends Vue {
     if (typeof this.chartJsInstance === "undefined") {
       this.chartJsInstance = new Chart<"line">(this.domElement, {
         type: "line",
-        data: this.data,
+        data: this.forChartJs,
         options: { ...LineChartOptions },
       });
     } else {
