@@ -26,26 +26,27 @@ export default class PieChartComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   counters!: { name: string; value: number }[];
 
-  private chartJsInstance?: Chart;
+  private chartJsInstance?: Chart<"pie">;
 
   get domElement(): HTMLCanvasElement {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }
 
-  get forChartJs(): { labels: string[]; datasets: ChartDataset[] } {
+  get forChartJs(): { labels: string[]; datasets: ChartDataset<"pie">[] } {
     const labels: string[] = [];
-    const datasets: ChartDataset[] = [];
+    const datasets: ChartDataset<"pie">[] = [];
     if (Array.isArray(this.counters)) {
-      const dataset = {
-        data: [] as number[],
-        backgroundColor: [] as string[],
-      };
+      const data: number[] = [];
+      const backgroundColor: string[] = [];
       this.counters.forEach(({ name, value }, index) => {
         labels.push(name);
-        dataset.data.push(value);
-        dataset.backgroundColor.push(colors[index % colors.length]);
+        data.push(value);
+        backgroundColor.push(colors[index % colors.length]);
       });
-      datasets.push(dataset);
+      datasets.push({
+        data,
+        backgroundColor,
+      });
     }
     return {
       labels,
@@ -58,9 +59,9 @@ export default class PieChartComponent extends Vue {
   }
 
   @Watch("counters")
-  private create(): Chart {
+  private create(): Chart<"pie"> {
     if (typeof this.chartJsInstance === "undefined") {
-      this.chartJsInstance = new Chart(this.domElement, {
+      this.chartJsInstance = new Chart<"pie">(this.domElement, {
         type: "pie",
         data: this.forChartJs,
         options: { ...PieChartOptions },
