@@ -4,6 +4,8 @@ import QuestionModel from "@/store/question.model";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
+type Auth = string | { status: string };
+
 export class LimesurveyApi {
   username?: string;
   session?: string;
@@ -19,22 +21,20 @@ export class LimesurveyApi {
   }
 
   async authenticate(username: string, password: string): Promise<boolean> {
-    try {
-      this.session = await this.call(
-        "get_session_key",
-        false,
-        username,
-        password
-      );
-      if (this.session) {
-        this.username = username;
-        return true;
-      }
-      return false;
-    } catch (e) {
-      console.warn(`LimeSurvey authentication failed: ${e}`);
-      return false;
+    const session = await this.call<Auth>(
+      "get_session_key",
+      false,
+      username,
+      password
+    );
+    if (session && typeof session === "string") {
+      this.session = session;
+      this.username = username;
+      return true;
+    } else if (typeof session === "object") {
+      throw new Error(session.status);
     }
+    return false;
   }
 
   async listSurveys(): Promise<SurveyModel[]> {
