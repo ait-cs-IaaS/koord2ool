@@ -10,9 +10,23 @@
                 header-bg-variant="primary"
                 header-text-variant="light"
               >
-                <b-form-checkbox v-model="useLogicalTime" name="logical-time"
-                  >Use logical time</b-form-checkbox
+                <b-form-group
+                  label-cols-md="3"
+                  label-cols-lg="2"
+                  label-cols-xl="1"
+                  label-class="font-weight-bold"
+                  label="Time:"
+                  :description="timeOptionDescription"
+                  v-slot="{ ariaDescribedby }"
                 >
+                  <b-form-radio-group
+                    id="time-display-setting"
+                    name="time-display-setting"
+                    v-model="useLogicalTime"
+                    :options="timeOptions"
+                    :aria-describedby="ariaDescribedby"
+                  />
+                </b-form-group>
               </b-card>
             </b-col>
           </b-row>
@@ -73,6 +87,28 @@ import { MinMax } from "@/helpers/min-max";
 })
 export default class Survey extends Vue {
   useLogicalTime = false;
+
+  readonly timeOptions = [
+    {
+      text: "Real",
+      value: false,
+      description:
+        "Actual time: time-based charts will use actual timestamps of survey responses.",
+    },
+    {
+      text: "Logical",
+      value: true,
+      description:
+        "Logical time: time-based charts will show change in responses evenly for readability purposes.",
+    },
+  ];
+
+  get timeOptionDescription(): string {
+    const value = this.timeOptions.find(
+      (option) => option.value === this.useLogicalTime
+    );
+    return typeof value !== "undefined" ? value.description : "";
+  }
 
   get questionKeys(): string[] {
     return Array.from(
