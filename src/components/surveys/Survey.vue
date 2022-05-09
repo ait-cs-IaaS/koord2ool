@@ -3,14 +3,17 @@
     <b-tabs card>
       <b-tab title="Charts" active>
         <b-container fluid>
-          <b-row>
+          <b-row class="d-print-none mb-2">
             <b-col>
-              <div class="ml-auto">
-                <b-form-checkbox
-                  v-model="useLogicalTime"
-                  label="Use logical time"
-                />
-              </div>
+              <b-card
+                title="Display options"
+                header-bg-variant="primary"
+                header-text-variant="light"
+              >
+                <b-form-checkbox v-model="useLogicalTime" name="logical-time"
+                  >Use logical time</b-form-checkbox
+                >
+              </b-card>
             </b-col>
           </b-row>
           <b-row>

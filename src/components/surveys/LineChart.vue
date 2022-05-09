@@ -37,6 +37,12 @@ export default class LineChartComponent extends Vue {
     this.$nextTick(() => this.create());
   }
 
+  @Watch("logicalTime")
+  private recreate(): void {
+    this.destroy();
+    this.create();
+  }
+
   @Watch("data")
   private create(): Chart<"line"> {
     if (typeof this.chartJsInstance === "undefined") {
@@ -66,6 +72,8 @@ export default class LineChartComponent extends Vue {
                   x: {
                     type: "time",
                     time: {
+                      isoWeekday: true,
+                      minUnit: "day",
                       tooltipFormat: "MMM DD",
                     },
                     title: {
