@@ -20,7 +20,7 @@ function rehydrate(store: Store<KoordLayout>): void {
   let user = "";
   document.cookie
     .split(";")
-    .map((cookie) => cookie.split("="))
+    .map((cookie) => cookie.split("=").map((part) => part.trim()))
     .filter(([key]) => key === sessionKey || key === userKey)
     .forEach(([key, value]) => {
       if (key === sessionKey) {
@@ -35,6 +35,9 @@ function rehydrate(store: Store<KoordLayout>): void {
     api.session = session;
     api.username = user;
     store.commit("setApi", api);
+    console.debug("Older session found; rehydrated");
+  } else {
+    console.debug("No session found; nothing to rehydrate");
   }
 }
 
