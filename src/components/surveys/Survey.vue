@@ -4,6 +4,16 @@
       <b-tab title="Charts" active>
         <b-container fluid>
           <b-row>
+            <b-col>
+              <div class="ml-auto">
+                <b-form-checkbox
+                  v-model="useLogicalTime"
+                  label="Use logical time"
+                />
+              </div>
+            </b-col>
+          </b-row>
+          <b-row>
             <b-col
               cols="12"
               md="6"
@@ -19,7 +29,10 @@
               >
                 <pie-chart :counters="countResponsesFor(question)" />
 
-                <line-chart :data="createTimelineFor(question)" />
+                <line-chart
+                  :data="createTimelineFor(question)"
+                  :is-logical-time="useLogicalTime"
+                />
               </b-card>
             </b-col>
           </b-row>
@@ -56,6 +69,8 @@ import { MinMax } from "@/helpers/min-max";
   },
 })
 export default class Survey extends Vue {
+  useLogicalTime = false;
+
   get questionKeys(): string[] {
     return Array.from(
       new Set<string>(
@@ -92,7 +107,7 @@ export default class Survey extends Vue {
   }
 
   private createTimelineFor(questionKey: string): ChartData<"line"> {
-    const labels: Date[] = [];
+    const labels: (Date | number)[] = [];
     const timeline = new Map<string, { x: number; y: number }[]>();
     const lastChoice = new Map<string, string>();
     const timeRange = new MinMax();
@@ -107,13 +122,14 @@ export default class Survey extends Vue {
         value: String(r[questionKey]),
       }))
       .sort((a, b) => a.time.valueOf() - b.time.valueOf())
-      .forEach(({ token, time, value }) => {
-        labels.push(time);
-        timeRange.observe(time.valueOf());
+      .forEach(({ token, time, value }, index) => {
+        const x = this.useLogicalTime ? index : time.valueOf();
+        labels.push(x);
+        timeRange.observe(x);
 
         const timelineForAnswer = timeline.get(value) || [];
         const newRecord = {
-          x: time.valueOf(),
+          x,
           y: timelineForAnswer.length
             ? timelineForAnswer[timelineForAnswer.length - 1].y + 1
             : 1,
@@ -125,7 +141,7 @@ export default class Survey extends Vue {
         if (typeof oldAnswer !== "undefined") {
           const oldTimelineForAnswer = timeline.get(oldAnswer) || [];
           const newRecord = {
-            x: time.valueOf(),
+            x,
             y: oldTimelineForAnswer[oldTimelineForAnswer.length - 1].y - 1,
           };
           oldTimelineForAnswer.push(newRecord);

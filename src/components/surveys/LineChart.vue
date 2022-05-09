@@ -5,37 +5,8 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Chart, ChartData, ChartOptions } from "chart.js";
+import { Chart, ChartData } from "chart.js";
 import colors from "./colors";
-
-export const LineChartOptions: ChartOptions<"line"> = {
-  plugins: {
-    legend: {
-      display: true,
-      position: "bottom",
-      align: "center",
-    },
-  },
-  scales: {
-    x: {
-      type: "time",
-      time: {
-        tooltipFormat: "MMM DD",
-      },
-      title: {
-        display: true,
-        text: "Date",
-      },
-    },
-    y: {
-      beginAtZero: true,
-      stacked: "single",
-      ticks: {
-        precision: 0,
-      },
-    },
-  },
-};
 
 @Component({})
 export default class LineChartComponent extends Vue {
@@ -44,6 +15,9 @@ export default class LineChartComponent extends Vue {
 
   @Prop({ type: Object, required: true })
   data!: ChartData<"line">;
+
+  @Prop({ type: Boolean, default: () => false })
+  isLogicalTime!: boolean;
 
   private chartJsInstance?: Chart<"line">;
 
@@ -69,7 +43,46 @@ export default class LineChartComponent extends Vue {
       this.chartJsInstance = new Chart<"line">(this.domElement, {
         type: "line",
         data: this.forChartJs,
-        options: { ...LineChartOptions },
+        options: {
+          plugins: {
+            legend: {
+              display: true,
+              position: "bottom",
+              align: "center",
+            },
+          },
+          scales: {
+            ...(this.isLogicalTime
+              ? {
+                  x: {
+                    type: "linear",
+                    title: {
+                      display: true,
+                      text: "Logical Time",
+                    },
+                  },
+                }
+              : {
+                  x: {
+                    type: "time",
+                    time: {
+                      tooltipFormat: "MMM DD",
+                    },
+                    title: {
+                      display: true,
+                      text: "Date",
+                    },
+                  },
+                }),
+            y: {
+              beginAtZero: true,
+              stacked: "single",
+              ticks: {
+                precision: 0,
+              },
+            },
+          },
+        },
       });
     } else {
       this.chartJsInstance.data = this.data;
