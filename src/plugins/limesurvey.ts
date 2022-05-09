@@ -6,8 +6,8 @@ import QuestionModel from "@/store/question.model";
 
 export class LimesurveyApi {
   username?: string;
+  session?: string;
 
-  private session?: string;
   private nextId = 1;
 
   constructor(private readonly endpoint = process.env.VUE_APP_LIMESURVEY_API) {

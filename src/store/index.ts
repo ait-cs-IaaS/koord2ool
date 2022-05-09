@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import KoordStore from "@/store/koord.store";
+import RememberAuthPlugin from "@/store/remember-auth.plugin";
+import KoordLayout from "@/store/koord.layout";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
@@ -8,7 +9,7 @@ import QuestionModel from "@/store/question.model";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store<KoordStore>({
+export default new Vuex.Store<KoordLayout>({
   state: {
     limesurvey: undefined,
     responses: {},
@@ -129,5 +130,5 @@ export default new Vuex.Store<KoordStore>({
       return [];
     },
   },
-  modules: {},
+  plugins: [RememberAuthPlugin],
 });
