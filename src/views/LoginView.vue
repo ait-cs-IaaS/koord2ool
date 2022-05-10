@@ -3,20 +3,21 @@
     <b-col>
       <h1>Log in</h1>
 
-      <p>
-        Please authenticate using your
-        <span class="font-weight-bold">LimeSurvey</span>
-        log-in credentials.
-      </p>
+      <p v-if="isAuthenticated">You are logged in as {{ username }}.</p>
 
-      <div v-if="isAuthenticated">You are logged in as {{ username }}.</div>
-      <login
-        @auth-before="setBusy"
-        @auth-fail="setFailed"
-        @auth-success="setSuccess"
-        :disabled="authenticating"
-        v-else
-      />
+      <div v-else>
+        <p>
+          Please authenticate using your
+          <span class="font-weight-bold">LimeSurvey</span>
+          log-in credentials.
+        </p>
+        <login
+          @auth-before="setBusy"
+          @auth-fail="setFailed"
+          @auth-success="setSuccess"
+          :disabled="authenticating"
+        />
+      </div>
     </b-col>
   </b-row>
 </template>
