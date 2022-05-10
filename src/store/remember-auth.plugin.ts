@@ -42,27 +42,28 @@ function rehydrate(store: Store<KoordLayout>): void {
   }
 }
 
+function dehydrate(store: Store<KoordLayout>): void {
+  if (typeof store.state.limesurvey !== "undefined") {
+    const { username, session } = store.state.limesurvey;
+
+    if (typeof session === "string" && typeof username === "string") {
+      createCookie(sessionKey, session);
+      createCookie(userKey, username);
+    } else {
+      createCookie(sessionKey, "", moment.duration(0, "seconds"));
+      createCookie(userKey, "", moment.duration(0, "seconds"));
+    }
+  }
+}
+
 const plugin: Plugin<KoordLayout> = (store) => {
   // Rehydrate:
   rehydrate(store);
 
   // Dehydrate:
   store.subscribe((mutation) => {
-    if (mutation.type === "setApi") {
-      const payload: LimesurveyApi | undefined = mutation.payload;
-      console.debug("setApi called", payload);
-
-      if (
-        typeof payload !== "undefined" &&
-        typeof payload.session === "string" &&
-        typeof payload.username === "string"
-      ) {
-        createCookie(sessionKey, payload.session);
-        createCookie(userKey, payload.username);
-      } else {
-        createCookie(sessionKey, "", moment.duration(0, "seconds"));
-        createCookie(userKey, "", moment.duration(0, "seconds"));
-      }
+    if (mutation.type === "setApi" && typeof mutation.payload !== "undefined") {
+      dehydrate(store);
     }
   });
 };
