@@ -73,14 +73,23 @@ export default class LoginComponent extends Vue {
     }
   }
 
+  private getCredentials(
+    login?: unknown,
+    password?: unknown
+  ): { password: string; username: string } {
+    const useLogin =
+      !login || typeof login !== "string" ? this.username : login;
+    const usePassword =
+      !password || typeof password !== "string" ? this.password : password;
+    return { username: useLogin, password: usePassword };
+  }
+
   private async authenticate(login?: string, password?: string): Promise<void> {
     this.error = "";
     this.$emit("auth-before", login);
     try {
-      const okay = await this.$store.dispatch("authenticate", {
-        username: login || this.username,
-        password: password || this.password,
-      });
+      const credentials = this.getCredentials(login, password);
+      const okay = await this.$store.dispatch("authenticate", credentials);
       if (okay) {
         this.$emit("auth-success", login);
       } else {
