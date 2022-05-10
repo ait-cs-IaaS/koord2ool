@@ -1,0 +1,39 @@
+image: node:16
+
+stages:
+  - assess
+  - build
+
+cache:
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - .npm/
+
+before_script:
+  - npm ci --cache .npm --prefer-offline
+
+variables:
+  NODE_ENV: "development"
+
+lint:
+  stage: assess
+  script:
+    - npm run lint
+
+build_dist:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+      when: always
+    - when: manual
+  variables:
+    VUE_APP_LIMESURVEY_API: "https://lime.cyberrange.rocks/index.php/admin/remotecontrol"
+  script:
+    - npm run build
+  artifacts:
+    when: on_success
+    expire_in: 1 week
+    paths:
+      - dist/
