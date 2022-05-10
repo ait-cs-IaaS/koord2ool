@@ -62,7 +62,6 @@ export default class LoginView extends Vue {
   private setSuccess(): void {
     const goTo = this.returnTo || "/";
     this.$router.push(goTo);
-    this.$store.dispatch("refreshSurveys");
   }
 }
 </script>

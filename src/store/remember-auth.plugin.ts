@@ -35,6 +35,7 @@ function rehydrate(store: Store<KoordLayout>): void {
     api.session = session;
     api.username = user;
     store.commit("setApi", api);
+    store.dispatch("refreshSurveys");
     console.debug("Older session found; rehydrated");
   } else {
     console.debug("No session found; nothing to rehydrate");
