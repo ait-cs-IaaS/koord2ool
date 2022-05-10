@@ -27,8 +27,9 @@ export default class LineChartComponent extends Vue {
 
   get forChartJs(): ChartData<"line"> {
     const replica = { ...this.data };
+    const useColors = [...colors];
     replica.datasets.forEach((dataset, index) => {
-      dataset.backgroundColor = colors[index % colors.length];
+      dataset.backgroundColor = useColors[index % useColors.length];
     });
     return replica;
   }
