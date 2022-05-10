@@ -20,7 +20,7 @@
           >
         </b-nav-item-dropdown>
 
-        <b-nav-item-dropdown v-if="isAuthenticated" text="User" right>
+        <b-nav-item-dropdown v-if="isAuthenticated" :text="username" right>
           <b-dropdown-item to="/logout">Log out</b-dropdown-item>
         </b-nav-item-dropdown>
       </b-navbar-nav>
@@ -46,6 +46,12 @@ export default class NavigationComponent extends Vue {
 
   get isSyncing(): boolean {
     return this.$store.state.syncing;
+  }
+
+  get username(): string {
+    return typeof this.$store.getters.username !== "undefined"
+      ? this.$store.getters.username
+      : "User";
   }
 
   get surveyLinks(): SurveyLink[] {
