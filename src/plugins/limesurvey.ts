@@ -1,3 +1,4 @@
+import moment from "moment";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
@@ -57,13 +58,32 @@ export class LimesurveyApi {
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
       if (Array.isArray(asObj.responses)) {
-        return asObj.responses.map((response: ResponseModel) => {
-          if (
-            typeof response.TIME === "undefined" &&
-            typeof response.submitdate === "string"
-          ) {
-            // inject TIME if unset
-            response.TIME = response.submitdate;
+        const lastResponses = new Map<string, moment.Moment>();
+        const ary: ResponseModel[] = asObj.responses
+          .map((response: ResponseModel) => {
+            if (
+              typeof response.TIME === "undefined" &&
+              typeof response.submitdate === "string"
+            ) {
+              // inject TIME if unset
+              response.TIME = response.submitdate;
+            }
+            return response;
+          })
+          .sort(
+            (a: ResponseModel, b: ResponseModel) =>
+              moment(a.TIME).valueOf() - moment(b.TIME).valueOf()
+          );
+        ary.forEach(({ token, TIME }) => {
+          lastResponses.set(token, moment(TIME));
+        });
+        console.debug(lastResponses);
+        return ary.map((response: ResponseModel) => {
+          const lastResponse = lastResponses.get(response.token);
+          if (typeof lastResponse !== "undefined") {
+            response.$stale = lastResponse.isBefore(moment(response.TIME))
+              ? "1"
+              : "0";
           }
           return response;
         });

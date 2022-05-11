@@ -5,6 +5,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import ResponseModel from "@/store/response.model";
+import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
 
 @Component({})
 export default class TabularComponent extends Vue {
@@ -24,10 +25,13 @@ export default class TabularComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];
 
-  get fields(): { key: string; sortable: boolean; label?: string }[] {
+  get fields(): BvTableFieldArray {
     return this.showKeys.map((key) => ({
       key,
       sortable: true,
+      stickyColumn: ["TIME", "token"].includes(key),
+      tdClass: (item: ResponseModel) =>
+        item.$stale === "1" ? "text-muted" : "",
     }));
   }
 

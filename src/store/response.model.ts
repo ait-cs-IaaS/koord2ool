@@ -15,6 +15,8 @@ export default interface ResponseModel {
 
   TIME: string;
 
+  $stale?: "0" | "1";
+
   [question: string]: string | null | undefined;
 }
 
@@ -25,6 +27,7 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
   "seed",
   "startlanguage",
   "submitdate",
+  "$stale",
 ];
 
 export function strip(response: ResponseModel): Record<string, string> {
