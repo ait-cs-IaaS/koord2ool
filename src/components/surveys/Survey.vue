@@ -60,7 +60,8 @@
         <tabular
           :show-keys="questionKeys"
           :responses="responses"
-          sort-key="token"
+          :participants="participants"
+          sort-key="TIME"
         />
       </b-tab>
     </b-tabs>
@@ -78,6 +79,7 @@ import ResponseModel, { strip } from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
 import { MinMax } from "@/helpers/min-max";
+import { ParticipantModel } from "@/store/participant.model";
 
 @Component({
   components: {
@@ -131,6 +133,9 @@ export default class Survey extends Vue {
 
   @Prop({ type: Object, required: true })
   survey!: SurveyModel;
+
+  @Prop({ type: Array, default: () => [] })
+  participants!: ParticipantModel[];
 
   @Prop({ type: Date, default: () => new Date() })
   until!: Date;

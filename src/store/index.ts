@@ -6,12 +6,14 @@ import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
+import { ParticipantModel } from "@/store/participant.model";
 
 Vue.use(Vuex);
 
 export default new Vuex.Store<KoordLayout>({
   state: {
     limesurvey: undefined,
+    participants: {},
     responses: {},
     surveys: {},
     syncing: false,
@@ -74,6 +76,13 @@ export default new Vuex.Store<KoordLayout>({
     ) {
       Vue.set(state.responses, payload.sid, payload.responses);
     },
+
+    updateParticipants(
+      state,
+      payload: { sid: number; participants: ParticipantModel[] }
+    ) {
+      Vue.set(state.participants, payload.sid, payload.participants);
+    },
   },
   actions: {
     async authenticate(
@@ -101,6 +110,9 @@ export default new Vuex.Store<KoordLayout>({
         await Promise.all([
           ...surveys.map(({ sid }) => state.dispatch("refreshQuestions", sid)),
           ...surveys.map(({ sid }) => state.dispatch("refreshResponses", sid)),
+          ...surveys.map(({ sid }) =>
+            state.dispatch("refreshParticipants", sid)
+          ),
         ]);
         return surveys;
       }
@@ -125,6 +137,20 @@ export default new Vuex.Store<KoordLayout>({
             responses,
           });
           return responses;
+        }
+      }
+      return [];
+    },
+
+    async refreshParticipants(state, sid: number): Promise<ParticipantModel[]> {
+      if (state.state.limesurvey) {
+        const participants = await state.state.limesurvey.getParticipants(sid);
+        if (typeof participants !== "undefined") {
+          state.commit("updateParticipants", {
+            sid,
+            participants,
+          });
+          return participants;
         }
       }
       return [];

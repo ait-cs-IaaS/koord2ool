@@ -56,6 +56,7 @@
           :survey="survey"
           :responses="responsesInTimeline"
           :questions="questions"
+          :participants="participants"
           :until="showResponsesUntil"
         />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
@@ -71,6 +72,7 @@ import QuestionModel from "@/store/question.model";
 import Survey from "@/components/surveys/Survey.vue";
 import TimeSlider from "@/components/TimeSlider.vue";
 import ResponseModel from "@/store/response.model";
+import { ParticipantModel } from "@/store/participant.model";
 
 @Component({
   components: {
@@ -96,6 +98,12 @@ export default class SurveyView extends Vue {
 
   get hasResponses(): boolean {
     return this.responses.length > 0;
+  }
+
+  get participants(): ParticipantModel[] {
+    return Array.isArray(this.$store.state.participants[this.surveyId])
+      ? this.$store.state.participants[this.surveyId]
+      : [];
   }
 
   get responses(): ResponseModel[] {

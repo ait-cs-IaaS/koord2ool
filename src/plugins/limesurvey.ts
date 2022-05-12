@@ -2,6 +2,7 @@ import moment from "moment";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
+import { ParticipantModel } from "@/store/participant.model";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -91,6 +92,10 @@ export class LimesurveyApi {
       }
     }
     return [];
+  }
+
+  async getParticipants(sid: number): Promise<ParticipantModel[]> {
+    return this.call<ParticipantModel[]>("list_participants", true, sid);
   }
 
   private requireAuth(): void {

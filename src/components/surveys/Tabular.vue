@@ -4,12 +4,14 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import moment from "moment";
 import ResponseModel from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
+import { ParticipantModel } from "@/store/participant.model";
 
 @Component({})
 export default class TabularComponent extends Vue {
-  @Prop({ type: Array, default: () => ["TIME"] })
+  @Prop({ type: Array, default: () => ["TIME", "token"] })
   showKeys!: string[];
 
   @Prop({
@@ -28,19 +30,26 @@ export default class TabularComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];
 
+  @Prop({ type: Array, default: () => [] })
+  participants!: ParticipantModel[];
+
   get fields(): BvTableFieldArray {
     const timeAndToken = [
       {
         key: "token",
-        label: "Token",
+        label: "Participant",
+        formatter: (value: string) => this.getParticipant(value),
         sortable: true,
+        sortByFormatted: true,
         stickyColumn: true,
         variant: this.rowHeaderVariant,
       },
       {
         key: "TIME",
-        label: "Time",
+        label: "When",
+        formatter: (value: string) => moment(value).toISOString(false),
         sortable: true,
+        sortByFormatted: true,
         stickyColumn: true,
         variant: this.rowHeaderVariant,
       },
@@ -64,6 +73,19 @@ export default class TabularComponent extends Vue {
           return left.localeCompare(right) * this.sortDirection;
         })
       : this.responses;
+  }
+
+  private isStale(response: ResponseModel): boolean {
+    return false;
+  }
+
+  private getParticipant(token: string): string {
+    const participant = this.participants.find(
+      (participant) => participant.token === token
+    );
+    return participant
+      ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
+      : token;
   }
 }
 </script>
