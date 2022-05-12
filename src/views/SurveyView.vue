@@ -30,7 +30,7 @@
         />
       </b-col>
     </b-row>
-    <b-row class="survey-meta">
+    <b-row class="survey-meta" v-if="survey">
       <b-col cols="12" md="6">
         <!-- left side -->
         <ul class="list-unstyled">
