@@ -46,7 +46,7 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getResponses(sid: number): Promise<undefined | ResponseModel[]> {
+  async getResponses(sid: number): Promise<ResponseModel[]> {
     const data = await this.call(
       "export_responses",
       true,
@@ -58,37 +58,39 @@ export class LimesurveyApi {
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
       if (Array.isArray(asObj.responses)) {
-        const lastResponses = new Map<string, moment.Moment>();
-        const ary: ResponseModel[] = asObj.responses
-          .map((response: ResponseModel) => {
-            if (
-              typeof response.TIME === "undefined" &&
-              typeof response.submitdate === "string"
-            ) {
-              // inject TIME if unset
-              response.TIME = response.submitdate;
-            }
-            return response;
-          })
-          .sort(
-            (a: ResponseModel, b: ResponseModel) =>
-              moment(a.TIME).valueOf() - moment(b.TIME).valueOf()
-          );
-        ary.forEach(({ token, TIME }) => {
-          lastResponses.set(token, moment(TIME));
-        });
-        console.debug(lastResponses);
-        return ary.map((response: ResponseModel) => {
-          const lastResponse = lastResponses.get(response.token);
-          if (typeof lastResponse !== "undefined") {
-            response.$stale = lastResponse.isBefore(moment(response.TIME))
-              ? "1"
-              : "0";
+        const responsesByToken = new Map<
+          number,
+          Array<ResponseModel & { $time: moment.Moment }>
+        >();
+        for (const response of asObj.responses) {
+          const token = response.token;
+          const entry = {
+            ...response,
+            $time: moment(response.TIME || response.submitdate),
+          };
+          const entries = responsesByToken.get(token);
+          if (typeof entries !== "undefined") {
+            entries.push(entry);
+          } else {
+            responsesByToken.set(token, [entry]);
           }
-          return response;
-        });
+        }
+        for (const token of responsesByToken.keys()) {
+          const responses = responsesByToken.get(token);
+          if (typeof responses === "undefined") {
+            throw new Error("Found a token that magically disappeared?");
+          }
+          responses.sort((a, b) => a.$time.diff(b.$time));
+          for (let i = responses.length - 1; i > 0; i--) {
+            responses[i].$validUntil = responses[i - 1].$time.toISOString();
+          }
+          responsesByToken.set(token, responses);
+        }
+
+        return Array.from(responsesByToken.values()).flat();
       }
     }
+    return [];
   }
 
   private requireAuth(): void {

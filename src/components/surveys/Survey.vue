@@ -70,6 +70,7 @@
 <script lang="ts">
 import { Vue, Prop, Component } from "vue-property-decorator";
 import { ChartData, ChartDataset } from "chart.js";
+import moment from "moment";
 import LineChart from "@/components/surveys/LineChart.vue";
 import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
@@ -119,7 +120,7 @@ export default class Survey extends Vue {
   }
 
   get questionKeysOnly(): string[] {
-    return this.questionKeys.filter((key) => key !== "TIME" && key !== "token");
+    return this.questionKeys.filter((key) => /^[qQ]\d+.*$/.test(key));
   }
 
   @Prop({ type: Object, default: () => [] })
@@ -131,12 +132,24 @@ export default class Survey extends Vue {
   @Prop({ type: Object, required: true })
   survey!: SurveyModel;
 
+  @Prop({ type: Date, default: () => new Date() })
+  until!: Date;
+
   private countResponsesFor(questionKey: string) {
     const map = new Map<string, number>();
-    this.responses.forEach((response) => {
-      const value = response[questionKey] || "N/A";
-      map.set(value, (map.get(value) || 0) + 1);
-    });
+    this.responses
+      .filter((response) => {
+        const time = moment(response.TIME);
+        return (
+          time.isSameOrBefore(this.until) &&
+          (typeof response.$validUntil === "undefined" ||
+            moment(response.$validUntil).isAfter(this.until))
+        );
+      })
+      .forEach((response) => {
+        let value = response[questionKey] || "N/A";
+        map.set(value, (map.get(value) || 0) + 1);
+      });
     const asAry: { name: string; value: number }[] = [];
     map.forEach((value, key) => asAry.push({ name: key, value }));
 

@@ -15,7 +15,7 @@ export default interface ResponseModel {
 
   TIME: string;
 
-  $stale?: "0" | "1";
+  $validUntil?: string;
 
   [question: string]: string | null | undefined;
 }

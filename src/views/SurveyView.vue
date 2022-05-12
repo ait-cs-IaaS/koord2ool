@@ -56,6 +56,7 @@
           :survey="survey"
           :responses="responsesInTimeline"
           :questions="questions"
+          :until="showResponsesUntil"
         />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
       </b-col>

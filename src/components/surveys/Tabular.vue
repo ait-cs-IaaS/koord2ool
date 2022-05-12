@@ -1,5 +1,5 @@
 <template>
-  <b-table striped hover :items="sortedResponses" :fields="fields" />
+  <b-table striped hover :items="sortedResponses" :fields="fields"> </b-table>
 </template>
 
 <script lang="ts">
@@ -19,6 +19,9 @@ export default class TabularComponent extends Vue {
   })
   sortDirection!: -1 | 1;
 
+  @Prop({ type: String, default: () => "dark" })
+  rowHeaderVariant!: string;
+
   @Prop({ type: String, required: false })
   sortKey?: keyof ResponseModel;
 
@@ -26,13 +29,31 @@ export default class TabularComponent extends Vue {
   responses!: ResponseModel[];
 
   get fields(): BvTableFieldArray {
-    return this.showKeys.map((key) => ({
-      key,
-      sortable: true,
-      stickyColumn: ["TIME", "token"].includes(key),
-      tdClass: (item: ResponseModel) =>
-        item.$stale === "1" ? "text-muted" : "",
-    }));
+    const timeAndToken = [
+      {
+        key: "token",
+        label: "Token",
+        sortable: true,
+        stickyColumn: true,
+        variant: this.rowHeaderVariant,
+      },
+      {
+        key: "TIME",
+        label: "Time",
+        sortable: true,
+        stickyColumn: true,
+        variant: this.rowHeaderVariant,
+      },
+    ];
+    return [
+      ...timeAndToken,
+      ...this.showKeys
+        .filter((key) => !timeAndToken.map((entry) => entry.key).includes(key))
+        .map((key) => ({
+          key,
+          sortable: true,
+        })),
+    ];
   }
 
   get sortedResponses(): ResponseModel[] {
