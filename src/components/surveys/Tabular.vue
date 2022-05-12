@@ -34,10 +34,13 @@ export default class TabularComponent extends Vue {
   participants!: ParticipantModel[];
 
   get fields(): BvTableFieldArray {
+    const staleFormatter = (value: string, key1: string, item: ResponseModel) =>
+      item.$validUntil ? "text-muted" : "";
     const timeAndToken = [
       {
         key: "token",
         label: "Participant",
+        tdClass: staleFormatter,
         formatter: (value: string) => this.getParticipant(value),
         sortable: true,
         sortByFormatted: true,
@@ -47,6 +50,7 @@ export default class TabularComponent extends Vue {
       {
         key: "TIME",
         label: "When",
+        tdClass: staleFormatter,
         formatter: (value: string) => moment(value).toISOString(false),
         sortable: true,
         sortByFormatted: true,
@@ -61,6 +65,7 @@ export default class TabularComponent extends Vue {
         .map((key) => ({
           key,
           sortable: true,
+          tdClass: staleFormatter,
         })),
     ];
   }

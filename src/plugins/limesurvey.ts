@@ -3,6 +3,7 @@ import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import { ParticipantModel } from "@/store/participant.model";
+import { pairwise } from "@/helpers/pairwise";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -82,8 +83,8 @@ export class LimesurveyApi {
             throw new Error("Found a token that magically disappeared?");
           }
           responses.sort((a, b) => a.$time.diff(b.$time));
-          for (let i = responses.length - 1; i > 0; i--) {
-            responses[i].$validUntil = responses[i - 1].$time.toISOString();
+          for (const [previous, current] of pairwise(responses)) {
+            previous.$validUntil = current.$time.toISOString();
           }
           responsesByToken.set(token, responses);
         }
