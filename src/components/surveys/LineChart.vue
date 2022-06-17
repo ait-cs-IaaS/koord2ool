@@ -1,12 +1,63 @@
 <template>
-  <canvas :id="chartId" ref="chartCanvas" class="line-chart" />
+  <div class="mb-4 my-2 line-container">
+    <canvas :id="chartId" ref="chartCanvas" class="line-chart" />
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Chart, ChartData } from "chart.js";
+import { Chart, ChartData, ChartOptions } from "chart.js";
 import colors from "./colors";
+
+export const LineChartOptions: ChartOptions<"line"> = {
+  showLine: true,
+  elements: {
+    point: {
+      hitRadius: 40,
+      pointStyle: "circle",
+      hoverRadius: 10,
+      radius: 0,
+      borderWidth: 2,
+      hoverBorderWidth: 2,
+    },
+    line: {
+      fill: true,
+      borderWidth: 5,
+      tension: 0.0,
+      borderCapStyle: "round",
+      // stepped: true,
+    },
+  },
+  plugins: {
+    filler: {
+      propagate: true,
+    },
+    legend: {
+      display: false,
+      position: "top",
+      align: "center",
+      maxWidth: 200,
+    },
+    tooltip: {
+      backgroundColor: "#FFFFFF",
+      titleColor: "#575757",
+      bodyColor: "#575757",
+      padding: 12,
+      caretSize: 0,
+      cornerRadius: 1,
+      boxPadding: 5,
+      borderColor: "#A4A4A4",
+      borderWidth: 1,
+      position: "average",
+      callbacks: {
+        label: function (context) {
+          return context.formattedValue;
+        },
+      },
+    },
+  },
+};
 
 @Component({})
 export default class LineChartComponent extends Vue {
@@ -29,7 +80,9 @@ export default class LineChartComponent extends Vue {
     const replica = { ...this.data };
     const useColors = [...colors];
     replica.datasets.forEach((dataset, index) => {
-      dataset.backgroundColor = useColors[index % useColors.length];
+      dataset.backgroundColor = `${useColors[index % useColors.length]}20`;
+      dataset.borderColor = useColors[index % useColors.length];
+      dataset.fill = false;
     });
     return replica;
   }
@@ -38,7 +91,7 @@ export default class LineChartComponent extends Vue {
     this.$nextTick(() => this.create());
   }
 
-  @Watch("logicalTime")
+  @Watch("isLogicalTime", { immediate: false })
   private recreate(): void {
     this.destroy();
     this.create();
@@ -51,13 +104,7 @@ export default class LineChartComponent extends Vue {
         type: "line",
         data: this.forChartJs,
         options: {
-          plugins: {
-            legend: {
-              display: true,
-              position: "bottom",
-              align: "center",
-            },
-          },
+          ...LineChartOptions,
           scales: {
             ...(this.isLogicalTime
               ? {
@@ -67,6 +114,10 @@ export default class LineChartComponent extends Vue {
                       display: true,
                       text: "Logical Time",
                     },
+                    grid: {
+                      borderColor: "#848484",
+                      display: true,
+                    },
                   },
                 }
               : {
@@ -75,11 +126,18 @@ export default class LineChartComponent extends Vue {
                     time: {
                       isoWeekday: true,
                       minUnit: "day",
-                      tooltipFormat: "MMM DD",
+                      round: "day",
+                      displayFormats: {
+                        day: "MMM DD",
+                      },
+                      tooltipFormat: "MMM DD, YYYY",
+                    },
+                    grid: {
+                      borderColor: "#848484",
+                      display: true,
                     },
                     title: {
-                      display: true,
-                      text: "Date",
+                      display: false,
                     },
                   },
                 }),
@@ -89,14 +147,26 @@ export default class LineChartComponent extends Vue {
               ticks: {
                 precision: 0,
               },
+              grid: {
+                borderColor: "#848484",
+                display: false,
+              },
             },
           },
         },
       });
     } else {
       this.chartJsInstance.data = this.data;
+
+      this.chartJsInstance.data.datasets.forEach((dataset, index) => {
+        dataset.backgroundColor = colors[index % colors.length] + "20";
+        dataset.borderColor = colors[index % colors.length];
+        dataset.fill = false;
+      });
+
       this.chartJsInstance.update("none");
     }
+
     return this.chartJsInstance;
   }
 
