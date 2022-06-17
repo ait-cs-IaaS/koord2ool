@@ -5,18 +5,9 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Chart, ChartDataset, ChartOptions } from "chart.js";
+import { Chart, ChartDataset } from "chart.js";
 import colors from "./colors";
-
-export const PieChartOptions: ChartOptions<"pie"> = {
-  plugins: {
-    legend: {
-      display: true,
-      position: "bottom",
-      align: "center",
-    },
-  },
-};
+import pieOptions from "./pie-options";
 
 @Component({})
 export default class PieChartComponent extends Vue {
@@ -64,7 +55,7 @@ export default class PieChartComponent extends Vue {
       this.chartJsInstance = new Chart<"pie">(this.domElement, {
         type: "pie",
         data: this.forChartJs,
-        options: { ...PieChartOptions },
+        options: { ...pieOptions },
       });
     } else {
       this.chartJsInstance.data = this.forChartJs;
