@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { stringify, v4 } from "uuid";
+import { v4 } from "uuid";
 import { Chart, ChartDataset, ChartOptions } from "chart.js";
 import colors from "./colors";
 
