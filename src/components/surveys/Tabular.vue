@@ -1,9 +1,58 @@
 <template>
-  <b-table striped hover :items="sortedResponses" :fields="fields"> </b-table>
+  <div>
+    <!-- FIXME: the filter-function doesn't do anything.. yet? -->
+    <b-table
+      borderless
+      outlined
+      hover
+      responsive
+      stacked="sm"
+      :tbody-transition-props="{ name: 'flip-list' }"
+      primary-key="TIME"
+      :items="sortedResponses"
+      :fields="fields"
+      :filter-function="filterRecords"
+      :filter="null"
+      empty-filtered-text="There are no records to show matching your filter."
+      empty-text="There are no records to show."
+      class="table-default shadow"
+    >
+      <template #cell()="data">
+        <b-icon
+          v-if="data.value === 'Y'"
+          icon="check-circle-fill"
+          class="table-check-icon"
+        ></b-icon>
+        <b-icon
+          v-else-if="data.value === 'N'"
+          icon="x-circle-fill"
+          class="table-cross-icon"
+        ></b-icon>
+        <b-icon
+          v-else-if="data.value === ''"
+          icon="dash"
+          class="table-dash-icon"
+        ></b-icon>
+        <span v-else>{{ data.value }}</span>
+      </template>
+
+      <template #cell(token)="data">
+        <span :data-token="data.item.token">
+          {{ data.value }}
+        </span>
+        <div
+          v-if="data.item.$validUntil && !hideStaleSetting"
+          class="update-info"
+        >
+          (updated {{ data.item.$validUntil }})
+        </div>
+      </template>
+    </b-table>
+  </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment from "moment";
 import ResponseModel from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
@@ -21,9 +70,6 @@ export default class TabularComponent extends Vue {
   })
   sortDirection!: -1 | 1;
 
-  @Prop({ type: String, default: () => "dark" })
-  rowHeaderVariant!: string;
-
   @Prop({ type: String, required: false })
   sortKey?: keyof ResponseModel;
 
@@ -33,29 +79,39 @@ export default class TabularComponent extends Vue {
   @Prop({ type: Array, default: () => [] })
   participants!: ParticipantModel[];
 
+  @Prop({ type: Boolean, default: () => false })
+  hideStale!: boolean;
+
+  hideStaleSetting = false;
+
+  @Watch("hideStale", { immediate: false })
+  private changeStale(): void {
+    this.hideStaleSetting = this.hideStale;
+  }
+
   get fields(): BvTableFieldArray {
     const staleFormatter = (value: string, key1: string, item: ResponseModel) =>
-      item.$validUntil ? "text-muted" : "";
+      !this.hideStaleSetting && item.$validUntil ? "text-muted" : "";
     const timeAndToken = [
       {
         key: "token",
         label: "Participant",
-        tdClass: staleFormatter,
         formatter: (value: string) => this.getParticipant(value),
         sortable: true,
         sortByFormatted: true,
         stickyColumn: true,
-        variant: this.rowHeaderVariant,
+        variant: "accent",
+        tdClass: staleFormatter,
       },
       {
         key: "TIME",
         label: "When",
-        tdClass: staleFormatter,
         formatter: (value: string) => moment(value).toISOString(false),
         sortable: true,
         sortByFormatted: true,
         stickyColumn: true,
-        variant: this.rowHeaderVariant,
+        variant: "accent",
+        tdClass: staleFormatter,
       },
     ];
     return [
@@ -80,10 +136,6 @@ export default class TabularComponent extends Vue {
       : this.responses;
   }
 
-  private isStale(response: ResponseModel): boolean {
-    return false;
-  }
-
   private getParticipant(token: string): string {
     const participant = this.participants.find(
       (participant) => participant.token === token
@@ -91,6 +143,11 @@ export default class TabularComponent extends Vue {
     return participant
       ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
       : token;
+  }
+
+  private filterRecords(item: ResponseModel): boolean {
+    console.debug(item);
+    return !this.hideStale || !item.$validUntil;
   }
 }
 </script>

@@ -1,16 +1,30 @@
 <template>
-  <b-navbar toggleable="lg" type="dark" variant="gradient-primary" id="top-nav">
-    <b-navbar-brand to="/">Koord2ool</b-navbar-brand>
+  <b-navbar toggleable="lg" type="light" id="top-nav" class="header-navbar">
+    <b-navbar-brand to="/">
+      <span class="logo"> koord2ool</span>
+    </b-navbar-brand>
 
     <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
     <b-collapse id="nav-collapse" is-nav>
       <b-navbar-nav class="ml-auto">
         <b-nav-item v-if="!isAuthenticated" to="/login">Log-in</b-nav-item>
-        <b-nav-item-dropdown v-else text="Surveys" right :disabled="isSyncing">
+        <b-nav-item-dropdown
+          no-caret
+          v-else
+          text="Surveys"
+          right
+          :disabled="isSyncing"
+          class="mr-3"
+        >
           <template #button-content>
-            <b-spinner v-if="isSyncing" small variant="light" />
-            <span v-else>Surveys</span>
+            <b-spinner v-if="isSyncing" small variant="dark" class="mr-2" />
+            <span>Surveys</span>
+            <b-icon
+              icon="chevron-down"
+              aria-hidden="true"
+              class="ml-2 small-dropdown-icon"
+            ></b-icon>
           </template>
           <b-dropdown-item
             v-for="{ key, label, to } in surveyLinks"
@@ -20,7 +34,15 @@
           >
         </b-nav-item-dropdown>
 
-        <b-nav-item-dropdown v-if="isAuthenticated" :text="username" right>
+        <b-nav-item-dropdown no-caret v-if="isAuthenticated" right>
+          <template #button-content>
+            <span>{{ username }}</span>
+            <b-icon
+              icon="chevron-down"
+              aria-hidden="true"
+              class="ml-2 small-dropdown-icon"
+            ></b-icon>
+          </template>
           <b-dropdown-item to="/logout">Log out</b-dropdown-item>
         </b-nav-item-dropdown>
       </b-navbar-nav>

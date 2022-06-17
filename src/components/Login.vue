@@ -1,38 +1,51 @@
 <template>
   <b-form @submit.prevent="authenticate">
-    <b-form-group id="username" label="User" label-for="username-input">
-      <b-form-input
-        id="username-input"
-        v-model="username"
-        :disabled="disabled"
-        :state="acceptUser"
-        required
-      />
-    </b-form-group>
+    <b-container fluid class="pl-0 mt-5">
+      <b-row>
+        <b-col cols="4">
+          <b-form-group id="username" label="User" label-for="username-input">
+            <b-form-input
+              id="username-input"
+              v-model="username"
+              :disabled="disabled"
+              :state="acceptUser"
+              required
+            />
+          </b-form-group>
+        </b-col>
+      </b-row>
 
-    <b-form-group
-      id="password"
-      label="Password"
-      label-for="password-input"
-      :state="error"
-      :invalid-feedback="error"
-    >
-      <b-form-input
-        id="password-input"
-        v-model="password"
-        type="password"
-        :disabled="disabled"
-        :state="acceptPassword"
-        required
-      />
-    </b-form-group>
-
-    <b-button
-      type="submit"
-      :variant="error ? 'danger' : 'primary'"
-      :disabled="disabled || !canAuthenticate"
-      >Log in</b-button
-    >
+      <b-row>
+        <b-col cols="4">
+          <b-form-group
+            id="password"
+            label="Password"
+            label-for="password-input"
+            :state="error"
+            :invalid-feedback="error"
+          >
+            <b-form-input
+              id="password-input"
+              v-model="password"
+              type="password"
+              :disabled="disabled"
+              :state="acceptPassword"
+              required
+            />
+          </b-form-group>
+        </b-col>
+      </b-row>
+      <b-row class="mt-4">
+        <b-col>
+          <b-button
+            type="submit"
+            :variant="error ? 'danger' : 'primary'"
+            :disabled="disabled || !canAuthenticate"
+            >Log in</b-button
+          >
+        </b-col>
+      </b-row>
+    </b-container>
   </b-form>
 </template>
 

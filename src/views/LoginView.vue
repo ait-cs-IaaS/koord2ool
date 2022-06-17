@@ -1,11 +1,38 @@
 <template>
   <b-row class="login">
     <b-col>
-      <h1>Log in</h1>
+      <div v-if="isAuthenticated">
+        <b-container fluid class="pl-0">
+          <b-row>
+            <b-col cols="12">
+              <h1>
+                Successfully logged in
+                <b-icon icon="check-circle" class="ml-2 text-success"></b-icon>
+              </h1>
+              <p>
+                You are logged in as <b>{{ username }}</b
+                >.
+              </p>
+            </b-col>
 
-      <p v-if="isAuthenticated">You are logged in as {{ username }}.</p>
+            <b-col cols="4">
+              <h4 class="pt-5 pb-2">Choose a survey</h4>
+              <b-list-group class="shadow">
+                <b-list-group-item
+                  v-for="{ key, label, to } in surveyLinks"
+                  :key="key"
+                  :to="to"
+                >
+                  {{ label }}
+                </b-list-group-item>
+              </b-list-group>
+            </b-col>
+          </b-row>
+        </b-container>
+      </div>
 
       <div v-else>
+        <h1>Log in</h1>
         <p>
           Please authenticate using your
           <span class="font-weight-bold">LimeSurvey</span>
@@ -25,6 +52,13 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import Login from "@/components/Login.vue";
+import { RawLocation } from "vue-router";
+
+type SurveyLink = {
+  key: string | number;
+  label: string;
+  to: RawLocation;
+};
 
 @Component({
   components: {
@@ -41,6 +75,23 @@ export default class LoginView extends Vue {
 
   get username(): string {
     return this.$store.getters.username;
+  }
+
+  get surveyLinks(): SurveyLink[] {
+    const surveyIds: number[] = [...this.$store.getters.getSurveys];
+    return surveyIds.sort().map((surveyId) => {
+      const title = this.$store.state.surveys[surveyId].surveyls_title;
+      return {
+        key: surveyId,
+        label: `${surveyId} - ${title} (${
+          Array.isArray(this.$store.state.responses[surveyId]) &&
+          this.$store.state.responses[surveyId].length
+            ? this.$store.state.responses[surveyId].length
+            : 0
+        })`,
+        to: { name: "survey", params: { surveyId: surveyId.toString() } },
+      };
+    });
   }
 
   @Prop({ type: String, required: false })

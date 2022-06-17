@@ -1,68 +1,136 @@
 <template>
-  <b-card no-body>
-    <b-tabs card>
-      <b-tab title="Charts" active>
-        <b-container fluid>
-          <b-row class="d-print-none mb-2">
-            <b-col>
-              <b-card
-                title="Display options"
-                header-bg-variant="primary"
-                header-text-variant="light"
-              >
-                <b-form-group
-                  label-cols-md="3"
-                  label-cols-lg="2"
-                  label-cols-xl="1"
-                  label-class="font-weight-bold"
-                  label="Time:"
-                  :description="timeOptionDescription"
-                  v-slot="{ ariaDescribedby }"
-                >
-                  <b-form-radio-group
-                    id="time-display-setting"
-                    name="time-display-setting"
+  <b-card no-body class="survey-results-outer-container">
+    <b-tabs v-model="tabIndex" pills card>
+      <template #tabs-end>
+        <!-- Chart display options -->
+        <b-button
+          v-if="tabIndex === 0"
+          class="ml-auto"
+          variant="info"
+          :pressed="chartDisplayOptions"
+          @click="chartDisplayOptions = !chartDisplayOptions"
+        >
+          <b-icon icon="gear" aria-hidden="true" class="mr-2"></b-icon>
+          Display options
+          <b-icon
+            icon="chevron-down"
+            aria-hidden="true"
+            class="ml-2 display-options-icon"
+            :class="{ active: chartDisplayOptions }"
+          ></b-icon>
+        </b-button>
+
+        <!-- Table display options -->
+        <b-button
+          v-if="tabIndex === 1"
+          class="ml-auto"
+          variant="info"
+          :pressed="tableDisplayOptions"
+          @click="tableDisplayOptions = !tableDisplayOptions"
+        >
+          <b-icon icon="gear" aria-hidden="true" class="mr-2"></b-icon>
+          Display options
+          <b-icon
+            icon="chevron-down"
+            aria-hidden="true"
+            class="ml-2 display-options-icon"
+            :class="{ active: tableDisplayOptions }"
+          ></b-icon>
+        </b-button>
+      </template>
+      <b-tab title="Charts">
+        <template #title>
+          <b-icon
+            icon="clipboard-data"
+            aria-hidden="true"
+            class="mr-2"
+          ></b-icon>
+          <strong>Charts</strong>
+        </template>
+
+        <b-container fluid class="px-0 mx-0">
+          <b-row class="d-print-none display-options-outer-container">
+            <b-col class="px-0">
+              <b-collapse v-model="chartDisplayOptions">
+                <b-card class="mb-4 px-1 display-options-container shadow">
+                  <b-form-checkbox
+                    switch
+                    size="lg"
                     v-model="useLogicalTime"
-                    :options="timeOptions"
-                    :aria-describedby="ariaDescribedby"
-                  />
-                </b-form-group>
-              </b-card>
+                    class="pointer"
+                  >
+                    <span class="display-option">
+                      Show <b>logical</b> time <br />
+                    </span>
+                    <span class="display-option-description">
+                      {{ timeOptionDescription }}
+                    </span>
+                  </b-form-checkbox>
+                </b-card>
+              </b-collapse>
             </b-col>
           </b-row>
-          <b-row>
+          <b-row class="pt-3">
             <b-col
               cols="12"
-              md="6"
-              lg="4"
-              class="avoid-page-break"
-              v-for="question of questionKeysOnly"
-              :key="question"
+              lg="12"
+              xl="6"
+              class="avoid-page-break px-1 py-1"
+              v-for="questionKey of questionKeysOnly"
+              :key="questionKey"
             >
-              <!-- actual chart -->
-              <b-card
-                :title="question"
-                :sub-title="questions[question].question"
-              >
-                <pie-chart :counters="countResponsesFor(question)" />
-
-                <line-chart
-                  :data="createTimelineFor(question)"
-                  :is-logical-time="useLogicalTime"
-                />
-              </b-card>
+              <chart-card
+                :id="questionKey"
+                :question="questions[questionKey].question"
+                :counters="countResponsesFor(questionKey)"
+                :data="createTimelineFor(questionKey)"
+                :useLogicalTime="useLogicalTime"
+              ></chart-card>
             </b-col>
           </b-row>
         </b-container>
       </b-tab>
 
-      <b-tab title="Tabular">
-        <tabular
-          :show-keys="questionKeys"
-          :responses="responses"
-          :participants="participants"
-          sort-key="TIME"
-        />
+      <b-tab title="Tabular" class="px-1">
+        <template #title>
+          <b-icon icon="table" aria-hidden="true" class="mr-2"></b-icon>
+          <strong>Table</strong>
+        </template>
+
+        <b-container fluid class="px-3 mx-0">
+          <b-row class="d-print-none display-options-outer-container">
+            <b-col class="px-0">
+              <b-collapse v-model="tableDisplayOptions">
+                <b-card class="mb-4 px-1 display-options-container shadow">
+                  <b-form-checkbox
+                    switch
+                    size="lg"
+                    v-model="hideStale"
+                    class="pointer"
+                  >
+                    <span class="display-option">
+                      Hide <b>stale</b> <br />
+                    </span>
+                    <span class="display-option-description">
+                      {{ staleOptionDescription }}
+                    </span>
+                  </b-form-checkbox>
+                </b-card>
+              </b-collapse>
+            </b-col>
+          </b-row>
+          <b-row class="pt-3">
+            <b-col cols="12" class="avoid-page-break px-1 py-1">
+              <tabular
+                :show-keys="questionKeys"
+                :responses="responses"
+                :participants="participants"
+                :hideStale="hideStale"
+                sort-key="TIME"
+              />
+            </b-col>
+          </b-row>
+        </b-container>
       </b-tab>
     </b-tabs>
   </b-card>
@@ -75,6 +143,7 @@ import moment from "moment";
 import LineChart from "@/components/surveys/LineChart.vue";
 import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
+import ChartCard from "@/components/surveys/ChartCard.vue";
 import ResponseModel, { strip } from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
@@ -86,9 +155,14 @@ import { ParticipantModel } from "@/store/participant.model";
     LineChart,
     PieChart,
     Tabular,
+    ChartCard,
   },
 })
 export default class Survey extends Vue {
+  chartDisplayOptions = false;
+  tableDisplayOptions = false;
+  tabIndex = 0;
+
   useLogicalTime = false;
 
   readonly timeOptions = [
@@ -109,6 +183,26 @@ export default class Survey extends Vue {
   get timeOptionDescription(): string {
     const value = this.timeOptions.find(
       (option) => option.value === this.useLogicalTime
+    );
+    return typeof value !== "undefined" ? value.description : "";
+  }
+
+  hideStale = false;
+
+  readonly staleOptions = [
+    {
+      value: false,
+      description: "Visible stale: decorate updated rows.",
+    },
+    {
+      value: true,
+      description: "Hidden stale: show all rows as default rows.",
+    },
+  ];
+
+  get staleOptionDescription(): string {
+    const value = this.staleOptions.find(
+      (option) => option.value === this.hideStale
     );
     return typeof value !== "undefined" ? value.description : "";
   }
@@ -138,6 +232,9 @@ export default class Survey extends Vue {
   participants!: ParticipantModel[];
 
   @Prop({ type: Date, default: () => new Date() })
+  from!: Date;
+
+  @Prop({ type: Date, default: () => new Date() })
   until!: Date;
 
   private countResponsesFor(questionKey: string) {
@@ -157,6 +254,15 @@ export default class Survey extends Vue {
       });
     const asAry: { name: string; value: number }[] = [];
     map.forEach((value, key) => asAry.push({ name: key, value }));
+
+    asAry.sort((a, b) => {
+      if (a.name.length === b.name.length) {
+        if (a.name === b.name) return 0;
+        return a.name > b.name ? -1 : 1;
+      } else {
+        return a.name.length - b.name.length;
+      }
+    });
 
     this.createTimelineFor(questionKey);
 
@@ -231,6 +337,7 @@ export default class Survey extends Vue {
       };
       datasets.push(dataset);
     }
+
     return { labels, datasets };
   }
 }

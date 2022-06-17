@@ -7,46 +7,46 @@
         'survey-inactive': !surveyActive,
       }"
     >
-      <b-col cols="12" md="6">
-        <h2>
+      <b-col cols="12" md="12" class="pb-4">
+        <h5>
           <b-badge
             pill
+            small
             :variant="surveyActive ? 'success' : 'danger'"
-            class="mr-2"
+            class="mr-2 text-white"
           >
             {{ surveyId }}
           </b-badge>
-          <span class="survey-title" v-if="survey">{{
-            survey.surveyls_title
-          }}</span>
-        </h2>
-      </b-col>
-      <b-col cols="12" md="6">
-        <time-slider
-          v-model="showResponsesUntil"
-          :min="minResponseDate"
-          :max="maxResponseDate"
-          :disabled="!hasResponses"
-        />
+        </h5>
+        <h1 class="survey-title" v-if="survey">
+          {{ survey.surveyls_title }}
+        </h1>
+        <hr />
       </b-col>
     </b-row>
-    <b-row class="survey-meta" v-if="survey">
-      <b-col cols="12" md="6">
-        <!-- left side -->
+    <b-row>
+      <b-col cols="12">
         <ul class="list-unstyled">
           <li v-if="survey.startdate">Start: {{ survey.startdate }}</li>
           <li v-if="survey.expires">Expires: {{ survey.expires }}</li>
         </ul>
-      </b-col>
-      <b-col cols="12" md="6">
-        <!-- right side -->
-        <ul class="list-unstyled">
-          <li>{{ questionCount }} question(s)</li>
-          <li v-if="hasResponses">
-            showing {{ responsesInTimeline.length }} of
-            {{ responses.length }} answer(s)
-          </li>
-        </ul>
+
+        <b-card class="time-slider-container mb-5 shadow d-print-none">
+          <time-slider
+            v-model="responseRange"
+            :min="minResponseDate"
+            :max="maxResponseDate"
+            :disabled="!hasResponses"
+          />
+
+          <ul class="list-unstyled">
+            <li>{{ questionCount }} question(s)</li>
+            <li v-if="hasResponses">
+              showing {{ responsesInTimeline.length }} of
+              {{ responses.length }} answer(s)
+            </li>
+          </ul>
+        </b-card>
       </b-col>
     </b-row>
     <b-row class="survey-responses">
@@ -57,7 +57,8 @@
           :responses="responsesInTimeline"
           :questions="questions"
           :participants="participants"
-          :until="showResponsesUntil"
+          :until="untilDate"
+          :from="fromDate"
         />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
       </b-col>
@@ -113,9 +114,12 @@ export default class SurveyView extends Vue {
   }
 
   get responsesInTimeline(): ResponseModel[] {
-    return this.responses.filter(
-      (response) => new Date(response.TIME) <= this.showResponsesUntil
-    );
+    return this.responses.filter((response) => {
+      return (
+        this.fromDate <= new Date(response.TIME) &&
+        new Date(response.TIME) <= this.untilDate
+      );
+    });
   }
 
   get survey(): SurveyModel | undefined {
@@ -140,10 +144,22 @@ export default class SurveyView extends Vue {
   get maxResponseDate(): Date {
     return this.responses
       .map((response) => new Date(response.TIME))
-      .reduce((max, date) => (date > max ? date : max), new Date());
+      .reduce((max, date) => (date > max ? date : max));
   }
 
-  showResponsesUntil = new Date();
+  responseRange = [];
+
+  get fromDate(): Date {
+    return typeof this.responseRange[0] !== "undefined"
+      ? this.responseRange[0]
+      : this.minResponseDate;
+  }
+
+  get untilDate(): Date {
+    return typeof this.responseRange[1] !== "undefined"
+      ? this.responseRange[1]
+      : this.maxResponseDate;
+  }
 
   async beforeMount(): Promise<void> {
     await this.$store.dispatch("refreshResponses", this.surveyId);

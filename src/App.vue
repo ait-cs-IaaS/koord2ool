@@ -2,13 +2,13 @@
   <div>
     <nav-component class="mb-4" />
 
-    <b-container fluid>
+    <b-container fluid class="main-container">
       <router-view />
-
-      <footer class="d-print-none small text-muted text-right font-italic">
-        AWAKE
-      </footer>
     </b-container>
+
+    <footer class="footer-container text-center d-print-none py-3">
+      <span>AWAKE</span>
+    </footer>
   </div>
 </template>
 

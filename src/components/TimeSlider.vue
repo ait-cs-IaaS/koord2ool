@@ -1,75 +1,76 @@
 <template>
-  <b-form-group class="time-slider" label="Show until" :label-for="id">
-    <template #description>
-      <div class="text-lg-right">
-        {{ label }}
-      </div>
-    </template>
-    <b-form-input
-      type="range"
+  <b-form-group class="time-slider" :label-for="id">
+    <h4>
+      <b>Set range</b>
+    </h4>
+    <vue-slider
+      v-model="range"
       :id="id"
+      :enable-cross="false"
+      :tooltip="'always'"
+      :tooltip-placement="['bottom', 'top']"
+      :tooltip-formatter="tooltipFormater"
       :min="minRange"
       :max="maxRange"
-      :step="step"
-      :value="valueAsNumber"
-      :disabled="disabled"
-      :readonly="disabled"
-      @input="emitUpdate"
-    ></b-form-input>
+      :absorb="true"
+      :marks="true"
+      :interval="1000 * 3600 * 24"
+      :hide-label="true"
+      :lazy="true"
+      class="mx-5 mt-5 mb-5 pb-4 text-primary"
+      @change="emitUpdate"
+    ></vue-slider>
   </b-form-group>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { v4 } from "uuid";
+import VueSlider from "vue-slider-component";
+import moment from "moment";
+import "vue-slider-component/theme/antd.css";
 
-@Component({})
+@Component({
+  components: {
+    VueSlider,
+  },
+})
 export default class TimeSlider extends Vue {
   @Prop({ type: String, default: () => `timeslider-${v4()}` })
   id!: string;
-
-  @Prop({ type: Boolean, default: () => false })
-  disabled!: boolean;
 
   @Prop({ type: Date, required: false })
   min?: Date;
 
   private get minRange(): number {
-    return typeof this.min !== "undefined" ? this.min.valueOf() : 0;
+    return typeof this.min !== "undefined"
+      ? this.min.setHours(0, 0, 0, 0).valueOf()
+      : 0;
   }
 
   @Prop({ type: Date, required: false })
   max?: Date;
 
   private get maxRange(): number {
-    return typeof this.max !== "undefined" ? this.max.valueOf() : 1;
+    return typeof this.max !== "undefined"
+      ? this.max.setHours(0, 0, 0, 0).valueOf() + 1000 * 3600 * 24
+      : 1;
   }
 
-  @Prop({ type: Date, required: false })
-  value?: Date;
-
-  private get valueAsNumber(): number {
-    return typeof this.value !== "undefined" ? this.value.valueOf() : 0;
+  get range(): [number, number] {
+    // +/- 1 to trigger change event on edges
+    return [this.minRange + 1, this.maxRange - 1];
   }
 
-  @Prop({ type: Number, default: () => 1000 * 60 * 30 }) // 30 minutes
-  step!: number;
+  tooltipFormater = (value: number): string => {
+    var label = moment.unix(value / 1000).format("MM/DD/YYYY");
+    return label;
+  };
 
-  get label(): string {
-    if (typeof this.value !== "undefined") {
-      return this.value.toISOString();
+  protected emitUpdate(range?: [number, number]): void {
+    if (typeof range !== "undefined") {
+      this.$emit("input", [new Date(range[0]), new Date(range[1])]);
     }
-    return "";
-  }
-
-  protected emitUpdate(value?: Date | string | number): void {
-    if (typeof value === "string") {
-      value = /^\d+$/i.test(value) ? new Date(Number(value)) : new Date(value);
-    } else if (typeof value === "number") {
-      value = new Date(value);
-    }
-
-    this.$emit("input", value);
   }
 }
 </script>
