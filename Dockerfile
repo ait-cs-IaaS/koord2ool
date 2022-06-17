@@ -1,4 +1,4 @@
-FROM node:18.1 AS builder
+FROM node:18 AS builder
 ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 WORKDIR /usr/src/koordtool

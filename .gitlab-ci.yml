@@ -1,8 +1,9 @@
-image: node:16
+image: node:18
 
 stages:
   - assess
   - build
+  - deploy
 
 cache:
   key:
@@ -16,6 +17,7 @@ before_script:
 
 variables:
   NODE_ENV: "development"
+  NODE_OPTIONS: "--openssl-legacy-provider"
 
 lint:
   stage: assess
@@ -37,3 +39,24 @@ build_dist:
     expire_in: 1 week
     paths:
       - dist/
+
+deploy:
+  stage: deploy
+  image: ubuntu:22.04
+  needs:
+    - build_dist
+  rules:
+    - when: manual
+  script:
+    # Iff OpenSSH is not installed, install it now
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    # Run ssh-agent (inside the build environment)
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    # Casually drop our SSH keys into the build environment
+    - echo "${CD_PUBLIC_KEY}" > ~/.ssh/id_rsa.pub # probably not needed?
+    - echo "${CD_PRIVATE_KEY}" > ~/.ssh/id_rsa
+    # Permission change required or SSH/SCP will whine and refuse to do anything
+    - chmod 600 ~/.ssh/id_rsa
+    - scp -r dist/* ${CD_TARGET_USER}@${CD_TARGET_HOST}:${CD_TARGET_PATH}
