@@ -52,6 +52,9 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
+/**
+ * This is the login component that handles user authentication.
+ */
 @Component({})
 export default class LoginComponent extends Vue {
   @Prop({ type: Boolean, default: () => false })

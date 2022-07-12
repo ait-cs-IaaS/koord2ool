@@ -60,6 +60,9 @@ type SurveyLink = {
   to: RawLocation;
 };
 
+/**
+ * This component provides navigation components.
+ */
 @Component({})
 export default class NavigationComponent extends Vue {
   get isAuthenticated(): boolean {

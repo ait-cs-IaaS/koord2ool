@@ -1,5 +1,8 @@
 import QuestionModel from "@/store/question.model";
 
+/**
+ * This is a stub of the DTO returned by LimeSurvey when retrieving surveys.
+ */
 export default interface SurveyModel {
   sid: number;
 
@@ -15,5 +18,9 @@ export default interface SurveyModel {
 
   questions?: Record<string, QuestionModel>;
 
+  /**
+   * This is a catch-all property for past, present, or future use.
+   * It may or may not actually exist, and its type is intrinsically unknown.
+   */
   [key: string]: unknown;
 }

@@ -1,5 +1,6 @@
 import Vue, { VNode } from "vue";
 
+// This is a general shim provided by Vue
 declare global {
   namespace JSX {
     // tslint:disable no-empty-interface

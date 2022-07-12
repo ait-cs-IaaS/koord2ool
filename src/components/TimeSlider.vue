@@ -30,6 +30,10 @@ import VueSlider from "vue-slider-component";
 import moment from "moment";
 import "vue-slider-component/theme/antd.css";
 
+/**
+ * This component provides a range-like slider for date-time input.
+ * Unlike the regular slider, this component provides a min and a max.
+ */
 @Component({
   components: {
     VueSlider,

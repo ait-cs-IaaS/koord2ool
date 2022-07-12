@@ -9,6 +9,7 @@ import store from "./store";
 
 import "@/assets/css/app.scss";
 
+// This is the main entry point of the application that initializes the Vue framework.
 new Vue({
   router,
   store,
