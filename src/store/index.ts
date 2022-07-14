@@ -104,6 +104,8 @@ export default new Vuex.Store<KoordLayout>({
       if (okay) {
         state.commit("setApi", okay ? api : undefined);
         await state.dispatch("refreshSurveys");
+      } else {
+        state.commit("setError", new Error("Failed to authenticate"));
       }
 
       state.commit("setSyncState", false);
