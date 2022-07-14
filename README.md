@@ -33,8 +33,9 @@ In hardened environments, it is advisable to restrict CORS headers further, in p
 
 The LimeSurvey installation should have the plugin
 [addScriptToQuestion](https://gitlab.com/SondagesPro/QuestionSettingsType/addScriptToQuestion) installed.
+It is, however, not strictly needed.
 
-You should enable the remote procedure call interface in the administrative settings of LimeSurvey.
+You must enable the remote procedure call interface in the administrative settings of LimeSurvey.
 Take note of the URL where this endpoint is exposed, e.g. `https://limesurvey.example.com/admin/remotecontrol`.
 Export this variable as an environment variable called `VUE_APP_LIMESURVEY_API` during build time.
 **Warning:** setting the value *after* the build will not have any effect. This needs to be set during build time.
@@ -45,7 +46,7 @@ The build server should have Node 16 installed.
 Node v17+ also works but may require `NODE_OPTIONS=--openssl-legacy-provider` to be set as an environment variable
 due to breaking changes in OpenSSL since Node v17.
 
-If `VUE_APP_LIMESURVEY_API` is set (see previous subsection), install dependencies using `npm install`.
+Once `VUE_APP_LIMESURVEY_API` is set (see previous subsection), install dependencies using `npm install`.
 
 Once successful, run `npm run build`.
 After a little while, generated artefacts will be available in the `dist` folder.
