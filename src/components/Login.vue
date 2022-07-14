@@ -3,7 +3,13 @@
     <b-container fluid class="pl-0 mt-5">
       <b-row>
         <b-col cols="4">
-          <b-form-group id="username" label="User" label-for="username-input">
+          <b-form-group
+            id="username"
+            label="User"
+            label-for="username-input"
+            :state="acceptUser"
+            invalid-feedback="Your username is too short."
+          >
             <b-form-input
               id="username-input"
               v-model="username"
@@ -21,8 +27,8 @@
             id="password"
             label="Password"
             label-for="password-input"
-            :state="error"
-            :invalid-feedback="error"
+            :state="acceptPassword"
+            invalid-feedback="Your password is too short."
           >
             <b-form-input
               id="password-input"
@@ -39,7 +45,7 @@
         <b-col>
           <b-button
             type="submit"
-            :variant="error ? 'danger' : 'primary'"
+            variant="primary"
             :disabled="disabled || !canAuthenticate"
             >Log in</b-button
           >
@@ -62,10 +68,9 @@ export default class LoginComponent extends Vue {
 
   private username = "";
   private password = "";
-  private error = "";
 
   get acceptPassword(): boolean {
-    return this.password.length > 0 && this.error !== "";
+    return this.password.length > 0;
   }
 
   get acceptUser(): boolean {
@@ -101,7 +106,6 @@ export default class LoginComponent extends Vue {
   }
 
   private async authenticate(login?: string, password?: string): Promise<void> {
-    this.error = "";
     this.$emit("auth-before", login);
     try {
       const credentials = this.getCredentials(login, password);
@@ -109,17 +113,12 @@ export default class LoginComponent extends Vue {
       if (okay) {
         this.$emit("auth-success", login);
       } else {
-        this.$emit("auth-fail", login);
-        this.error = "Authentication failed";
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error("Authentication failed");
       }
     } catch (e) {
       this.$emit("auth-fail", login, e);
-      console.debug(e);
-      if (e instanceof Error) {
-        this.error = e.message;
-      } else if (typeof e === "string") {
-        this.error = e;
-      }
+      this.$store.commit("setError", e);
     }
   }
 }

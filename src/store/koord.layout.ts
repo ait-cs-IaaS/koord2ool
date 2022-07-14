@@ -28,6 +28,11 @@ export default interface KoordLayout {
   participants: Record<number, ParticipantModel>;
 
   /**
+   * Any active error that should be presented to the user.
+   */
+  error?: Error;
+
+  /**
    * A flag indicating whether the application is currently syncing or not.
    * @deprecated
    */

@@ -2,6 +2,15 @@
   <div>
     <nav-component class="mb-4" />
 
+    <b-alert
+      :show="$store.getters.hasError"
+      variant="danger"
+      dismissible
+      @dismissed="clearError"
+    >
+      {{ $store.state.error }}
+    </b-alert>
+
     <b-container fluid class="main-container">
       <router-view />
     </b-container>
@@ -21,5 +30,9 @@ import NavComponent from "@/components/Navigation.vue";
     NavComponent,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  clearError(): void {
+    this.$store.commit("setError", undefined);
+  }
+}
 </script>

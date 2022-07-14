@@ -67,7 +67,6 @@ type SurveyLink = {
 })
 export default class LoginView extends Vue {
   private authenticating = false;
-  private message = "";
 
   get isAuthenticated(): boolean {
     return this.$store.getters.isAuthenticated;
@@ -97,13 +96,8 @@ export default class LoginView extends Vue {
   @Prop({ type: String, required: false })
   returnTo?: string;
 
-  private clearAlert(): void {
-    this.message = "";
-  }
-
   private setBusy(): void {
     this.authenticating = true;
-    this.clearAlert();
   }
 
   private setFailed(): void {
