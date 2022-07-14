@@ -334,6 +334,7 @@ export default class Survey extends Vue {
         data: answerTimeline,
         label: key,
         fill: true,
+        stepped: true,
       };
       datasets.push(dataset);
     }
