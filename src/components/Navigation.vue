@@ -85,12 +85,7 @@ export default class NavigationComponent extends Vue {
       const title = this.$store.state.surveys[surveyId].surveyls_title;
       return {
         key: surveyId,
-        label: `${surveyId} - ${title} (${
-          Array.isArray(this.$store.state.responses[surveyId]) &&
-          this.$store.state.responses[surveyId].length
-            ? this.$store.state.responses[surveyId].length
-            : 0
-        })`,
+        label: `${surveyId} - ${title}`,
         to: { name: "survey", params: { surveyId: surveyId.toString() } },
       };
     });
