@@ -27,8 +27,10 @@
     <b-row>
       <b-col cols="12">
         <ul class="list-unstyled">
-          <li v-if="survey.startdate">Start: {{ survey.startdate }}</li>
-          <li v-if="survey.expires">Expires: {{ survey.expires }}</li>
+          <li v-if="survey.startdate !== null">
+            Start: {{ survey.startdate }}
+          </li>
+          <li v-if="survey.expires !== null">Expires: {{ survey.expires }}</li>
         </ul>
 
         <b-card class="time-slider-container mb-5 shadow d-print-none">
@@ -160,7 +162,14 @@ export default class SurveyView extends Vue {
   }
 
   async beforeMount(): Promise<void> {
-    await this.$store.dispatch("refreshResponses", this.surveyId);
+    await this.$store.dispatch("refreshSurvey", this.surveyId);
+  }
+
+  mounted(): void {
+    // This shouldn't happen, but it does :(
+    if (typeof this.survey === "undefined") {
+      throw new Error("Couldn't find a local copy of the survey.");
+    }
   }
 }
 </script>
