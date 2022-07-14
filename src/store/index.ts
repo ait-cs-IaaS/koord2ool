@@ -12,6 +12,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store<KoordLayout>({
   state: {
+    error: undefined,
     limesurvey: undefined,
     participants: {},
     responses: {},
@@ -20,6 +21,8 @@ export default new Vuex.Store<KoordLayout>({
   },
   getters: {
     getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
+
+    hasError: (state) => typeof state.error !== "undefined",
 
     isAuthenticated: (state) =>
       typeof state.limesurvey !== "undefined" &&
@@ -31,6 +34,10 @@ export default new Vuex.Store<KoordLayout>({
   mutations: {
     setApi(state, api?: LimesurveyApi) {
       state.limesurvey = api;
+    },
+
+    setError(state, error?: Error) {
+      state.error = error;
     },
 
     setSyncState(state, syncing = true) {
