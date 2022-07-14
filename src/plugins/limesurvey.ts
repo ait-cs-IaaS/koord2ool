@@ -68,7 +68,7 @@ export class LimesurveyApi {
           const token = response.token;
           const entry = {
             ...response,
-            $time: moment(response.TIME || response.submitdate),
+            $time: moment(response.submitdate),
           };
           const entries = responsesByToken.get(token);
           if (typeof entries !== "undefined") {

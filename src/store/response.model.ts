@@ -15,11 +15,13 @@ export default interface ResponseModel {
 
   startlanguage?: string;
 
-  submitdate?: string;
+  datestamp?: string;
+
+  startdate?: string;
+
+  submitdate: string;
 
   token: string;
-
-  TIME: string;
 
   $validUntil?: string;
 
@@ -34,11 +36,13 @@ export default interface ResponseModel {
 }
 
 export const ignoreKeys: (keyof ResponseModel)[] = [
+  "datestamp",
   "id",
   "ipaddr",
   "lastpage",
   "seed",
   "startlanguage",
+  "startdate",
   "submitdate",
   "$validUntil",
 ];

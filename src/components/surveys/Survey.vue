@@ -126,7 +126,7 @@
                 :responses="responses"
                 :participants="participants"
                 :hideStale="hideStale"
-                sort-key="TIME"
+                sort-key="submitdate"
               />
             </b-col>
           </b-row>
@@ -241,7 +241,7 @@ export default class Survey extends Vue {
     const map = new Map<string, number>();
     this.responses
       .filter((response) => {
-        const time = moment(response.TIME);
+        const time = moment(response.submitdate);
         return (
           time.isSameOrBefore(this.until) &&
           (typeof response.$validUntil === "undefined" ||
@@ -281,7 +281,7 @@ export default class Survey extends Vue {
       )
       .map((r) => ({
         token: r.token,
-        time: new Date(r.TIME),
+        time: new Date(r.submitdate),
         value: String(r[questionKey]),
       }))
       .sort((a, b) => a.time.valueOf() - b.time.valueOf())

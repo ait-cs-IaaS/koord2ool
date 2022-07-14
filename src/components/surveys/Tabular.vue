@@ -8,7 +8,7 @@
       responsive
       stacked="sm"
       :tbody-transition-props="{ name: 'flip-list' }"
-      primary-key="TIME"
+      primary-key="submitdate"
       :items="sortedResponses"
       :fields="fields"
       :filter-function="filterRecords"
@@ -60,7 +60,7 @@ import { ParticipantModel } from "@/store/participant.model";
 
 @Component({})
 export default class TabularComponent extends Vue {
-  @Prop({ type: Array, default: () => ["TIME", "token"] })
+  @Prop({ type: Array, default: () => ["submitdate", "token"] })
   showKeys!: string[];
 
   @Prop({
@@ -104,7 +104,7 @@ export default class TabularComponent extends Vue {
         tdClass: staleFormatter,
       },
       {
-        key: "TIME",
+        key: "submitdate",
         label: "When",
         formatter: (value: string) => moment(value).toISOString(false),
         sortable: true,
@@ -129,8 +129,8 @@ export default class TabularComponent extends Vue {
   get sortedResponses(): ResponseModel[] {
     return this.sortKey
       ? [...this.responses].sort((a: ResponseModel, b: ResponseModel) => {
-          const left = a[this.sortKey || "TIME"] || "";
-          const right = b[this.sortKey || "TIME"] || "";
+          const left = a[this.sortKey || "submitdate"] || "";
+          const right = b[this.sortKey || "submitdate"] || "";
           return left.localeCompare(right) * this.sortDirection;
         })
       : this.responses;
