@@ -115,10 +115,8 @@ export default class SurveyView extends Vue {
 
   get responsesInTimeline(): ResponseModel[] {
     return this.responses.filter((response) => {
-      return (
-        this.fromDate <= new Date(response.TIME) &&
-        new Date(response.TIME) <= this.untilDate
-      );
+      const thisTime = new Date(response.submitdate);
+      return this.fromDate <= thisTime && thisTime <= this.untilDate;
     });
   }
 
@@ -137,14 +135,14 @@ export default class SurveyView extends Vue {
 
   get minResponseDate(): Date {
     return this.responses
-      .map((response) => new Date(response.TIME))
+      .map((response) => new Date(response.submitdate))
       .reduce((min, date) => (date < min ? date : min), new Date());
   }
 
   get maxResponseDate(): Date {
     return this.responses
-      .map((response) => new Date(response.TIME))
-      .reduce((max, date) => (date > max ? date : max));
+      .map((response) => new Date(response.submitdate))
+      .reduce((max, date) => (date > max ? date : max), new Date());
   }
 
   responseRange = [];

@@ -4,7 +4,7 @@ Koord2ool is an extension of [LimeSurvey](https://github.com/LimeSurvey/LimeSurv
 over time.
 
 The original tool was developed within the scope of [ACCSA](https://projekte.ffg.at/projekt/2742376) (Austrian Cyber Crisis
-Support Activities), a research project funded by the FFG (Forschungsförderungsgesellschaft).
+Support Activities), a research project funded by the [FFG](https://www.ffg.at/) (Forschungsförderungsgesellschaft).
 The project has been improved in some regards within the scope of AWAKE.
 
 ## Deployment
@@ -30,10 +30,6 @@ Access-Control-Allow-Origin: *
 
 In hardened environments, it is advisable to restrict CORS headers further, in particular
 [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
-
-The LimeSurvey installation should have the plugin
-[addScriptToQuestion](https://gitlab.com/SondagesPro/QuestionSettingsType/addScriptToQuestion) installed.
-It is, however, not strictly needed.
 
 You must enable the remote procedure call interface in the administrative settings of LimeSurvey.
 Take note of the URL where this endpoint is exposed, e.g. `https://limesurvey.example.com/admin/remotecontrol`.
@@ -66,10 +62,6 @@ You can log-in using the credentials of your LimeSurvey instance.
 On a surface level, this software is a web application that tightly integrates into LimeSurvey.
 LimeSurvey is an open-source questionnaire software that will be used to collect data from participants.
 
-The LimeSurvey installation should have the plugin
-[addScriptToQuestion](https://gitlab.com/SondagesPro/QuestionSettingsType/addScriptToQuestion) installed as this will
-be used to pre-fill and hide the `TIME` question.
-
 A docker-compose file is attached to illustrate the deployment of the software.
 When using this type of deployment, the container will run and expose the tool using nginx.
 
@@ -84,21 +76,10 @@ User management and any IAM-related subjects should be done there.
 
 ### Creating a Survey
 
-When creating a new survey, it is advised to start with a copy of "Template Survey".
-It already includes a question with the identifier `TIME`.
-The app is pre-filling the value of this question with the current time and hides it from the user.
+Create a survey in LimeSurvey as you normally would.
 
-If this template does not exist, simply add a question with the identifier `TIME` and set its type to "Short Text".
-Finally, add the following script to this question:
-
-```js
-$("#question{QID}").css('visibility', 'hidden');
-$("#answer{SGQ}").val(new Date().toUTCString());
-```
-
-This should be the first or last question in the question group.
-While its rendering will be prohibited by the `visibility: hidden` CSS property,
-the browser will still "reserve" its space.
+**Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
+Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
 
 ### Changing a Survey
 
