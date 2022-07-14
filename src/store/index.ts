@@ -10,7 +10,7 @@ import { ParticipantModel } from "@/store/participant.model";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store<KoordLayout>({
+const store = new Vuex.Store<KoordLayout>({
   state: {
     error: undefined,
     limesurvey: undefined,
@@ -112,17 +112,25 @@ export default new Vuex.Store<KoordLayout>({
       return okay;
     },
 
+    async refreshSurvey(state, surveyId: number): Promise<void> {
+      if (state.state.limesurvey) {
+        try {
+          state.commit("setSyncState", true);
+          await Promise.all([
+            state.dispatch("refreshQuestions", surveyId),
+            state.dispatch("refreshResponses", surveyId),
+            state.dispatch("refreshParticipants", surveyId),
+          ]);
+        } finally {
+          state.commit("setSyncState", false);
+        }
+      }
+    },
+
     async refreshSurveys(state): Promise<SurveyModel[]> {
       if (state.state.limesurvey) {
         const surveys = await state.state.limesurvey.listSurveys();
         state.commit("setSurveyList", surveys);
-        await Promise.all([
-          ...surveys.map(({ sid }) => state.dispatch("refreshQuestions", sid)),
-          ...surveys.map(({ sid }) => state.dispatch("refreshResponses", sid)),
-          ...surveys.map(({ sid }) =>
-            state.dispatch("refreshParticipants", sid)
-          ),
-        ]);
         return surveys;
       }
       return [];
@@ -167,3 +175,12 @@ export default new Vuex.Store<KoordLayout>({
   },
   plugins: [RememberAuthPlugin],
 });
+
+export default store;
+
+Vue.config.errorHandler = function (err, vm, info) {
+  store.commit("setError", err);
+
+  console.error(err);
+  console.error(`Further info: ${info}`);
+};
