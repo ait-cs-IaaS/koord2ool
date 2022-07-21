@@ -1,9 +1,0 @@
-POST https://lime.cyberrange.rocks/index.php/admin/remotecontrol
-Content-Type: application/json
-Accept: application/json
-
-{
-"method": "list_questions",
-"params": [ "KkHbuEawqueGmJMNH~DZpJ2x0H5lm9oM", "646132" ],
-"id": 1
-}
