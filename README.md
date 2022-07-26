@@ -96,6 +96,11 @@ If you are changing an already active survey, use the following approach:
       * you may be able to restore previous responses by using the "Import responses from a deactivated survey table" menu item.
 
 ## Contributors
-  * **Martin Galusinski**: initial development of the KoordTool.
-  * **Benjamin Akhras**: post-release support.
-  * **Manuel Warum**: post-release support.
+
+- **Martin Galusinski**: initial development of the KoordTool.
+- **Benjamin Akhras**: post-release support.
+- **Manuel Warum**: post-release support.
+
+### EU Funding
+
+![Co-financed by the Connecting Europe Facility of the European Union](https://ec.europa.eu/inea/sites/default/files/ceflogos/en_horizontal_cef_logo_2.png)
