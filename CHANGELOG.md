@@ -29,6 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial rewrite for CERT.at emulating the basic functionality of the original KoordTool.
 
-[Unreleased]: https://git-service.ait.ac.at/sim-ict/accsa/koord2ool/compare/main...develop
-[0.2.0]: https://git-service.ait.ac.at/sim-ict/accsa/koord2ool/compare/0.1.0...0.2.0
-[0.1.0]: https://git-service.ait.ac.at/sim-ict/accsa/koord2ool/-/tags/0.1.0
+[Unreleased]: https://github.com/ait-cs-IaaS/koord2ool/compare/main...develop
+[0.2.0]: https://github.com/ait-cs-IaaS/koord2ool/releases/tag/0.2.0
+[0.1.0]: https://github.com/ait-cs-IaaS/koord2ool/releases/tag/0.1.0
