@@ -77,6 +77,13 @@ User management and any IAM-related subjects should be done there.
 ### Creating a Survey
 
 Create a survey in LimeSurvey as you normally would.
+Note that you need to have the survey in closed-access mode so that individual answers
+can be associated with a source.
+
+If you want to be able to allow users to update their responses, set the following options
+in "Participants settings":
+  - "Allow multiple responses or update responses with one access code" should be ON, and
+  - "Enable participant-based response persistence" should be ON as well.
 
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
@@ -94,6 +101,10 @@ If you are changing an already active survey, use the following approach:
   3. re-activate the survey. You can now restore previous participant tokens and responses.
       * you can restore previous participants using the "Survey participants" menu item.
       * you may be able to restore previous responses by using the "Import responses from a deactivated survey table" menu item.
+
+## Known issues
+
+- the application has issues evaluating multiple-choice question types.
 
 ## Contributors
 
