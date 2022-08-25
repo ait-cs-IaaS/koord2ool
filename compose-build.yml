@@ -3,12 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - web
     ports:
       - "8080:80"
     volumes:  # needed due to read-only file system
@@ -20,8 +14,3 @@ services:
 volumes:
   nginx-pid:
   nginx-cache:
-
-networks:
-  web:
-    external:
-      name: docker_web
