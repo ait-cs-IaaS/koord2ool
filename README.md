@@ -33,8 +33,7 @@ In hardened environments, it is advisable to restrict CORS headers further, in p
 You must enable the remote procedure call interface in the administrative settings of LimeSurvey.
 Take note of the URL where this endpoint is exposed, e.g. `https://limesurvey.example.com/admin/remotecontrol`.
 
-You can either export during build time as `VUE_APP_LIMESURVEY_API` in the [Dockerfile](Dockerfile).
-Or set during `LIMESURVEY_RPC_API` variable while running in the [compose.yml](compose.yml).
+You can either export during build time as `VUE_APP_LIMESURVEY_API` in the [Dockerfile](Dockerfile) or set `LIMESURVEY_RPC_API` in your [compose.yml](compose.yml).
 
 ### Build Server
 
