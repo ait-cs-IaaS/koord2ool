@@ -24,7 +24,7 @@
         <hr />
       </b-col>
     </b-row>
-    <b-row>
+    <b-row class="d-print-none">
       <b-col cols="12">
         <ul class="list-unstyled">
           <li v-if="survey.startdate !== null">
@@ -33,7 +33,7 @@
           <li v-if="survey.expires !== null">Expires: {{ survey.expires }}</li>
         </ul>
 
-        <b-card class="time-slider-container mb-5 shadow d-print-none">
+        <b-card class="time-slider-container mb-5 shadow">
           <time-slider
             v-model="responseRange"
             :min="minResponseDate"
@@ -48,6 +48,15 @@
               {{ responses.length }} answer(s)
             </li>
           </ul>
+
+          <div class="d-flex justify-content-end">
+            <b-btn
+              variant="primary"
+              @click="refresh"
+              :disabled="$store.state.syncing"
+              >Refresh</b-btn
+            >
+          </div>
         </b-card>
       </b-col>
     </b-row>
@@ -170,6 +179,10 @@ export default class SurveyView extends Vue {
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
+  }
+
+  async refresh(): Promise<void> {
+    await this.$store.dispatch("refreshSurvey", this.surveyId);
   }
 }
 </script>
