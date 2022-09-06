@@ -69,14 +69,25 @@ export default class LoginComponent extends Vue {
   private username = "";
   private password = "";
 
+  /**
+   * Returns true iff the current password is acceptable to enable the login action.
+   * Currently, any password with at least one character is okay.
+   */
   get acceptPassword(): boolean {
     return this.password.length > 0;
   }
 
+  /**
+   * Returns true iff the current user is acceptable to enable the login action.
+   * Currently, any username with at least one character is okay.
+   */
   get acceptUser(): boolean {
     return this.username.length > 0;
   }
 
+  /**
+   * Returns true iff the login action should be enabled.
+   */
   get canAuthenticate(): boolean {
     return !this.disabled && this.username !== "" && this.password !== "";
   }
@@ -86,6 +97,7 @@ export default class LoginComponent extends Vue {
       process.env;
     if (VUE_APP_LIMESURVEY_LOGIN && VUE_APP_LIMESURVEY_PASSWORD) {
       this.$nextTick(() => {
+        // Authenticate with LimeSurvey automatically if these environment variables are set.
         this.authenticate(
           VUE_APP_LIMESURVEY_LOGIN,
           VUE_APP_LIMESURVEY_PASSWORD
@@ -105,6 +117,13 @@ export default class LoginComponent extends Vue {
     return { username: useLogin, password: usePassword };
   }
 
+  /**
+   * Starts the authentication process with LimeSurvey.
+   *
+   * @param login the login to use
+   * @param password the password to use
+   * @private
+   */
   private async authenticate(login?: string, password?: string): Promise<void> {
     this.$emit("auth-before", login);
     try {

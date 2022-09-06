@@ -1,5 +1,10 @@
 import { ChartOptions } from "chart.js";
 
+/**
+ * These are common options used by all doughnut charts in the application.
+ *
+ * @see {@link DoughnutChartComponent}
+ */
 export default {
   responsive: true,
   maintainAspectRatio: true,

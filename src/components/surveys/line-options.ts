@@ -1,5 +1,10 @@
 import { ChartOptions } from "chart.js";
 
+/**
+ * These are options used by all line charts in the application.
+ *
+ * @see {@link LineChartComponent}
+ */
 export default {
   showLine: true,
   elements: {
@@ -16,7 +21,6 @@ export default {
       borderWidth: 5,
       tension: 0.0,
       borderCapStyle: "round",
-      // stepped: true,
     },
   },
   plugins: {
