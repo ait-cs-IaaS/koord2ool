@@ -58,11 +58,23 @@ import ResponseModel from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
 import { ParticipantModel } from "@/store/participant.model";
 
+/**
+ * This is a tabular view of survey responses.
+ */
 @Component({})
 export default class TabularComponent extends Vue {
+  /**
+   * The keys that should be shown in the table.
+   * @default ["submitdate", "token"]
+   */
   @Prop({ type: Array, default: () => ["submitdate", "token"] })
   showKeys!: string[];
 
+  /**
+   * The sorting direction, either ascending (1) or descending (-1).
+   *
+   * @default 1
+   */
   @Prop({
     type: Number,
     default: () => 1,
@@ -70,15 +82,30 @@ export default class TabularComponent extends Vue {
   })
   sortDirection!: -1 | 1;
 
+  /**
+   * The key to sort the table by.
+   */
   @Prop({ type: String, required: false })
   sortKey?: keyof ResponseModel;
 
+  /**
+   * The responses to render.
+   */
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];
 
+  /**
+   * A list of participants for these responses.
+   */
   @Prop({ type: Array, default: () => [] })
   participants!: ParticipantModel[];
 
+  /**
+   * Iff true, "overridden" responses (i.e., a response was submit at least a second time with the same token)
+   * will be hidden.
+   *
+   * @default false
+   */
   @Prop({ type: Boolean, default: () => false })
   hideStale!: boolean;
 
@@ -89,6 +116,9 @@ export default class TabularComponent extends Vue {
     this.hideStaleSetting = this.hideStale;
   }
 
+  /**
+   * Creates an object consumed by the bootstrap table. It contains data as well as rendering instructions.
+   */
   get fields(): BvTableFieldArray {
     const staleFormatter = (value: string, key1: string, item: ResponseModel) =>
       !this.hideStaleSetting && item.$validUntil ? "text-muted" : "";
@@ -126,6 +156,11 @@ export default class TabularComponent extends Vue {
     ];
   }
 
+  /**
+   * Returns the responses sorted by the current sorting sections.
+   *
+   * @see {@link sortKey}, {@link sortKey}
+   */
   get sortedResponses(): ResponseModel[] {
     return this.sortKey
       ? [...this.responses].sort((a: ResponseModel, b: ResponseModel) => {
@@ -136,6 +171,13 @@ export default class TabularComponent extends Vue {
       : this.responses;
   }
 
+  /**
+   * Gets the corresponding participant data for the given token.
+   * If unknown (i.e., not contained in the list of participants), the token will be returned as-is.
+   *
+   * @param token the token for this participant
+   * @private
+   */
   private getParticipant(token: string): string {
     const participant = this.participants.find(
       (participant) => participant.token === token

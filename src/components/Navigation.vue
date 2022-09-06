@@ -65,20 +65,33 @@ type SurveyLink = {
  */
 @Component({})
 export default class NavigationComponent extends Vue {
+  /**
+   * Returns true iff the user is authenticated (i.e., has a session key)
+   */
   get isAuthenticated(): boolean {
     return this.$store.getters.isAuthenticated;
   }
 
+  /**
+   * Returns true iff the application is currently syncing (according to the flag in the Vue store)
+   */
   get isSyncing(): boolean {
     return this.$store.state.syncing;
   }
 
+  /**
+   * Gets the name of the logged-in user, if set; "User" otherwise.
+   * This is only relevant for the UI.
+   */
   get username(): string {
     return typeof this.$store.getters.username !== "undefined"
       ? this.$store.getters.username
       : "User";
   }
 
+  /**
+   * Creates link entries for the dropdown menu with all the surveys known to the application.
+   */
   get surveyLinks(): SurveyLink[] {
     const surveyIds: number[] = [...this.$store.getters.getSurveys];
     return surveyIds.sort().map((surveyId) => {

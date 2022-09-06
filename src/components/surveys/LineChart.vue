@@ -13,6 +13,10 @@ import lineOptions from "./line-options";
 
 @Component({})
 export default class LineChartComponent extends Vue {
+  /**
+   * The unique DOM ID for this chart.
+   * This is usually a combination of "line-" followed by a random UUID (v4).
+   */
   @Prop({ type: String, default: () => `line-${v4()}` })
   chartId!: string;
 
@@ -24,6 +28,9 @@ export default class LineChartComponent extends Vue {
 
   private chartJsInstance?: Chart<"line">;
 
+  /**
+   * A link to the <canvas> DOM element.
+   */
   get domElement(): HTMLCanvasElement {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }

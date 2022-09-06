@@ -40,9 +40,15 @@ import "vue-slider-component/theme/antd.css";
   },
 })
 export default class TimeSlider extends Vue {
+  /**
+   * The DOM id of the input element.
+   */
   @Prop({ type: String, default: () => `timeslider-${v4()}` })
   id!: string;
 
+  /**
+   * The minimum date that the slider should allow.
+   */
   @Prop({ type: Date, required: false })
   min?: Date;
 
@@ -52,6 +58,9 @@ export default class TimeSlider extends Vue {
       : 0;
   }
 
+  /**
+   * The maximum date that the slider should allow.
+   */
   @Prop({ type: Date, required: false })
   max?: Date;
 
