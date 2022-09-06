@@ -16,6 +16,10 @@ import doughnutOptions from "./doughnut-options";
 
 @Component({})
 export default class DoughnutChartComponent extends Vue {
+  /**
+   * The unique DOM ID for this chart.
+   * This is usually a combination of "doughnut-" followed by a random UUID (v4).
+   */
   @Prop({ type: String, default: () => `doughnut-${v4()}` })
   chartId!: string;
 
@@ -24,6 +28,9 @@ export default class DoughnutChartComponent extends Vue {
 
   private chartJsInstance?: Chart<"doughnut">;
 
+  /**
+   * A link to the <canvas> DOM element.
+   */
   get domElement(): HTMLCanvasElement {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }

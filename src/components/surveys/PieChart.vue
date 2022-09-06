@@ -11,6 +11,10 @@ import pieOptions from "./pie-options";
 
 @Component({})
 export default class PieChartComponent extends Vue {
+  /**
+   * The unique DOM ID for this chart.
+   * This is usually a combination of "pie-" followed by a random UUID (v4).
+   */
   @Prop({ type: String, default: () => `pie-${v4()}` })
   chartId!: string;
 
@@ -19,6 +23,9 @@ export default class PieChartComponent extends Vue {
 
   private chartJsInstance?: Chart<"pie">;
 
+  /**
+   * A link to the <canvas> DOM element.
+   */
   get domElement(): HTMLCanvasElement {
     return this.$refs.chartCanvas as HTMLCanvasElement;
   }
