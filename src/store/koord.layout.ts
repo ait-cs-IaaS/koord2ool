@@ -2,6 +2,7 @@ import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
+import { SettingsModel } from "./settings.model";
 
 /**
  * This is the layout for the internal Vuex store.
@@ -37,4 +38,6 @@ export default interface KoordLayout {
    * @deprecated
    */
   syncing: boolean;
+
+  settings: SettingsModel;
 }

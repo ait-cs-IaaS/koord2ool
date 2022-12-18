@@ -31,6 +31,9 @@
             Start: {{ survey.startdate }}
           </li>
           <li v-if="survey.expires !== null">Expires: {{ survey.expires }}</li>
+          <li>minResponseDate: {{ minResponseDate }}</li>
+          <li>maxResponseDate: {{ maxResponseDate }}</li>
+          <li>submitDates: {{ submitDates }}</li>
         </ul>
 
         <b-card class="time-slider-container mb-5 shadow">
@@ -39,7 +42,15 @@
             :min="minResponseDate"
             :max="maxResponseDate"
             :disabled="!hasResponses"
+            v-if="hasResponseDates"
           />
+          <b-alert v-else variant="danger"
+            >Responses have no responseDate set.
+            <a
+              href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
+              >Info</a
+            ></b-alert
+          >
 
           <ul class="list-unstyled">
             <li>{{ questionCount }} question(s)</li>
@@ -83,7 +94,11 @@ import SurveyModel from "@/store/survey.model";
 import QuestionModel from "@/store/question.model";
 import Survey from "@/components/surveys/Survey.vue";
 import TimeSlider from "@/components/TimeSlider.vue";
-import ResponseModel from "@/store/response.model";
+import ResponseModel, {
+  hasSubmitDateMatch,
+  minResponseDate,
+  maxResponseDate,
+} from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 
 @Component({
@@ -113,15 +128,11 @@ export default class SurveyView extends Vue {
   }
 
   get participants(): ParticipantModel[] {
-    return Array.isArray(this.$store.state.participants[this.surveyId])
-      ? this.$store.state.participants[this.surveyId]
-      : [];
+    return this.$store.getters.getParticipants(this.surveyId);
   }
 
   get responses(): ResponseModel[] {
-    return Array.isArray(this.$store.state.responses[this.surveyId])
-      ? this.$store.state.responses[this.surveyId]
-      : [];
+    return this.$store.getters.getResponses(this.surveyId);
   }
 
   get responsesInTimeline(): ResponseModel[] {
@@ -129,6 +140,10 @@ export default class SurveyView extends Vue {
       const thisTime = new Date(response.submitdate);
       return this.fromDate <= thisTime && thisTime <= this.untilDate;
     });
+  }
+
+  get submitDates(): string[] {
+    return this.responses.map((response) => response.submitdate);
   }
 
   get survey(): SurveyModel | undefined {
@@ -145,15 +160,15 @@ export default class SurveyView extends Vue {
   }
 
   get minResponseDate(): Date {
-    return this.responses
-      .map((response) => new Date(response.submitdate))
-      .reduce((min, date) => (date < min ? date : min), new Date());
+    return minResponseDate(this.responses);
   }
 
   get maxResponseDate(): Date {
-    return this.responses
-      .map((response) => new Date(response.submitdate))
-      .reduce((max, date) => (date > max ? date : max), new Date());
+    return maxResponseDate(this.responses);
+  }
+
+  get hasResponseDates(): boolean {
+    return hasSubmitDateMatch(this.responses);
   }
 
   responseRange = [];

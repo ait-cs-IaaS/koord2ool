@@ -237,7 +237,9 @@ export default class Survey extends Vue {
   @Prop({ type: Date, default: () => new Date() })
   until!: Date;
 
-  private countResponsesFor(questionKey: string) {
+  countResponsesFor(
+    questionKey: string
+  ): Array<{ name: string; value: number }> {
     const map = new Map<string, number>();
     this.responses
       .filter((response) => {
@@ -269,7 +271,7 @@ export default class Survey extends Vue {
     return asAry;
   }
 
-  private createTimelineFor(questionKey: string): ChartData<"line"> {
+  createTimelineFor(questionKey: string): ChartData<"line"> {
     const labels: (Date | number)[] = [];
     const timeline = new Map<string, { x: number; y: number }[]>();
     const lastChoice = new Map<string, string>();

@@ -1,7 +1,7 @@
 <template>
   <b-navbar toggleable="lg" type="light" id="top-nav" class="header-navbar">
     <b-navbar-brand to="/">
-      <span class="logo"> koord2ool</span>
+      <span class="logo">koord2ool</span>
     </b-navbar-brand>
 
     <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
@@ -43,7 +43,12 @@
               class="ml-2 small-dropdown-icon"
             ></b-icon>
           </template>
-          <b-dropdown-item to="/logout">Log out</b-dropdown-item>
+          <b-dropdown-item to="/settings">
+            <b-icon icon="gear-fill" aria-hidden="true"></b-icon> Settings
+          </b-dropdown-item>
+          <b-dropdown-item to="/logout">
+            <b-icon icon="door-open" aria-hidden="true"></b-icon> Log out
+          </b-dropdown-item>
         </b-nav-item-dropdown>
       </b-navbar-nav>
     </b-collapse>

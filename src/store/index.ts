@@ -17,6 +17,7 @@ const store = new Vuex.Store<KoordLayout>({
     participants: {},
     responses: {},
     surveys: {},
+    settings: { step: 6, limeSurveyUri: process.env.VUE_APP_LIMESURVEY_API },
     syncing: false,
   },
   getters: {
@@ -30,6 +31,45 @@ const store = new Vuex.Store<KoordLayout>({
 
     username: (state) =>
       typeof state.limesurvey !== "undefined" ? state.limesurvey.username : "",
+
+    getInstanceDomain: (state) => {
+      const endpoint = state.settings.limeSurveyUri;
+      if (!/\/admin\/remotecontrol$/.test(endpoint)) {
+        store.commit(
+          "setError",
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
+        );
+        return "";
+      }
+      if (state.settings.limeSurveyUri === undefined) {
+        store.commit(
+          "setError",
+          "LimeSurvey RPC endpoint unconfigured. Please set the VUE_APP_LIMESURVEY_API environment variable."
+        );
+        return "";
+      }
+      const domain = new URL(state.settings.limeSurveyUri);
+      if (domain.hostname === undefined) {
+        store.commit(
+          "setError",
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`
+        );
+        return "";
+      }
+      return domain.hostname;
+    },
+    getResponses: (state) => (sid: number) => {
+      if (typeof state.responses[sid] === "undefined") {
+        return [];
+      }
+      return state.responses[sid];
+    },
+    getParticipants: (state) => (sid: number) => {
+      if (typeof state.participants[sid] === "undefined") {
+        return [];
+      }
+      return state.participants[sid];
+    },
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {
