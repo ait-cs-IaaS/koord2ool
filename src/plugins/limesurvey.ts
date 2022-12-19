@@ -1,9 +1,7 @@
-import moment from "moment";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import { ParticipantModel } from "@/store/participant.model";
-import { pairwise } from "@/helpers/pairwise";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -55,7 +53,9 @@ export class LimesurveyApi {
       sid,
       "json",
       "en",
-      "complete"
+      "complete",
+      "code",
+      "long"
     );
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));

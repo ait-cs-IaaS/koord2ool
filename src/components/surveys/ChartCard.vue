@@ -19,8 +19,8 @@
                 :style="{ 'background-color': bcolors[index % bcolors.length] }"
               ></span>
               <span class="legend-label">
-                {{ answer.name }}
-                <strong>({{ answer.value }})</strong>
+                {{ answer["name"] }}
+                <strong>({{ answer["value"] }})</strong>
               </span>
             </p>
           </b-card-text>

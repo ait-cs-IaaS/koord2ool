@@ -67,7 +67,6 @@ export function strip(response: ResponseModel): Record<string, string> {
 }
 
 export function hasSubmitDate(response: ResponseModel): boolean {
-  console.log(response.submitdate + " - 1980-01-01 00:00:00");
   return response.submitdate !== "1980-01-01 00:00:00";
 }
 

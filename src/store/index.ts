@@ -70,6 +70,12 @@ const store = new Vuex.Store<KoordLayout>({
       }
       return state.participants[sid];
     },
+    getSurvey: (state) => (sid: number) => {
+      if (typeof state.surveys[sid] === "undefined") {
+        return {};
+      }
+      return state.surveys[sid];
+    },
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {

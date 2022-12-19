@@ -26,16 +26,6 @@
     </b-row>
     <b-row class="d-print-none">
       <b-col cols="12">
-        <ul class="list-unstyled">
-          <li v-if="survey.startdate !== null">
-            Start: {{ survey.startdate }}
-          </li>
-          <li v-if="survey.expires !== null">Expires: {{ survey.expires }}</li>
-          <li>minResponseDate: {{ minResponseDate }}</li>
-          <li>maxResponseDate: {{ maxResponseDate }}</li>
-          <li>submitDates: {{ submitDates }}</li>
-        </ul>
-
         <b-card class="time-slider-container mb-5 shadow">
           <time-slider
             v-model="responseRange"
@@ -44,21 +34,40 @@
             :disabled="!hasResponses"
             v-if="hasResponseDates"
           />
-          <b-alert v-else variant="danger"
-            >Responses have no responseDate set.
-            <a
-              href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
-              >Info</a
-            ></b-alert
-          >
-
-          <ul class="list-unstyled">
-            <li>{{ questionCount }} question(s)</li>
-            <li v-if="hasResponses">
-              showing {{ responsesInTimeline.length }} of
-              {{ responses.length }} answer(s)
-            </li>
-          </ul>
+          <v-simple-table>
+            <template v-slot:default>
+              <tbody>
+                <tr v-if="!hasResponseDates">
+                  <td colspan="2">
+                    Responses have no responseDate set.
+                    <a
+                      href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
+                      target="_blank"
+                      >Info</a
+                    >
+                  </td>
+                </tr>
+                <tr v-if="hasResponses">
+                  <td colspan="2">
+                    showing {{ responsesInTimeline.length }} of
+                    {{ responses.length }} answer(s)
+                  </td>
+                </tr>
+                <tr>
+                  <td>Number of questions</td>
+                  <td>{{ questionCount }}</td>
+                </tr>
+                <tr v-if="survey.startdate !== null">
+                  <td>Start</td>
+                  <td>{{ survey.startdate }}</td>
+                </tr>
+                <tr v-if="survey.expires !== null">
+                  <td>Expires</td>
+                  <td>{{ survey.expires }}</td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
 
           <div class="d-flex justify-content-end">
             <b-btn
@@ -73,7 +82,7 @@
     </b-row>
     <b-row class="survey-responses">
       <b-col>
-        <survey
+        <survey-component
           v-if="hasResponses"
           :survey="survey"
           :responses="responsesInTimeline"
@@ -81,6 +90,7 @@
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
+          :useLogicalTime="!hasResponseDates"
         />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
       </b-col>
@@ -92,7 +102,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import SurveyModel from "@/store/survey.model";
 import QuestionModel from "@/store/question.model";
-import Survey from "@/components/surveys/Survey.vue";
+import SurveyComponent from "@/components/surveys/Survey.vue";
 import TimeSlider from "@/components/TimeSlider.vue";
 import ResponseModel, {
   hasSubmitDateMatch,
@@ -103,7 +113,7 @@ import { ParticipantModel } from "@/store/participant.model";
 
 @Component({
   components: {
-    Survey,
+    SurveyComponent,
     TimeSlider,
   },
 })
@@ -146,8 +156,8 @@ export default class SurveyView extends Vue {
     return this.responses.map((response) => response.submitdate);
   }
 
-  get survey(): SurveyModel | undefined {
-    return this.$store.state.surveys[this.surveyId];
+  get survey(): SurveyModel {
+    return this.$store.getters.getSurvey(this.surveyId);
   }
 
   get surveyActive(): boolean {
@@ -212,5 +222,9 @@ export default class SurveyView extends Vue {
   .avoid-page-break {
     page-break-inside: avoid;
   }
+}
+tbody td:first-child {
+  width: 1%;
+  white-space: nowrap;
 }
 </style>

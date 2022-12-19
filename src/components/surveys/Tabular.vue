@@ -8,7 +8,6 @@
       responsive
       stacked="sm"
       :tbody-transition-props="{ name: 'flip-list' }"
-      primary-key="submitdate"
       :items="sortedResponses"
       :fields="fields"
       :filter-function="filterRecords"
@@ -53,7 +52,6 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import moment from "moment";
 import ResponseModel from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
 import { ParticipantModel } from "@/store/participant.model";
@@ -133,16 +131,6 @@ export default class TabularComponent extends Vue {
         variant: "accent",
         tdClass: staleFormatter,
       },
-      {
-        key: "submitdate",
-        label: "When",
-        formatter: (value: string) => moment(value).toISOString(false),
-        sortable: true,
-        sortByFormatted: true,
-        stickyColumn: true,
-        variant: "accent",
-        tdClass: staleFormatter,
-      },
     ];
     return [
       ...timeAndToken,
@@ -176,9 +164,8 @@ export default class TabularComponent extends Vue {
    * If unknown (i.e., not contained in the list of participants), the token will be returned as-is.
    *
    * @param token the token for this participant
-   * @private
    */
-  private getParticipant(token: string): string {
+  getParticipant(token: string): string {
     const participant = this.participants.find(
       (participant) => participant.token === token
     );
@@ -187,8 +174,7 @@ export default class TabularComponent extends Vue {
       : token;
   }
 
-  private filterRecords(item: ResponseModel): boolean {
-    console.debug(item);
+  filterRecords(item: ResponseModel): boolean {
     return !this.hideStale || !item.$validUntil;
   }
 }

@@ -163,7 +163,26 @@ export default class Survey extends Vue {
   tableDisplayOptions = false;
   tabIndex = 0;
 
-  useLogicalTime = false;
+  @Prop({ type: Boolean, default: false })
+  useLogicalTime!: boolean;
+
+  @Prop({ type: Object, default: () => [] })
+  questions!: Record<string, QuestionModel>;
+
+  @Prop({ type: Array, default: () => [] })
+  responses!: ResponseModel[];
+
+  @Prop({ type: Object, required: true })
+  survey!: SurveyModel;
+
+  @Prop({ type: Array, default: () => [] })
+  participants!: ParticipantModel[];
+
+  @Prop({ type: Date, default: () => new Date() })
+  from!: Date;
+
+  @Prop({ type: Date, default: () => new Date() })
+  until!: Date;
 
   readonly timeOptions = [
     {
@@ -218,24 +237,6 @@ export default class Survey extends Vue {
   get questionKeysOnly(): string[] {
     return this.questionKeys.filter((key) => /^[qQ]\d+.*$/.test(key));
   }
-
-  @Prop({ type: Object, default: () => [] })
-  questions!: Record<string, QuestionModel>;
-
-  @Prop({ type: Array, default: () => [] })
-  responses!: ResponseModel[];
-
-  @Prop({ type: Object, required: true })
-  survey!: SurveyModel;
-
-  @Prop({ type: Array, default: () => [] })
-  participants!: ParticipantModel[];
-
-  @Prop({ type: Date, default: () => new Date() })
-  from!: Date;
-
-  @Prop({ type: Date, default: () => new Date() })
-  until!: Date;
 
   countResponsesFor(
     questionKey: string
