@@ -173,7 +173,7 @@ export default class SurveyView extends Vue {
   }
 
   get hasResponseDates(): boolean {
-    return this.$store.getters.hasResponseDates();
+    return this.$store.getters.hasSubmitDateMatch();
   }
 
   responseRange = [];

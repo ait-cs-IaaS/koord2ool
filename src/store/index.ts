@@ -90,6 +90,9 @@ const store = new Vuex.Store<KoordLayout>({
         if (sid === undefined) {
           return false;
         }
+        if (state.responses[sid] === undefined) {
+          return false;
+        }
         return hasSubmitDateMatch(state.responses[sid]);
       },
     getMinResponseDate:
