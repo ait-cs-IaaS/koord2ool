@@ -2,40 +2,21 @@
   <b-row class="login">
     <b-col>
       <div v-if="isAuthenticated">
-        <b-container fluid class="pl-0">
-          <b-row>
-            <b-col cols="12">
-              <h1>
-                Successfully logged in
-                <b-icon icon="check-circle" class="ml-2 text-success"></b-icon>
-              </h1>
-              <p>
-                You are logged in as <b>{{ username }}</b
-                >.
-              </p>
-            </b-col>
-
-            <b-col cols="4">
-              <h4 class="pt-5 pb-2">Choose a survey</h4>
-              <b-list-group class="shadow">
-                <b-list-group-item
-                  v-for="{ key, label, to } in surveyLinks"
-                  :key="key"
-                  :to="to"
-                >
-                  {{ label }}
-                </b-list-group-item>
-              </b-list-group>
-            </b-col>
-          </b-row>
-        </b-container>
+        <h1>
+          Logged in as {{ username }}
+          <b-icon icon="person-check" class="ml-4 text-success"></b-icon>
+        </h1>
+        <survey-list :username="username" />
       </div>
 
       <div v-else>
         <h1>Log in</h1>
         <p>
           Please authenticate using your
-          <span class="font-weight-bold">LimeSurvey</span>
+          <span class="font-weight-bold"
+            >LimeSurvey
+            <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
+          >
           log-in credentials.
         </p>
         <login
@@ -52,21 +33,16 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 import Login from "@/components/Login.vue";
-import { RawLocation } from "vue-router";
-
-type SurveyLink = {
-  key: string | number;
-  label: string;
-  to: RawLocation;
-};
+import SurveyList from "@/components/SurveyList.vue";
 
 @Component({
   components: {
     Login,
+    SurveyList,
   },
 })
 export default class LoginView extends Vue {
-  private authenticating = false;
+  authenticating = false;
 
   get isAuthenticated(): boolean {
     return this.$store.getters.isAuthenticated;
@@ -76,30 +52,22 @@ export default class LoginView extends Vue {
     return this.$store.getters.username;
   }
 
-  get surveyLinks(): SurveyLink[] {
-    const surveyIds: number[] = [...this.$store.getters.getSurveys];
-    return surveyIds.sort().map((surveyId) => {
-      const title = this.$store.state.surveys[surveyId].surveyls_title;
-      return {
-        key: surveyId,
-        label: `${surveyId} - ${title}`,
-        to: { name: "survey", params: { surveyId: surveyId.toString() } },
-      };
-    });
+  get instance(): string {
+    return this.$store.getters.getInstanceDomain;
   }
 
   @Prop({ type: String, required: false })
   returnTo?: string;
 
-  private setBusy(): void {
+  setBusy(): void {
     this.authenticating = true;
   }
 
-  private setFailed(): void {
+  setFailed(): void {
     this.authenticating = false;
   }
 
-  private setSuccess(): void {
+  setSuccess(): void {
     const goTo = this.returnTo || "/";
     this.$router.push(goTo);
   }

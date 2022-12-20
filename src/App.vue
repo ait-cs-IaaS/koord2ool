@@ -2,16 +2,15 @@
   <div>
     <nav-component class="mb-4" />
 
-    <b-alert
-      :show="$store.getters.hasError"
-      variant="danger"
-      dismissible
-      @dismissed="clearError"
-    >
-      {{ $store.state.error }}
-    </b-alert>
-
     <b-container fluid class="main-container">
+      <b-alert
+        :show="$store.getters.hasError"
+        variant="danger"
+        dismissible
+        @dismissed="clearError"
+      >
+        {{ $store.state.error }}
+      </b-alert>
       <router-view />
     </b-container>
 

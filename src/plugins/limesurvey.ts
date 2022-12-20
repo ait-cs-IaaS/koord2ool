@@ -1,9 +1,7 @@
-import moment from "moment";
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import { ParticipantModel } from "@/store/participant.model";
-import { pairwise } from "@/helpers/pairwise";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -55,20 +53,18 @@ export class LimesurveyApi {
       sid,
       "json",
       "en",
-      "complete"
+      "complete",
+      "code",
+      "long"
     );
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
       if (Array.isArray(asObj.responses)) {
-        const responsesByToken = new Map<
-          number,
-          Array<ResponseModel & { $time: moment.Moment }>
-        >();
+        const responsesByToken = new Map<number, Array<ResponseModel>>();
         for (const response of asObj.responses) {
           const token = response.token;
           const entry = {
             ...response,
-            $time: moment(response.submitdate),
           };
           const entries = responsesByToken.get(token);
           if (typeof entries !== "undefined") {
@@ -81,10 +77,6 @@ export class LimesurveyApi {
           const responses = responsesByToken.get(token);
           if (typeof responses === "undefined") {
             throw new Error("Found a token that magically disappeared?");
-          }
-          responses.sort((a, b) => a.$time.diff(b.$time));
-          for (const [previous, current] of pairwise(responses)) {
-            previous.$validUntil = current.$time.toISOString();
           }
           responsesByToken.set(token, responses);
         }

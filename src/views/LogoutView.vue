@@ -8,10 +8,10 @@
 import { Vue, Component } from "vue-property-decorator";
 
 @Component({})
-export default class LoginView extends Vue {
+export default class LogoutView extends Vue {
   mounted(): void {
     this.$nextTick(() => {
-      this.$store.commit("setApi", undefined);
+      this.$store.commit("setApi", {});
       this.$router.push("/");
     });
   }

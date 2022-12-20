@@ -58,29 +58,18 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-/**
- * This is the login component that handles user authentication.
- */
 @Component({})
 export default class LoginComponent extends Vue {
   @Prop({ type: Boolean, default: () => false })
   disabled!: boolean;
 
-  private username = "";
-  private password = "";
+  username = "";
+  password = "";
 
-  /**
-   * Returns true iff the current password is acceptable to enable the login action.
-   * Currently, any password with at least one character is okay.
-   */
   get acceptPassword(): boolean {
     return this.password.length > 0;
   }
 
-  /**
-   * Returns true iff the current user is acceptable to enable the login action.
-   * Currently, any username with at least one character is okay.
-   */
   get acceptUser(): boolean {
     return this.username.length > 0;
   }
@@ -122,9 +111,8 @@ export default class LoginComponent extends Vue {
    *
    * @param login the login to use
    * @param password the password to use
-   * @private
    */
-  private async authenticate(login?: string, password?: string): Promise<void> {
+  async authenticate(login?: string, password?: string): Promise<void> {
     this.$emit("auth-before", login);
     try {
       const credentials = this.getCredentials(login, password);
