@@ -35,11 +35,16 @@
             <p>You can use this tool to visualize survey responses.</p>
 
             <h4 class="pt-5 pb-2">Further links:</h4>
-            <b-link v-if="limesurveyUrl" :href="limesurveyUrl" target="_blank">
-              Limesurvey @ {{ limesurveyUrl }}
+            <b-link
+              v-if="instance"
+              :href="'https://' + instance"
+              target="_blank"
+            >
+              Limesurvey @ {{ instance }}
             </b-link>
           </b-col>
         </b-row>
+        <survey-list :username="username" />
       </b-container>
     </b-col>
   </b-row>
@@ -47,8 +52,13 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
+import SurveyList from "@/components/SurveyList.vue";
 
-@Component({})
+@Component({
+  components: {
+    SurveyList,
+  },
+})
 export default class HomeView extends Vue {
   get isAuthenticated(): boolean {
     return this.$store.getters.isAuthenticated;
@@ -58,10 +68,8 @@ export default class HomeView extends Vue {
     return this.$store.getters.username;
   }
 
-  get limesurveyUrl(): string {
-    const endpoint = process.env.VUE_APP_LIMESURVEY_API;
-    const cutoff = endpoint.lastIndexOf("/admin/remotecontrol");
-    return cutoff !== -1 ? endpoint.substring(0, cutoff) : "";
+  get instance(): string {
+    return this.$store.getters.getInstanceDomain;
   }
 }
 </script>

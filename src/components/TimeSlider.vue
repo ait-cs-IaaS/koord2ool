@@ -61,18 +61,12 @@ export default class TimeSlider extends Vue {
     return [this.min - 1, this.max + 1];
   }
   set range(range: [number, number]) {
-    console.log("set Range: ", range);
     this.$emit("input", [new Date(range[0] * 1000), new Date(range[1] * 1000)]);
   }
 
   get step(): number {
     const stepSize = this.$store.getters.getStep;
     return stepSize * 3600;
-  }
-
-  created(): void {
-    console.log(`(max, min) = ${this.max}, ${this.min}`);
-    console.log(`(maxDate, minDate) ${this.maxDate}, ${this.minDate}`);
   }
 
   tooltipFormater = (value: number): string => {

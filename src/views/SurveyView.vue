@@ -98,16 +98,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import SurveyModel from "@/store/survey.model";
 import QuestionModel from "@/store/question.model";
 import SurveyComponent from "@/components/surveys/Survey.vue";
 import TimeSlider from "@/components/TimeSlider.vue";
-import ResponseModel, {
-  hasSubmitDateMatch,
-  minResponseDate,
-  maxResponseDate,
-} from "@/store/response.model";
+import ResponseModel from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 
 @Component({
@@ -169,15 +165,15 @@ export default class SurveyView extends Vue {
   }
 
   get minResponseDate(): Date {
-    return minResponseDate(this.responses);
+    return this.$store.getters.getMinResponseDate();
   }
 
   get maxResponseDate(): Date {
-    return maxResponseDate(this.responses);
+    return this.$store.getters.getMaxResponseDate();
   }
 
   get hasResponseDates(): boolean {
-    return hasSubmitDateMatch(this.responses);
+    return this.$store.getters.hasResponseDates();
   }
 
   responseRange = [];
@@ -203,6 +199,11 @@ export default class SurveyView extends Vue {
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
+  }
+
+  @Watch("$route")
+  async onRouteChange(): Promise<void> {
+    await this.$store.dispatch("refreshSurvey", this.surveyId);
   }
 
   async refresh(): Promise<void> {

@@ -2,6 +2,10 @@
   <b-row class="login">
     <b-col>
       <div v-if="isAuthenticated">
+        <h1>
+          Logged in as {{ username }}
+          <b-icon icon="person-check" class="ml-4 text-success"></b-icon>
+        </h1>
         <survey-list :username="username" />
       </div>
 

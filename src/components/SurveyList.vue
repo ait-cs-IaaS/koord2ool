@@ -1,18 +1,7 @@
 <template>
   <b-container fluid class="pl-0">
     <b-row>
-      <b-col cols="12">
-        <h1>
-          Successfully logged in
-          <b-icon icon="check-circle" class="ml-2 text-success"></b-icon>
-        </h1>
-        <p>
-          You are logged in as <b>{{ username }}</b
-          >.
-        </p>
-      </b-col>
-
-      <b-col cols="4">
+      <b-col cols="6">
         <h4 class="pt-5 pb-2">Choose a survey</h4>
         <b-list-group class="shadow">
           <b-list-group-item

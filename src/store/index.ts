@@ -4,7 +4,11 @@ import RememberAuthPlugin from "@/store/remember-auth.plugin";
 import KoordLayout from "@/store/koord.layout";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
-import ResponseModel from "@/store/response.model";
+import ResponseModel, {
+  hasSubmitDateMatch,
+  minResponseDate,
+  maxResponseDate,
+} from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
 import { ParticipantModel } from "@/store/participant.model";
 
@@ -18,6 +22,7 @@ const store = new Vuex.Store<KoordLayout>({
     responses: {},
     surveys: {},
     settings: { step: 6, limeSurveyUri: process.env.VUE_APP_LIMESURVEY_API },
+    selectedSurveyID: undefined,
     syncing: false,
   },
   getters: {
@@ -77,6 +82,32 @@ const store = new Vuex.Store<KoordLayout>({
       return state.surveys[sid];
     },
     getStep: (state) => state.settings.step,
+    getLimeSurveyUri: (state) => state.settings.limeSurveyUri,
+    getSelectedSurveyID: (state) => state.selectedSurveyID,
+    hasSubmitDateMatch:
+      (state) =>
+      (sid: number | undefined = state.selectedSurveyID) => {
+        if (sid === undefined) {
+          return false;
+        }
+        return hasSubmitDateMatch(state.responses[sid]);
+      },
+    getMinResponseDate:
+      (state) =>
+      (sid: number | undefined = state.selectedSurveyID) => {
+        if (sid === undefined) {
+          return undefined;
+        }
+        return minResponseDate(state.responses[sid]);
+      },
+    getMaxResponseDate:
+      (state) =>
+      (sid: number | undefined = state.selectedSurveyID) => {
+        if (sid === undefined) {
+          return undefined;
+        }
+        return maxResponseDate(state.responses[sid]);
+      },
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {
@@ -91,6 +122,9 @@ const store = new Vuex.Store<KoordLayout>({
       state.syncing = syncing;
     },
 
+    setSurveyID(state, sid: number) {
+      state.selectedSurveyID = sid;
+    },
     setSurveyList(state, surveys: SurveyModel[] = []) {
       const newSurveys: Record<number, SurveyModel> = {};
       for (const survey of surveys) {
@@ -137,6 +171,10 @@ const store = new Vuex.Store<KoordLayout>({
     ) {
       Vue.set(state.participants, payload.sid, payload.participants);
     },
+
+    updateStep(state, step: number) {
+      state.settings.step = step;
+    },
   },
   actions: {
     async authenticate(
@@ -163,6 +201,7 @@ const store = new Vuex.Store<KoordLayout>({
       if (state.state.limesurvey) {
         try {
           state.commit("setSyncState", true);
+          state.commit("setSurveyID", surveyId);
           await Promise.all([
             state.dispatch("refreshQuestions", surveyId),
             state.dispatch("refreshResponses", surveyId),
@@ -183,20 +222,26 @@ const store = new Vuex.Store<KoordLayout>({
       return [];
     },
 
-    async refreshQuestions(state, sid: number): Promise<QuestionModel[]> {
-      if (state.state.limesurvey) {
-        const questions = await state.state.limesurvey.getQuestions(sid);
-        state.commit("updateQuestions", { sid, questions });
+    async refreshQuestions(
+      { state, commit },
+      sid: number
+    ): Promise<QuestionModel[]> {
+      if (state.limesurvey) {
+        const questions = await state.limesurvey.getQuestions(sid);
+        commit("updateQuestions", { sid, questions });
         return questions;
       }
       return [];
     },
 
-    async refreshResponses(state, sid: number): Promise<ResponseModel[]> {
-      if (state.state.limesurvey) {
-        const responses = await state.state.limesurvey.getResponses(sid);
+    async refreshResponses(
+      { state, commit },
+      sid: number
+    ): Promise<ResponseModel[]> {
+      if (state.limesurvey) {
+        const responses = await state.limesurvey.getResponses(sid);
         if (typeof responses !== "undefined") {
-          state.commit("updateResponses", {
+          commit("updateResponses", {
             sid,
             responses,
           });
