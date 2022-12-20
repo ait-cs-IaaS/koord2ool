@@ -5,6 +5,7 @@
     </b-row>
     <b-row>
       <b-col>
+        <h2>Time slider interval in hours:</h2>
         <v-btn-toggle v-model="step" mandatory>
           <v-btn>
             <v-icon>1</v-icon>
