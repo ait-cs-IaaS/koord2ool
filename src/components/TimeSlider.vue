@@ -12,13 +12,12 @@
       :min="min"
       :max="max"
       :absorb="true"
-      :interval="3600 * 24"
+      :interval="step"
       :marks="true"
       :hide-label="true"
       :lazy="true"
       class="mx-5 mt-5 mb-5 pb-4 text-primary"
     ></vue-slider>
-    {{ range }}
   </div>
 </template>
 
