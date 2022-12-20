@@ -76,6 +76,7 @@ const store = new Vuex.Store<KoordLayout>({
       }
       return state.surveys[sid];
     },
+    getStep: (state) => state.settings.step,
   },
   mutations: {
     setApi(state, api?: LimesurveyApi) {

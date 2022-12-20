@@ -1,4 +1,4 @@
-export interface SettingsModel {
+export default interface SettingsModel {
   limeSurveyUri: string;
   step: number;
 }

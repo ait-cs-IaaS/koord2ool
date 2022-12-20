@@ -1,41 +1,82 @@
 <template>
-  <b-form-group class="time-slider" :label-for="id">
+  <div>
     <h4>
       <b>Set range</b>
     </h4>
-    <v-range-slider
+    <vue-slider
       v-model="range"
-      :min="minDate"
-      :max="maxDate"
-      :step="step"
-    />
-  </b-form-group>
+      :enable-cross="false"
+      :tooltip="'always'"
+      tooltip-placement="top"
+      :tooltip-formatter="tooltipFormater"
+      :min="min"
+      :max="max"
+      :absorb="true"
+      :interval="3600 * 24"
+      :marks="true"
+      :hide-label="true"
+      :lazy="true"
+      class="mx-5 mt-5 mb-5 pb-4 text-primary"
+    ></vue-slider>
+    {{ range }}
+  </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
-import { v4 } from "uuid";
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/antd.css";
 
 @Component({
-  components: {},
+  components: {
+    VueSlider,
+  },
 })
 export default class TimeSlider extends Vue {
-  @Prop({ type: String, default: () => `timeslider-${v4()}` })
-  id!: string;
+  @Prop({ type: Date, required: true })
+  minDate!: Date;
 
-  @Prop({ type: Date, required: false })
-  minDate?: Date;
+  @Prop({ type: Date, required: true })
+  maxDate!: Date;
 
-  @Prop({ type: Date, required: false })
-  maxDate?: Date;
-
-  range: [Date, Date] = [new Date(), new Date()];
-  step: number = 6 * 60 * 60 * 1000;
-
-  protected emitUpdate(range?: [number, number]): void {
-    if (typeof range !== "undefined") {
-      this.$emit("input", [new Date(range[0]), new Date(range[1])]);
-    }
+  getMidnight(date: Date): Date {
+    return new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
   }
+  getMidnightTomrrow(date: Date): Date {
+    return new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+    );
+  }
+  get min(): number {
+    return Math.round(this.getMidnight(this.minDate).getTime() / 1000);
+  }
+
+  get max(): number {
+    return Math.round(this.getMidnightTomrrow(this.maxDate).getTime() / 1000);
+  }
+
+  get range(): [number, number] {
+    return [this.min - 1, this.max + 1];
+  }
+  set range(range: [number, number]) {
+    console.log("set Range: ", range);
+    this.$emit("input", [new Date(range[0] * 1000), new Date(range[1] * 1000)]);
+  }
+
+  get step(): number {
+    const stepSize = this.$store.getters.getStep;
+    return stepSize * 3600;
+  }
+
+  created(): void {
+    console.log(`(max, min) = ${this.max}, ${this.min}`);
+    console.log(`(maxDate, minDate) ${this.maxDate}, ${this.minDate}`);
+  }
+
+  tooltipFormater = (value: number): string => {
+    return new Date(value * 1000).toUTCString();
+  };
 }
 </script>

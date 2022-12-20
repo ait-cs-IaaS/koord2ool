@@ -7,6 +7,7 @@
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
 import { mapState } from "vuex";
+import SettingsModel from "@/store/settings.model";
 
 @Component({
   computed: {
@@ -14,7 +15,7 @@ import { mapState } from "vuex";
   },
 })
 export default class SettingsView extends Vue {
-  settings!: any[];
+  settings!: SettingsModel;
   created() {
     console.log(this.settings);
   }

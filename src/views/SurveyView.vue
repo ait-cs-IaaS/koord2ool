@@ -29,9 +29,8 @@
         <b-card class="time-slider-container mb-5 shadow">
           <time-slider
             v-model="responseRange"
-            :min="minResponseDate"
-            :max="maxResponseDate"
-            :disabled="!hasResponses"
+            :minDate="minResponseDate"
+            :maxDate="maxResponseDate"
             v-if="hasResponseDates"
           />
           <v-simple-table>
