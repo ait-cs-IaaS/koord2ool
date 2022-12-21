@@ -1,7 +1,7 @@
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
-import { ParticipantModel } from "@/store/participant.model";
+import { ParticipantModel, ParticipantError } from "@/store/participant.model";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -40,6 +40,26 @@ export class LimesurveyApi {
 
   async listSurveys(): Promise<SurveyModel[]> {
     return this.call("list_surveys");
+  }
+
+  async exportStatistics(sid: number): Promise<Blob> {
+    const b64Content = await this.call<string>("export_statistics", true, sid);
+    const byteCharacters = atob(b64Content);
+    const byteArrays = [];
+
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+
+    return new Blob(byteArrays, { type: "application/pdf" });
   }
 
   async getQuestions(sid: number): Promise<QuestionModel[]> {
@@ -87,8 +107,22 @@ export class LimesurveyApi {
     return [];
   }
 
+  isParticipantsError(
+    o: ParticipantModel[] | ParticipantError
+  ): o is ParticipantError {
+    return "status" in o;
+  }
+
   async getParticipants(sid: number): Promise<ParticipantModel[]> {
-    return this.call<ParticipantModel[]>("list_participants", true, sid);
+    const participants = await this.call<ParticipantModel[] | ParticipantError>(
+      "list_participants",
+      true,
+      sid
+    );
+    if (this.isParticipantsError(participants)) {
+      return [];
+    }
+    return participants;
   }
 
   private requireAuth(): void {

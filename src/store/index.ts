@@ -257,13 +257,11 @@ const store = new Vuex.Store<KoordLayout>({
     async refreshParticipants(state, sid: number): Promise<ParticipantModel[]> {
       if (state.state.limesurvey) {
         const participants = await state.state.limesurvey.getParticipants(sid);
-        if (typeof participants !== "undefined") {
-          state.commit("updateParticipants", {
-            sid,
-            participants,
-          });
-          return participants;
-        }
+        state.commit("updateParticipants", {
+          sid,
+          participants,
+        });
+        return participants;
       }
       return [];
     },

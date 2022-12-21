@@ -125,6 +125,7 @@ export default class SurveyView extends Vue {
     ) {
       return survey.questions;
     }
+    console.warn("No questions found for survey", this.surveyId);
     return {};
   }
 

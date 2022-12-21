@@ -18,3 +18,7 @@ export interface ParticipantModel {
    */
   [other: string]: unknown;
 }
+
+export interface ParticipantError {
+  status: string;
+}

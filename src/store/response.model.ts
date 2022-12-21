@@ -28,39 +28,25 @@ export default interface ResponseModel {
   /**
    * This is a catch-all property for question data.
    *
-   * Iff `undefined`, there does not appear to be any such question.
-   * Iff `null`, the question exists in general, but the user chose not to answer.
+   * If `undefined`, there does not appear to be any such question.
+   * If `null`, the question exists in general, but the user chose not to answer.
    * Otherwise, expect a `string` here.
    */
   [question: string]: string | null | undefined;
 }
 
-export const ignoreKeys: (keyof ResponseModel)[] = [
-  "datestamp",
-  "id",
-  "ipaddr",
-  "lastpage",
-  "seed",
-  "startlanguage",
-  "startdate",
-  "submitdate",
-  "$validUntil",
-];
-
-/**
- * This method strips the provided response of metadata or other
- * critical information that should probably not be presented to
- * the user.
- * @param response the response to strip data from.
- */
-export function strip(response: ResponseModel): Record<string, string> {
+export function getQuestionsFromResponses(
+  response: ResponseModel
+): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {
-    if (
-      !ignoreKeys.includes(key as keyof ResponseModel) &&
-      typeof value === "string"
-    ) {
-      result[key] = value;
+    if (key.startsWith("Q") && typeof value === "string") {
+      if (key.indexOf("[") === -1) {
+        result[key] = value;
+      } else {
+        const questionKey = key.substring(0, key.indexOf("["));
+        result[questionKey] = value;
+      }
     }
   });
   return result;
