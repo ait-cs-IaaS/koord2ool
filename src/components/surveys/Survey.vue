@@ -1,7 +1,5 @@
 <template>
   <b-card no-body class="survey-results-outer-container">
-    <h1>QUESTION KEYS: {{ questionKeys }}</h1>
-    <h1>QUESTION Texts: {{ questionTexts }}</h1>
     <b-tabs v-model="tabIndex" pills card>
       <template #tabs-end>
         <b-button

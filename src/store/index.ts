@@ -11,6 +11,7 @@ import ResponseModel, {
   maxResponseDate,
 } from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
+import QuestionPropertyModel from "./question_property.model";
 import { ParticipantModel } from "@/store/participant.model";
 
 Vue.use(Vuex);
@@ -153,6 +154,30 @@ const store = new Vuex.Store<KoordLayout>({
       Vue.set(state, "surveys", newSurveys);
     },
 
+    updateQuestionProperties(
+      state,
+      payload: { question_properties: QuestionPropertyModel }
+    ) {
+      const sid: number = +payload.question_properties.sid;
+      const title: string = payload.question_properties.title;
+      const questions = state.surveys[sid].questions;
+      if (questions === undefined) {
+        console.log("No questions for survey: ", sid);
+        return;
+      }
+      const question = questions[title];
+      if (question === undefined) {
+        console.log("No question for title: ", title);
+        return;
+      }
+      console.log("Updating question properties for: ", question);
+      question.question_properties = payload.question_properties;
+      console.log(
+        "Updated question properties with: ",
+        payload.question_properties
+      );
+    },
+
     updateQuestions(
       state,
       payload: { sid: number; questions: QuestionModel[] }
@@ -160,6 +185,9 @@ const store = new Vuex.Store<KoordLayout>({
       if (typeof state.surveys[payload.sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
         for (const question of payload.questions) {
+          if (question.question_theme_name === "multipleshorttext") {
+            store.dispatch("refreshQuestionProperties", question.qid);
+          }
           asRecord[question.title] = question;
         }
         Vue.set(state.surveys[payload.sid], "questions", asRecord);
@@ -251,6 +279,16 @@ const store = new Vuex.Store<KoordLayout>({
         return questions;
       }
       return [];
+    },
+
+    async refreshQuestionProperties(
+      { state, commit },
+      qid: number
+    ): Promise<void> {
+      if (state.limesurvey) {
+        const question_properties = await api.getQuestionProperties(qid);
+        commit("updateQuestionProperties", { question_properties });
+      }
     },
 
     async refreshResponses(
