@@ -87,8 +87,13 @@ export default class ChartsComponent extends Vue {
   ];
 
   getQuestionText(questionKey: string): string {
-    const key = questionKey.split("[")[0];
-    return this.questions[key].question;
+    const key = questionKey.split("[");
+    const question = this.questions[key[0]];
+    if (key.length === 1) return question.question;
+    const subquestion = key[1].split("]")[0];
+    if (question.subquestions !== undefined)
+      return question.subquestions[subquestion];
+    return question.question;
   }
 
   // TODO: Check if there is response[questionKey + "[S" + questionKey + "#]"] and use that instead

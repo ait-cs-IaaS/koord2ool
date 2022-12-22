@@ -13,6 +13,7 @@ import ResponseModel, {
 import QuestionModel from "@/store/question.model";
 import QuestionPropertyModel from "./question_property.model";
 import { ParticipantModel } from "@/store/participant.model";
+import SubQuestionModel from "./subquestion.model";
 
 Vue.use(Vuex);
 
@@ -162,20 +163,28 @@ const store = new Vuex.Store<KoordLayout>({
       const title: string = payload.question_properties.title;
       const questions = state.surveys[sid].questions;
       if (questions === undefined) {
-        console.log("No questions for survey: ", sid);
+        console.debug("No questions for survey: ", sid);
         return;
       }
       const question = questions[title];
       if (question === undefined) {
-        console.log("No question for title: ", title);
+        console.debug("No question for title: ", title);
         return;
       }
-      console.log("Updating question properties for: ", question);
-      question.question_properties = payload.question_properties;
-      console.log(
-        "Updated question properties with: ",
-        payload.question_properties
-      );
+      if (
+        typeof payload.question_properties.subquestions === "string" ||
+        payload.question_properties.subquestions === undefined
+      ) {
+        return;
+      }
+      const subquestions = payload.question_properties.subquestions;
+      const result = Object.keys(subquestions).reduce((acc, key) => {
+        const titleX = subquestions[key].title;
+        const questionX = subquestions[key].question;
+        return { ...acc, [titleX]: questionX };
+      }, {});
+      console.log("XXXX: ", result);
+      Vue.set(question, "subquestions", result);
     },
 
     updateQuestions(
