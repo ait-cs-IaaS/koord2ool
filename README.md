@@ -108,9 +108,9 @@ If you are changing an already active survey, use the following approach:
 
 Have a look at our [Contribution guidelines](https://github.com/ait-cs-IaaS/.github/blob/master/CONTRIBUTING.md) tips on how to contribute.
 
-- **Martin Galusinski**: initial development of the KoordTool.
-- **Benjamin Akhras**: post-release support.
-- **Manuel Warum**: post-release support.
+- **Martin Galusinski**: [inert]
+- **Manuel Warum**: [inert]
+- **Benjamin Akhras**: [active]
 
 ### EU Funding
 

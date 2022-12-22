@@ -1,7 +1,10 @@
 import SurveyModel from "@/store/survey.model";
 import ResponseModel from "@/store/response.model";
 import QuestionModel from "@/store/question.model";
+import QuestionPropertyModel from "@/store/question_property.model";
 import { ParticipantModel, ParticipantError } from "@/store/participant.model";
+import store from "@/store";
+import router from "@/router";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -21,7 +24,10 @@ export class LimesurveyApi {
     }
   }
 
-  async authenticate(username: string, password: string): Promise<boolean> {
+  async authenticate(
+    username: string,
+    password: string
+  ): Promise<string | undefined> {
     const session = await this.call<Auth>(
       "get_session_key",
       false,
@@ -31,11 +37,11 @@ export class LimesurveyApi {
     if (session && typeof session === "string") {
       this.session = session;
       this.username = username;
-      return true;
+      return session;
     } else if (typeof session === "object") {
       throw new Error(session.status);
     }
-    return false;
+    return undefined;
   }
 
   async listSurveys(): Promise<SurveyModel[]> {
@@ -66,7 +72,14 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getResponses(sid: number): Promise<ResponseModel[]> {
+  async getQuestionProperties(qid: number): Promise<QuestionPropertyModel> {
+    return this.call("get_question_properties", true, qid);
+  }
+
+  async getResponses(
+    sid: number,
+    headingType = "code"
+  ): Promise<ResponseModel[]> {
     const data = await this.call(
       "export_responses",
       true,
@@ -74,7 +87,7 @@ export class LimesurveyApi {
       "json",
       "en",
       "complete",
-      "code",
+      headingType,
       "long"
     );
     if (typeof data === "string") {
@@ -125,9 +138,42 @@ export class LimesurveyApi {
     return participants;
   }
 
+  private restoreSession(): boolean {
+    if (store.state.limesurvey === undefined) {
+      console.error("Failed to restore state.");
+      return false;
+    }
+    const username = store.state.limesurvey.username;
+    const session = store.state.limesurvey.session;
+    if (username === undefined || session === undefined) {
+      console.error("No Session Key found.");
+      return false;
+    }
+    this.username = username;
+    this.session = session;
+    console.debug("Session restored.");
+    return true;
+  }
+
   private requireAuth(): void {
     if (typeof this.session === "undefined") {
+      if (this.restoreSession()) {
+        return;
+      }
       throw new Error("LimeSurvey API not authenticated");
+    }
+  }
+
+  private checkResult(result: Record<string, string>): void {
+    if (result.status !== undefined) {
+      if (result.status === "Invalid session key") {
+        this.session = undefined;
+        this.username = undefined;
+        store.state.limesurvey = undefined;
+        store.commit("setError", "Invalid session Key redirected to login");
+        console.debug(`Invalid session Key redirected to login`);
+        router.push({ name: "login" });
+      }
     }
   }
 
@@ -160,6 +206,7 @@ export class LimesurveyApi {
     if (error) {
       throw new Error(error);
     }
+    this.checkResult(result);
     return result;
   }
 }

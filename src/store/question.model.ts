@@ -1,5 +1,6 @@
 /**
  * This is a stub of the DTO returned by LimeSurvey when retrieving questions.
+ * https://api.limesurvey.org/classes/Question.html
  */
 export default interface QuestionModel {
   title: string;
@@ -9,6 +10,8 @@ export default interface QuestionModel {
   question: string;
 
   help?: string;
+
+  qid: number;
 
   mandatory?: "N" | "Y";
 

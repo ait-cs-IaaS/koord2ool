@@ -20,7 +20,7 @@
       >
         <chart-card
           :id="questionKey"
-          :question="questions[questionKey].question"
+          :question="getQuestionText(questionKey)"
           :counters="countResponsesFor(questionKey)"
           :data="createTimelineFor(questionKey)"
           :useLogicalTime="useLogicalTime"
@@ -86,6 +86,12 @@ export default class ChartsComponent extends Vue {
     },
   ];
 
+  getQuestionText(questionKey: string): string {
+    const key = questionKey.split("[")[0];
+    return this.questions[key].question;
+  }
+
+  // TODO: Check if there is response[questionKey + "[S" + questionKey + "#]"] and use that instead
   countResponsesFor(
     questionKey: string
   ): Array<{ name: string; value: number }> {

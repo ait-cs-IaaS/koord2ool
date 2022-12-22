@@ -35,18 +35,29 @@ export default interface ResponseModel {
   [question: string]: string | null | undefined;
 }
 
+export const ignoreKeys: (keyof ResponseModel)[] = [
+  "datestamp",
+  "id",
+  "ipaddr",
+  "lastpage",
+  "seed",
+  "startlanguage",
+  "startdate",
+  "submitdate",
+  "$validUntil",
+];
+
 export function getQuestionsFromResponses(
   response: ResponseModel
 ): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {
-    if (key.startsWith("Q") && typeof value === "string") {
-      if (key.indexOf("[") === -1) {
-        result[key] = value;
-      } else {
-        const questionKey = key.substring(0, key.indexOf("["));
-        result[questionKey] = value;
-      }
+    if (
+      key.startsWith("Q") &&
+      typeof value === "string" &&
+      !ignoreKeys.includes(key)
+    ) {
+      result[key] = value;
     }
   });
   return result;

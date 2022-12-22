@@ -2,7 +2,10 @@
   <b-container fluid class="pl-0">
     <b-row>
       <b-col cols="6">
-        <h4 class="pt-5 pb-2">Choose a survey</h4>
+        <h4 class="pt-5 pb-2">
+          Choose a survey
+          <b-btn variant="primary" @click="refresh">Refresh</b-btn>
+        </h4>
         <b-list-group class="shadow">
           <b-list-group-item
             v-for="{ key, label, to } in surveyLinks"
@@ -30,6 +33,10 @@ type SurveyLink = {
 export default class SurveyListComponent extends Vue {
   @Prop({ type: String, required: true })
   username!: string;
+
+  async refresh(): Promise<void> {
+    await this.$store.dispatch("refreshSurveys");
+  }
 
   get surveyLinks(): SurveyLink[] {
     const surveyIds: number[] = [...this.$store.getters.getSurveys];

@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import RememberAuthPlugin from "@/store/remember-auth.plugin";
+// import RememberAuthPlugin from "@/store/remember-auth.plugin";
+import VuexPersistence from "vuex-persist";
 import KoordLayout from "@/store/koord.layout";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
@@ -13,6 +14,12 @@ import QuestionModel from "@/store/question.model";
 import { ParticipantModel } from "@/store/participant.model";
 
 Vue.use(Vuex);
+
+export const api = new LimesurveyApi();
+
+const vuexLocal = new VuexPersistence<KoordLayout>({
+  storage: window.localStorage,
+});
 
 const store = new Vuex.Store<KoordLayout>({
   state: {
@@ -113,8 +120,10 @@ const store = new Vuex.Store<KoordLayout>({
       },
   },
   mutations: {
-    setApi(state, api?: LimesurveyApi) {
-      state.limesurvey = api;
+    setApi(state, apiSession: { session: string; username: string }) {
+      api.username = apiSession.username;
+      api.session = apiSession.session;
+      state.limesurvey = apiSession;
     },
 
     setError(state, error?: Error) {
@@ -186,11 +195,18 @@ const store = new Vuex.Store<KoordLayout>({
     ): Promise<boolean> {
       state.commit("setSyncState", true);
 
-      const api = new LimesurveyApi();
-      const okay = await api.authenticate(payload.username, payload.password);
+      const session = await api.authenticate(
+        payload.username,
+        payload.password
+      );
+
+      const okay = session !== undefined;
 
       if (okay) {
-        state.commit("setApi", okay ? api : undefined);
+        state.commit("setApi", {
+          session: session,
+          username: payload.username,
+        });
         await state.dispatch("refreshSurveys");
       } else {
         state.commit("setError", new Error("Failed to authenticate"));
@@ -201,7 +217,7 @@ const store = new Vuex.Store<KoordLayout>({
     },
 
     async refreshSurvey(state, surveyId: number): Promise<void> {
-      if (state.state.limesurvey) {
+      if (state.getters.isAuthenticated) {
         try {
           state.commit("setSyncState", true);
           state.commit("setSurveyID", surveyId);
@@ -217,8 +233,8 @@ const store = new Vuex.Store<KoordLayout>({
     },
 
     async refreshSurveys(state): Promise<SurveyModel[]> {
-      if (state.state.limesurvey) {
-        const surveys = await state.state.limesurvey.listSurveys();
+      if (state.getters.isAuthenticated) {
+        const surveys = await api.listSurveys();
         state.commit("setSurveyList", surveys);
         return surveys;
       }
@@ -230,7 +246,7 @@ const store = new Vuex.Store<KoordLayout>({
       sid: number
     ): Promise<QuestionModel[]> {
       if (state.limesurvey) {
-        const questions = await state.limesurvey.getQuestions(sid);
+        const questions = await api.getQuestions(sid);
         commit("updateQuestions", { sid, questions });
         return questions;
       }
@@ -242,7 +258,7 @@ const store = new Vuex.Store<KoordLayout>({
       sid: number
     ): Promise<ResponseModel[]> {
       if (state.limesurvey) {
-        const responses = await state.limesurvey.getResponses(sid);
+        const responses = await api.getResponses(sid);
         if (typeof responses !== "undefined") {
           commit("updateResponses", {
             sid,
@@ -255,8 +271,8 @@ const store = new Vuex.Store<KoordLayout>({
     },
 
     async refreshParticipants(state, sid: number): Promise<ParticipantModel[]> {
-      if (state.state.limesurvey) {
-        const participants = await state.state.limesurvey.getParticipants(sid);
+      if (state.getters.isAuthenticated) {
+        const participants = await api.getParticipants(sid);
         state.commit("updateParticipants", {
           sid,
           participants,
@@ -266,7 +282,7 @@ const store = new Vuex.Store<KoordLayout>({
       return [];
     },
   },
-  plugins: [RememberAuthPlugin],
+  plugins: [vuexLocal.plugin],
 });
 
 export default store;

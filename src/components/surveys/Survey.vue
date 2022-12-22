@@ -1,10 +1,7 @@
 <template>
   <b-card no-body class="survey-results-outer-container">
     <h1>QUESTION KEYS: {{ questionKeys }}</h1>
-    <h1>QUESTION KEYS ONLY: {{ questionKeysOnly }}</h1>
-    <h1 v-for="(question, key) in questions" :key="key">
-      QUESTION[{{ key }}]: {{ question.question_theme_name }}
-    </h1>
+    <h1>QUESTION Texts: {{ questionTexts }}</h1>
     <b-tabs v-model="tabIndex" pills card>
       <template #tabs-end>
         <b-button
@@ -146,21 +143,8 @@ export default class Survey extends Vue {
     ).sort();
   }
 
-  get questionKeysOnly(): string[] {
-    return this.questionKeys.filter((key) => {
-      return true;
-      // if ("question_theme_name" in this.questions[key]) {
-      //   console.log("question_theme_name is undefined for: " + this.questions);
-      //   return false;
-      // }
-      // if (this.questions[key].question_theme_name === "multipleshorttext") {
-      //   return false;
-      // }
-      // if (typeof this.questions[key].question === "undefined") {
-      //   return false;
-      // }
-      // return /^[qQ]\d+.*$/.test(key);
-    });
+  get questionTexts(): Record<string, string> {
+    return getQuestionsFromResponses(this.responses[0]);
   }
 }
 </script>
