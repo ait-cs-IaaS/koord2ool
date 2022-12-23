@@ -84,10 +84,10 @@ export default class LineChartComponent extends Vue {
                     type: "time",
                     time: {
                       isoWeekday: true,
-                      minUnit: "day",
-                      round: "day",
+                      minUnit: "hour",
+                      round: "hour",
                       displayFormats: {
-                        day: "MMM DD",
+                        day: "HH:MM - MMM DD",
                       },
                       tooltipFormat: "MMM DD, YYYY",
                     },

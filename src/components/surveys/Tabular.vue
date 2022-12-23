@@ -1,78 +1,80 @@
 <template>
-  <div>
-    <!-- FIXME: the filter-function doesn't do anything.. yet? -->
-    <b-table
-      borderless
-      outlined
-      hover
-      responsive
-      stacked="sm"
-      :tbody-transition-props="{ name: 'flip-list' }"
-      :items="sortedResponses"
-      :fields="fields"
-      :filter-function="filterRecords"
-      :filter="null"
-      empty-filtered-text="There are no records to show matching your filter."
-      empty-text="There are no records to show."
-      class="table-default shadow"
-    >
-      <template #cell()="data">
-        <b-icon
-          v-if="data.value === 'Y'"
-          icon="check-circle-fill"
-          class="table-check-icon"
-        ></b-icon>
-        <b-icon
-          v-else-if="data.value === 'N'"
-          icon="x-circle-fill"
-          class="table-cross-icon"
-        ></b-icon>
-        <b-icon
-          v-else-if="data.value === ''"
-          icon="dash"
-          class="table-dash-icon"
-        ></b-icon>
-        <span v-else>{{ data.value }}</span>
-      </template>
-
-      <template #cell(token)="data">
-        <span :data-token="data.item.token">
-          {{ data.value }}
-        </span>
-        <div
-          v-if="data.item.$validUntil && !hideStaleSetting"
-          class="update-info"
+  <b-container fluid class="px-3 mx-0">
+    <b-row class="pt-3">
+      <b-col cols="12" class="avoid-page-break px-1 py-1">
+        <display-options
+          :displayOptions="showOptions"
+          :options="staleOptions"
+          @result="hideStale = $event"
+        />
+      </b-col>
+    </b-row>
+    <b-row class="pt-3">
+      <b-col cols="12" class="avoid-page-break px-1 py-1">
+        <b-table
+          borderless
+          outlined
+          hover
+          responsive
+          stacked="sm"
+          :tbody-transition-props="{ name: 'flip-list' }"
+          :items="sortedResponses"
+          :fields="fields"
+          :filter-function="filterRecords"
+          :filter="null"
+          empty-filtered-text="There are no records to show matching your filter."
+          empty-text="There are no records to show."
+          class="table-default shadow"
         >
-          (updated {{ data.item.$validUntil }})
-        </div>
-      </template>
-    </b-table>
-  </div>
+          <template #cell()="data">
+            <b-icon
+              v-if="data.value === 'Y'"
+              icon="check-circle-fill"
+              class="table-check-icon"
+            ></b-icon>
+            <b-icon
+              v-else-if="data.value === 'N'"
+              icon="x-circle-fill"
+              class="table-cross-icon"
+            ></b-icon>
+            <b-icon
+              v-else-if="data.value === ''"
+              icon="dash"
+              class="table-dash-icon"
+            ></b-icon>
+            <span v-else>{{ data.value }}</span>
+          </template>
+
+          <template #cell(token)="data">
+            <span :data-token="data.item.token">
+              {{ data.value }}
+            </span>
+            <div v-if="data.item.$validUntil && !hideStale" class="update-info">
+              (updated {{ data.item.$validUntil }})
+            </div>
+          </template>
+        </b-table>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import ResponseModel from "@/store/response.model";
+import { Component, Prop, Vue } from "vue-property-decorator";
+import { ResponseModel } from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
 import { ParticipantModel } from "@/store/participant.model";
+import DisplayOptions from "@/components/surveys/DisplayOptions.vue";
 
-/**
- * This is a tabular view of survey responses.
- */
-@Component({})
+@Component({
+  components: {
+    DisplayOptions,
+  },
+})
 export default class TabularComponent extends Vue {
-  /**
-   * The keys that should be shown in the table.
-   * @default ["submitdate", "token"]
-   */
   @Prop({ type: Array, default: () => ["submitdate", "token"] })
   showKeys!: string[];
 
-  /**
-   * The sorting direction, either ascending (1) or descending (-1).
-   *
-   * @default 1
-   */
   @Prop({
     type: Number,
     default: () => 1,
@@ -80,46 +82,36 @@ export default class TabularComponent extends Vue {
   })
   sortDirection!: -1 | 1;
 
-  /**
-   * The key to sort the table by.
-   */
   @Prop({ type: String, required: false })
   sortKey?: keyof ResponseModel;
 
-  /**
-   * The responses to render.
-   */
   @Prop({ type: Array, default: () => [] })
   responses!: ResponseModel[];
 
-  /**
-   * A list of participants for these responses.
-   */
   @Prop({ type: Array, default: () => [] })
   participants!: ParticipantModel[];
 
-  /**
-   * Iff true, "overridden" responses (i.e., a response was submit at least a second time with the same token)
-   * will be hidden.
-   *
-   * @default false
-   */
-  @Prop({ type: Boolean, default: () => false })
-  hideStale!: boolean;
+  @Prop({ type: Boolean, default: false })
+  showOptions!: boolean;
 
-  hideStaleSetting = false;
+  hideStale = false;
 
-  @Watch("hideStale", { immediate: false })
-  private changeStale(): void {
-    this.hideStaleSetting = this.hideStale;
-  }
+  readonly staleOptions = [
+    {
+      text: "Visible stale",
+      value: false,
+      description: "Visible stale: decorate updated rows.",
+    },
+    {
+      text: "Hidden stale",
+      value: true,
+      description: "Hidden stale: show all rows as default rows.",
+    },
+  ];
 
-  /**
-   * Creates an object consumed by the bootstrap table. It contains data as well as rendering instructions.
-   */
   get fields(): BvTableFieldArray {
     const staleFormatter = (value: string, key1: string, item: ResponseModel) =>
-      !this.hideStaleSetting && item.$validUntil ? "text-muted" : "";
+      !this.hideStale && item.$validUntil ? "text-muted" : "";
     const timeAndToken = [
       {
         key: "token",
@@ -174,6 +166,7 @@ export default class TabularComponent extends Vue {
       : token;
   }
 
+  // FIXME: the filter-function doesn't do anything.. yet? -->
   filterRecords(item: ResponseModel): boolean {
     return !this.hideStale || !item.$validUntil;
   }

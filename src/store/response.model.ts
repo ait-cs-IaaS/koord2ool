@@ -4,7 +4,7 @@
  * Question responses are usually part of this DTO as well, where the provided
  * question keys are properties in this DTO.
  */
-export default interface ResponseModel {
+export interface ResponseModel {
   id: string;
 
   ipaddr?: string;
@@ -28,8 +28,8 @@ export default interface ResponseModel {
   /**
    * This is a catch-all property for question data.
    *
-   * Iff `undefined`, there does not appear to be any such question.
-   * Iff `null`, the question exists in general, but the user chose not to answer.
+   * If `undefined`, there does not appear to be any such question.
+   * If `null`, the question exists in general, but the user chose not to answer.
    * Otherwise, expect a `string` here.
    */
   [question: string]: string | null | undefined;
@@ -47,18 +47,15 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
   "$validUntil",
 ];
 
-/**
- * This method strips the provided response of metadata or other
- * critical information that should probably not be presented to
- * the user.
- * @param response the response to strip data from.
- */
-export function strip(response: ResponseModel): Record<string, string> {
+export function getQuestionsFromResponses(
+  response: ResponseModel
+): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {
     if (
-      !ignoreKeys.includes(key as keyof ResponseModel) &&
-      typeof value === "string"
+      key.startsWith("Q") &&
+      typeof value === "string" &&
+      !ignoreKeys.includes(key)
     ) {
       result[key] = value;
     }

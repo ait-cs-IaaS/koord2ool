@@ -1,15 +1,7 @@
 <template>
   <b-row class="login">
     <b-col>
-      <div v-if="isAuthenticated">
-        <h1>
-          Logged in as {{ username }}
-          <b-icon icon="person-check" class="ml-4 text-success"></b-icon>
-        </h1>
-        <survey-list :username="username" />
-      </div>
-
-      <div v-else>
+      <div>
         <h1>Log in</h1>
         <p>
           Please authenticate using your
@@ -70,6 +62,14 @@ export default class LoginView extends Vue {
   setSuccess(): void {
     const goTo = this.returnTo || "/";
     this.$router.push(goTo);
+  }
+
+  mounted(): void {
+    this.$nextTick(() => {
+      if (this.isAuthenticated) {
+        this.$router.push("/");
+      }
+    });
   }
 }
 </script>

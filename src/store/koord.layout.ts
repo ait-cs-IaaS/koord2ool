@@ -1,6 +1,5 @@
-import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
-import ResponseModel from "@/store/response.model";
+import { ResponseModel } from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 import SettingsModel from "@/store/settings.model";
 
@@ -11,7 +10,7 @@ export default interface KoordLayout {
   /**
    * The LimeSurvey API facade, if authenticated.
    */
-  limesurvey?: LimesurveyApi;
+  limesurvey?: Record<string, string>;
 
   /**
    * A set of responses for a given survey, identified by its survey ID.

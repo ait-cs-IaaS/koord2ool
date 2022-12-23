@@ -1,0 +1,60 @@
+#!/bin/bash
+
+while getopts ":m:p:i:brd" opt; do
+  case $opt in
+    m)
+      METHOD=$OPTARG
+      ;;
+    p)
+      PARAMS=$OPTARG
+      ;;
+    i)
+      id=$OPTARG
+      ;;
+    b)
+      BASE=1
+      ;;
+    r)
+      RAW=1
+      ;;
+    d)
+      DEBUG=1
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+LIME_RPC_URL="${LIMESURVEY_RPC_API:-https://lime.cyberrange.rocks/index.php/admin/remotecontrol}"
+
+if [[ -z ${SESSION_KEY} ]]; then
+	echo "Session Key isn't set Try something like:"
+	echo 'export SESSION_KEY=$(curl -s "${LIMESURVEY_RPC_API}" -H "Accept: application/json" -H "Content-Type: application/json" --data-raw {"method":"get_session_key","params":["admin","example"],"id":1} | jq -r .result)'
+	exit 1
+fi
+
+CURL_PARAMS="-s"
+
+json="{\"method\":\"${METHOD}\",\"params\":[\"${SESSION_KEY}\",${PARAMS}],\"id\":\"${id:-1}\"}"
+if [[ ! -z $DEBUG ]]; then
+  echo -e "Sending To Server:\n${LIME_RPC_URL}\nParams:\n${json}\n"
+  CURL_PARAMS="-v"
+fi
+
+result=$(curl ${CURL_PARAMS} ${LIME_RPC_URL} -H 'Accept: application/json'  -H 'Content-Type: application/json' --data-raw "${json}")
+
+if [[ -z $RAW ]]; then
+  result=$(echo ${result} | jq -r .result)
+fi
+
+if [[ ! -z $BASE ]]; then
+  result=$(echo ${result} | base64 -d | jq .)
+fi
+
+echo $result
