@@ -1,5 +1,5 @@
 import SurveyModel from "@/store/survey.model";
-import ResponseModel from "@/store/response.model";
+import { ResponseModel } from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 import SettingsModel from "@/store/settings.model";
 

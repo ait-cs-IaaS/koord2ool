@@ -61,7 +61,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ResponseModel from "@/store/response.model";
+import { ResponseModel } from "@/store/response.model";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
 import { ParticipantModel } from "@/store/participant.model";
 import DisplayOptions from "@/components/surveys/DisplayOptions.vue";

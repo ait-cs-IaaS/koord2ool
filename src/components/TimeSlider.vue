@@ -57,7 +57,7 @@ export default class TimeSlider extends Vue {
   }
 
   get range(): [number, number] {
-    return [this.min - 1, this.max + 1];
+    return [this.min, this.max];
   }
   set range(range: [number, number]) {
     this.$emit("input", [new Date(range[0] * 1000), new Date(range[1] * 1000)]);

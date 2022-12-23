@@ -5,15 +5,15 @@ import VuexPersistence from "vuex-persist";
 import KoordLayout from "@/store/koord.layout";
 import { LimesurveyApi } from "@/plugins";
 import SurveyModel from "@/store/survey.model";
-import ResponseModel, {
+import {
+  ResponseModel,
   hasSubmitDateMatch,
   minResponseDate,
   maxResponseDate,
 } from "@/store/response.model";
-import QuestionModel from "@/store/question.model";
+import { QuestionModel } from "@/store/question.model";
 import QuestionPropertyModel from "./question_property.model";
 import { ParticipantModel } from "@/store/participant.model";
-import SubQuestionModel from "./subquestion.model";
 
 Vue.use(Vuex);
 
@@ -183,7 +183,6 @@ const store = new Vuex.Store<KoordLayout>({
         const questionX = subquestions[key].question;
         return { ...acc, [titleX]: questionX };
       }, {});
-      console.log("XXXX: ", result);
       Vue.set(question, "subquestions", result);
     },
 

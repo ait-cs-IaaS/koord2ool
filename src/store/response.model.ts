@@ -4,7 +4,7 @@
  * Question responses are usually part of this DTO as well, where the provided
  * question keys are properties in this DTO.
  */
-export default interface ResponseModel {
+export interface ResponseModel {
   id: string;
 
   ipaddr?: string;

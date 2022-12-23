@@ -1,0 +1,43 @@
+#!/bin/bash
+
+while getopts ":m:p:i:bd" opt; do
+  case $opt in
+    m)
+      METHOD=$OPTARG
+      ;;
+    p)
+      PARAMS=$OPTARG
+      ;;
+    i)
+      id=$OPTARG
+      ;;
+    b)
+      BASE=1
+      ;;
+    d)
+      DEBUG=1
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+
+json="{\"method\":\"${METHOD}\",\"params\":[\"${SESSION_KEY}\",${PARAMS}],\"id\":\"${id:-1}\"}"
+if [[ ! -z $DEBUG ]]; then
+  echo "${json}"
+fi
+
+result=$(curl -s 'https://lime.cyberrange.rocks/index.php/admin/remotecontrol' -H 'Accept: application/json'  -H 'Content-Type: application/json' --data-raw "${json}" | jq -r .result)
+
+if [[ ! -z $BASE ]]; then
+  result=$(echo ${result} | base64 -d | jq .)
+fi
+
+echo $result

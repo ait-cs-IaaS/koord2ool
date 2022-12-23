@@ -20,7 +20,7 @@
       >
         <chart-card
           :id="questionKey"
-          :question="getQuestionText(questionKey)"
+          :question="questionText(questionKey)"
           :counters="countResponsesFor(questionKey)"
           :data="createTimelineFor(questionKey)"
           :useLogicalTime="useLogicalTime"
@@ -32,10 +32,10 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import ResponseModel from "@/store/response.model";
+import { ResponseModel } from "@/store/response.model";
 import ChartCard from "@/components/surveys/ChartCard.vue";
 import { ParticipantModel } from "@/store/participant.model";
-import QuestionModel from "@/store/question.model";
+import { QuestionModel, getQuestionText } from "@/store/question.model";
 import DisplayOptions from "@/components/surveys/DisplayOptions.vue";
 import { ChartData, ChartDataset } from "chart.js";
 import moment from "moment";
@@ -86,17 +86,10 @@ export default class ChartsComponent extends Vue {
     },
   ];
 
-  getQuestionText(questionKey: string): string {
-    const key = questionKey.split("[");
-    const question = this.questions[key[0]];
-    if (key.length === 1) return question.question;
-    const subquestion = key[1].split("]")[0];
-    if (question.subquestions !== undefined)
-      return question.subquestions[subquestion];
-    return question.question;
+  questionText(questionKey: string): string {
+    return getQuestionText(questionKey, this.questions);
   }
 
-  // TODO: Check if there is response[questionKey + "[S" + questionKey + "#]"] and use that instead
   countResponsesFor(
     questionKey: string
   ): Array<{ name: string; value: number }> {

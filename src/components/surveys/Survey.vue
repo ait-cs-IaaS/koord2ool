@@ -73,10 +73,11 @@ import LineChart from "@/components/surveys/LineChart.vue";
 import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
 import Charts from "@/components/surveys/Charts.vue";
-import ResponseModel, {
+import {
+  ResponseModel,
   getQuestionsFromResponses,
 } from "@/store/response.model";
-import QuestionModel from "@/store/question.model";
+import { QuestionModel } from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
 import { ParticipantModel } from "@/store/participant.model";
 

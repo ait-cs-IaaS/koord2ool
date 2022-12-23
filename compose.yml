@@ -1,3 +1,5 @@
+name: koord2ool
+
 services:
   koordtool:
     image: ghcr.io/ait-cs-iaas/koord2ool:latest

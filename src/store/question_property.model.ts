@@ -1,8 +1,13 @@
-import SubQuestionModel from "./subquestion.model";
 /**
  * This is a stub of the DTO returned by LimeSurvey when retrieving questions.
  * https://api.limesurvey.org/classes/Question.html
  */
+export interface SubQuestionModel {
+  question: string;
+  scale_id: string;
+  title: string;
+}
+
 export default interface QuestionPropertyModel {
   qid: string;
   parent_qid: string;

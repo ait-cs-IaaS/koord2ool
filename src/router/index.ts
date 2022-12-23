@@ -1,5 +1,5 @@
 import Vue from "vue";
-import VueRouter, { RouteConfig, Route } from "vue-router";
+import VueRouter, { RouteConfig } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
 import AboutView from "@/views/AboutView.vue";
 import SurveyView from "@/views/SurveyView.vue";

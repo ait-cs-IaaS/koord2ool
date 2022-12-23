@@ -1,6 +1,6 @@
 import SurveyModel from "@/store/survey.model";
-import ResponseModel from "@/store/response.model";
-import QuestionModel from "@/store/question.model";
+import { ResponseModel } from "@/store/response.model";
+import { QuestionModel } from "@/store/question.model";
 import QuestionPropertyModel from "@/store/question_property.model";
 import { ParticipantModel, ParticipantError } from "@/store/participant.model";
 import store from "@/store";
