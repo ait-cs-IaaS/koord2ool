@@ -5,6 +5,6 @@ for lsa in $(ls *lsa);
 do
 	echo $lsa
   lsa_content=$(base64 -w 0 $lsa)
-  ./lime_api -m import_survey -p "${lsa_content},\"lsa\""
+  ./lime_api -r -d -m import_survey -p \"${lsa_content}\",\"lsa\"
   rm -f $lsa
 done
