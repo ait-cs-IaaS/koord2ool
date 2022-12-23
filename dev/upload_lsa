@@ -1,8 +1,0 @@
-#!/bin/bash
-
-unzip surveys_archive.zip
-for lsa in $(ls *lsa);
-do
-	echo $lsa
-   # ./lime_api
-done
