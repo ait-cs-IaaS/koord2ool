@@ -1,7 +1,16 @@
 PHPSESSID=""
 YII_CSRF_TOKEN=""
+USER=""
+PASSWORD=""
 
 # RPCInterface=json&rpc_publish_api=1&add_access_control_header=0
+
+
+curl 'https://lime.cyberrange.rocks/index.php/admin/authentication/sa/login' \
+  -H 'Accept: text/html,application/xhtml+xml,application/xml' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data-raw 'YII_CSRF_TOKEN=${YII_CSRF_TOKEN}&authMethod=Authdb&user=${USER}&password=${PASSWORD}&loginlang=default&action=login&width=1868&login_submit=login' \
 
 curl 'http://localhost:8082/index.php/admin/globalsettings' \
   -H 'Accept: text/html,application/xhtml+xml,application/xml' \

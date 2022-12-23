@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - LIMESURVEY_RPC_API=http://localhost:8080/index.php/admin/remotecontrol
+      - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
       - VUE_APP_LIMESURVEY_PASSWORD=${AUTOLOGIN_PASSWORD}
       - VUE_APP_LIMESURVEY_LOGIN=${AUTOLOGIN_USER}
     ports:
@@ -44,7 +44,7 @@ services:
       - db
 
   db:
-    image: postgres:10-alpine
+    image: postgres:13
     restart: always
     volumes:
       - db-data:/var/lib/postgresql
