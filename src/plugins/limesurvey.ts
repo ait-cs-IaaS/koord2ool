@@ -204,6 +204,7 @@ export class LimesurveyApi {
     }
     const { result, error } = await response.json();
     if (error) {
+      store.commit("setError", error);
       throw new Error(error);
     }
     this.checkResult(result);

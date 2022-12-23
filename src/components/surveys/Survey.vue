@@ -58,10 +58,21 @@
           <b-icon icon="file-pdf" aria-hidden="true" class="mr-2"></b-icon>
           <strong>PDF Statistics</strong>
         </template>
-
-        <a :href="blobURL" download="statistics.pdf" target="_blank"
-          >PDF Statistics</a
-        >
+        <h4>
+          Below you can Download a PDF export from
+          <a href="https://manual.limesurvey.org/Statistics" target="_blank"
+            >LimeSurvey Staistic Endpoint</a
+          >.<br />
+          The content of this PDF can only be changed via LimeSurvey.<br />
+          <b-button
+            class="mt-3"
+            :href="blobURL"
+            :download="pdfFileName"
+            target="_blank"
+          >
+            PDF Statistics
+          </b-button>
+        </h4>
       </b-tab>
     </b-tabs>
   </b-card>
@@ -77,6 +88,7 @@ import {
   ResponseModel,
   getQuestionsFromResponses,
 } from "@/store/response.model";
+import { api } from "@/store";
 import { QuestionModel } from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
 import { ParticipantModel } from "@/store/participant.model";
@@ -125,10 +137,12 @@ export default class Survey extends Vue {
     }
   }
 
+  get pdfFileName(): string {
+    return `statistics_${this.survey.sid}.pdf`;
+  }
+
   async setSurveyBlob(): Promise<void> {
-    const blob = await this.$store.state.limesurvey.exportStatistics(
-      this.survey.sid
-    );
+    const blob = await api.exportStatistics(this.survey.sid);
     this.blobURL = URL.createObjectURL(blob);
   }
 
