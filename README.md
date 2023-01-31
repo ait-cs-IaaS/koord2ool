@@ -17,6 +17,8 @@ curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-
 docker-compose up -d
 ```
 
+![image](https://user-images.githubusercontent.com/6696618/215826266-70e2a176-5367-42d7-8127-a82a7d85df9b.png)
+
 ## Deployment
 
 There are multiple ways to deploy Koord2ool, the easiest one is via the [compose-dev.yml](compose-dev.yml) as described in [Quckstart](#quick-start).
