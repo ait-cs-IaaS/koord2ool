@@ -7,14 +7,36 @@ The original tool was developed within the scope of [ACCSA](https://projekte.ffg
 Support Activities), a research project funded by the [FFG](https://www.ffg.at/) (Forschungsförderungsgesellschaft).
 The project has been improved in some regards within the scope of AWAKE.
 
+## Quick Start
+
+```bash
+# Download compose.yml
+curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-dev.yml -O compose.yml
+
+# Start all services
+docker-compose up -d
+```
+
 ## Deployment
 
-If you want to deploy this application on your own premise, you will need:
+There are multiple ways to deploy Koord2ool, the easiest one is via the [compose-dev.yml](compose-dev.yml) as described in [Quckstart](#quick-start).
+For a production deployment a seperate LimeSurvey instance and the [compose.yml](compose.yml) should be considered.
 
-- any web server (e.g., nginx) to publish generated files (HTML, JavaScript, CSS),
-- a LimeSurvey instance with an appropriate CORS policy.
+There is a [Dockerfile](Dockerfile) that can be built and deployed, which is automatically packaged as a Container Image via a CI/CD pipeline, specifically a [GitHub Action](.github/workflows/cicd.yaml).
+The resulting artifact is then published to the GitHub Container Registry: `docker pull ghcr.io/ait-cs-iaas/koord2ool:latest`
 
-### LimeSurvey
+### Build From Source
+
+Koord2ool can also be built from source, following steps are necesarry.
+
+- Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
+- Run `npm install`.Optionally set `VUE_APP_LIMESURVEY_API` and install dependencies with npm install.
+- Run `npm run build`. Generated files are available in the dist folder and can be pushed to the web server.
+- Server files from `dist` folder with any web server (e.g., nginx)
+- Install and Configure LimeSurvey
+- Login with LimeSurvey Credentials
+
+## LimeSurvey
 
 You will need to install [LimeSurvey](https://www.limesurvey.org/) which is an open-source questionnaire tool.
 Please refer to its documentation regarding deployment.
@@ -22,66 +44,33 @@ Please refer to its documentation regarding deployment.
 Cross-Origin Resource Sharing headers *need* to be set, e.g.:
 
 ```
+
 Access-Control-Allow-Headers: *
 Access-Control-Allow-Methods: POST
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin:*
+
 ```
 
 In hardened environments, it is advisable to restrict CORS headers further, in particular
 [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
 
 You must enable the remote procedure call interface in the administrative settings of LimeSurvey.
+For Development there is a helper script for activating the endpoint under [dev/activate_rpc](dev/activate_rpc).
 Take note of the URL where this endpoint is exposed, e.g. `https://limesurvey.example.com/admin/remotecontrol`.
-
-You can either export during build time as `VUE_APP_LIMESURVEY_API` in the [Dockerfile](Dockerfile) or set `LIMESURVEY_RPC_API` in your [compose.yml](compose.yml).
-
-### Build Server
-
-The build server should have Node 16 installed.
-Node v17+ also works but may require `NODE_OPTIONS=--openssl-legacy-provider` to be set as an environment variable
-due to breaking changes in OpenSSL since Node v17.
-
-Optionally set `VUE_APP_LIMESURVEY_API`, and install dependencies using `npm install`.
-
-Once successful, run `npm run build`.
-After a little while, generated artefacts will be available in the `dist` folder.
-You can push those files directly to your web server.
-As no server-side processing takes place, there should be no further requirements on the server itself.
-
-### Web Server
-
-Publish all files generated in the previous subsection.
-These can be cached (e.g., using [`Cache-Control: immutable`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)).
-
-Once deployed, navigate to the newly deployed tool.
-You can log-in using the credentials of your LimeSurvey instance.
-
-## Architecture
-
-On a surface level, this software is a web application that tightly integrates into LimeSurvey.
-LimeSurvey is an open-source questionnaire software that will be used to collect data from participants.
-
-A docker-compose file is attached to illustrate the deployment of the software.
-When using this type of deployment, the container will run and expose the tool using nginx.
-
-## Deployment with Docker
-
-The repository contains a [docker-compose.yml](compose.yml) file.
-Note that this tool uses LimeSurvey for authentication.
-User management and any IAM-related subjects should be done there.
 
 ## How to Use
 
 ### Creating a Survey
 
-Create a survey in LimeSurvey as you normally would.
+Create a survey in LimeSurvey as described in the [LimeSurvey documentation](https://manual.limesurvey.org/Surveys_-_introduction).
 Note that you need to have the survey in closed-access mode so that individual answers
 can be associated with a source.
 
 If you want to be able to allow users to update their responses, set the following options
 in "Participants settings":
-  - "Allow multiple responses or update responses with one access code" should be ON, and
-  - "Enable participant-based response persistence" should be ON as well.
+
+- "Allow multiple responses or update responses with one access code" should be ON, and
+- "Enable participant-based response persistence" should be ON as well.
 
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
@@ -99,10 +88,6 @@ If you are changing an already active survey, use the following approach:
   3. re-activate the survey. You can now restore previous participant tokens and responses.
       - you can restore previous participants using the "Survey participants" menu item.
       - you may be able to restore previous responses by using the "Import responses from a deactivated survey table" menu item.
-
-## Known issues
-
-- the application has issues evaluating multiple-choice question types.
 
 ## Contributors
 
