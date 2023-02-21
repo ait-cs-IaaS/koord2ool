@@ -34,6 +34,7 @@ export function getQuestionText(
 ): string {
   const key = questionKey.split("[");
   const question = questions[key[0]];
+  if (question === undefined) return "";
   if (key.length === 1) return question.question;
   const subquestion = key[1].split("]")[0];
   if (question.subquestions !== undefined && subquestion !== undefined) {

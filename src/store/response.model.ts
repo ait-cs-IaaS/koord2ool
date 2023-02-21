@@ -44,6 +44,7 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
   "startlanguage",
   "startdate",
   "submitdate",
+  "token",
   "$validUntil",
 ];
 
@@ -52,11 +53,7 @@ export function getQuestionsFromResponses(
 ): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {
-    if (
-      key.startsWith("Q") &&
-      typeof value === "string" &&
-      !ignoreKeys.includes(key)
-    ) {
+    if (typeof value === "string" && !ignoreKeys.includes(key)) {
       result[key] = value;
     }
   });

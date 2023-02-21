@@ -1,6 +1,5 @@
 import Vue from "vue";
 import Vuex from "vuex";
-// import RememberAuthPlugin from "@/store/remember-auth.plugin";
 import VuexPersistence from "vuex-persist";
 import KoordLayout from "@/store/koord.layout";
 import { LimesurveyApi } from "@/plugins";
@@ -20,6 +19,12 @@ Vue.use(Vuex);
 export const api = new LimesurveyApi();
 
 const vuexLocal = new VuexPersistence<KoordLayout>({
+  reducer: (state) => ({
+    participants: state.participants,
+    responses: state.responses,
+    surveys: state.surveys,
+    limesurvey: state.limesurvey,
+  }),
   storage: window.localStorage,
 });
 
@@ -70,7 +75,7 @@ const store = new Vuex.Store<KoordLayout>({
         );
         return "";
       }
-      return domain.hostname;
+      return `${domain.protocol}//${domain.hostname}`;
     },
     getResponses: (state) => (sid: number) => {
       if (typeof state.responses[sid] === "undefined") {
