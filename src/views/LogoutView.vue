@@ -1,19 +1,20 @@
 <template>
-  <b-row class="login">
-    <b-col> Logging out&hellip; </b-col>
-  </b-row>
+  <v-row class="login">
+    <v-col> Logging out&hellip; </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { defineComponent } from "vue";
 
-@Component({})
-export default class LogoutView extends Vue {
+export default defineComponent({
+  name: "LogoutView",
+
   mounted(): void {
     this.$nextTick(() => {
       this.$store.commit("setApi", {});
       this.$router.push("/");
     });
-  }
-}
+  },
+});
 </script>

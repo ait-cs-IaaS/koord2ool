@@ -1,16 +1,12 @@
-import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
+import { RouteRecordRaw, createWebHistory, createRouter } from "vue-router";
 import HomeView from "@/views/HomeView.vue";
-import AboutView from "@/views/AboutView.vue";
 import SurveyView from "@/views/SurveyView.vue";
 import LoginView from "@/views/LoginView.vue";
 import LogoutView from "@/views/LogoutView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import requiresAuthGuard from "@/router/requires-auth.guard";
 
-Vue.use(VueRouter);
-
-const routes: RouteConfig[] = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/",
     name: "home",
@@ -33,11 +29,6 @@ const routes: RouteConfig[] = [
     component: SettingsView,
   },
   {
-    path: "/about",
-    name: "about",
-    component: AboutView,
-  },
-  {
     path: "/survey/:surveyId",
     name: "survey",
     component: SurveyView,
@@ -45,7 +36,8 @@ const routes: RouteConfig[] = [
   },
 ];
 
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHistory(),
   routes,
 });
 

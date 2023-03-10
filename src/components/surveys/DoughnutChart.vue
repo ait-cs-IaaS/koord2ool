@@ -1,86 +1,65 @@
 <template>
-  <div
-    class="px-2 my-2 doughnut-container"
-    :class="{ 'small-container': true }"
-  >
-    <canvas :id="chartId" ref="chartCanvas" class="doughnut-chart" />
-  </div>
+  <Doughnut :data="chartData" :options="options" />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartDataset,
+} from "chart.js";
+import { Doughnut } from "vue-chartjs";
 import { v4 } from "uuid";
-import { Chart, ChartDataset } from "chart.js";
 import colors from "./colors";
-import doughnutOptions from "./doughnut-options";
+import { chartOptions } from "./doughnut-options";
+import { defineComponent } from "vue";
 
-@Component({})
-export default class DoughnutChartComponent extends Vue {
-  /**
-   * The unique DOM ID for this chart.
-   * This is usually a combination of "doughnut-" followed by a random UUID (v4).
-   */
-  @Prop({ type: String, default: () => `doughnut-${v4()}` })
-  chartId!: string;
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-  @Prop({ type: Array, default: () => [] })
-  counters!: { name: string; value: number }[];
-
-  private chartJsInstance?: Chart<"doughnut">;
-
-  /**
-   * A link to the <canvas> DOM element.
-   */
-  get domElement(): HTMLCanvasElement {
-    return this.$refs.chartCanvas as HTMLCanvasElement;
-  }
-
-  get forChartJs(): { labels: string[]; datasets: ChartDataset<"doughnut">[] } {
-    const labels: string[] = [];
-    const datasets: ChartDataset<"doughnut">[] = [];
-    if (Array.isArray(this.counters)) {
-      const data: number[] = [];
-      const backgroundColor: string[] = [];
-      this.counters.forEach(({ name, value }, index) => {
-        labels.push(name);
-        data.push(value);
-        backgroundColor.push(colors[index % colors.length]);
-      });
-      datasets.push({
-        data,
-        backgroundColor,
-      });
-    }
+export default defineComponent({
+  name: "DoughnutChartComponent",
+  props: {
+    counters: {
+      type: Array,
+      default: () => [],
+    },
+    chartId: {
+      type: String,
+      default: () => `doughnut-${v4()}`,
+    },
+  },
+  components: {
+    Doughnut,
+  },
+  data() {
     return {
-      labels,
-      datasets,
+      options: chartOptions,
     };
-  }
-
-  mounted(): void {
-    this.$nextTick(() => this.create());
-  }
-
-  @Watch("counters")
-  private create(): Chart<"doughnut"> {
-    if (typeof this.chartJsInstance === "undefined") {
-      this.chartJsInstance = new Chart<"doughnut">(this.domElement, {
-        type: "doughnut",
-        data: this.forChartJs,
-        options: { ...doughnutOptions },
-      });
-    } else {
-      this.chartJsInstance.data = this.forChartJs;
-      this.chartJsInstance.update("none");
-    }
-    return this.chartJsInstance;
-  }
-
-  private destroy(): void {
-    if (typeof this.chartJsInstance !== "undefined") {
-      this.chartJsInstance.destroy();
-      this.chartJsInstance = undefined;
-    }
-  }
-}
+  },
+  computed: {
+    chartData(): { labels: string[]; datasets: ChartDataset<"doughnut">[] } {
+      const labels: string[] = [];
+      const datasets: ChartDataset<"doughnut">[] = [];
+      if (Array.isArray(this.counters)) {
+        const data: number[] = [];
+        const backgroundColor: string[] = [];
+        this.counters.forEach(({ name, value }, index) => {
+          labels.push(name);
+          data.push(value);
+          backgroundColor.push(colors[index % colors.length]);
+        });
+        datasets.push({
+          data,
+          backgroundColor,
+        });
+      }
+      return {
+        labels,
+        datasets,
+      };
+    },
+  },
+});
 </script>

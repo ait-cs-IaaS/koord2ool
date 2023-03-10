@@ -1,4 +1,3 @@
-import Vue from "vue";
 import Vuex from "vuex";
 import VuexPersistence from "vuex-persist";
 import KoordLayout from "@/store/koord.layout";
@@ -13,8 +12,6 @@ import {
 import { QuestionModel } from "@/store/question.model";
 import QuestionPropertyModel from "./question_property.model";
 import { ParticipantModel } from "@/store/participant.model";
-
-Vue.use(Vuex);
 
 export const api = new LimesurveyApi();
 
@@ -40,7 +37,8 @@ const store = new Vuex.Store<KoordLayout>({
     syncing: false,
   },
   getters: {
-    getSurveys: (state) => Object.keys(state.surveys).map((key) => Number(key)),
+    getSurveys: (state) =>
+      Object.values(state.surveys).map((survey) => survey.sid),
 
     hasError: (state) => typeof state.error !== "undefined",
 
@@ -49,7 +47,9 @@ const store = new Vuex.Store<KoordLayout>({
       typeof state.limesurvey.username !== "undefined",
 
     username: (state) =>
-      typeof state.limesurvey !== "undefined" ? state.limesurvey.username : "",
+      typeof state.limesurvey !== "undefined"
+        ? state.limesurvey.username
+        : "User",
 
     getInstanceDomain: (state) => {
       const endpoint = state.settings.limeSurveyUri;
@@ -157,7 +157,7 @@ const store = new Vuex.Store<KoordLayout>({
             : {}),
         };
       }
-      Vue.set(state, "surveys", newSurveys);
+      state.surveys = newSurveys;
     },
 
     updateQuestionProperties(
@@ -188,7 +188,7 @@ const store = new Vuex.Store<KoordLayout>({
         const questionX = subquestions[key].question;
         return { ...acc, [titleX]: questionX };
       }, {});
-      Vue.set(question, "subquestions", result);
+      question.subquestions = result;
     },
 
     updateQuestions(
@@ -203,7 +203,7 @@ const store = new Vuex.Store<KoordLayout>({
           }
           asRecord[question.title] = question;
         }
-        Vue.set(state.surveys[payload.sid], "questions", asRecord);
+        state.surveys[payload.sid].questions = asRecord;
       } else {
         console.warn(
           `Survey ${payload.sid} not found in the store; can't update questions.`
@@ -215,14 +215,14 @@ const store = new Vuex.Store<KoordLayout>({
       state,
       payload: { sid: number; responses: ResponseModel[] }
     ) {
-      Vue.set(state.responses, payload.sid, payload.responses);
+      state.responses[payload.sid] = payload.responses;
     },
 
     updateParticipants(
       state,
       payload: { sid: number; participants: ParticipantModel[] }
     ) {
-      Vue.set(state.participants, payload.sid, payload.participants);
+      state.participants = payload.participants;
     },
 
     updateStep(state, step: number) {
@@ -337,10 +337,3 @@ const store = new Vuex.Store<KoordLayout>({
 });
 
 export default store;
-
-Vue.config.errorHandler = function (err, vm, info) {
-  store.commit("setError", err);
-
-  console.error(err);
-  console.error(`Further info: ${info}`);
-};

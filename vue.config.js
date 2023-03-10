@@ -9,9 +9,5 @@ module.exports = {
       },
     },
   },
-  devServer: {
-    disableHostCheck: true,
-    public: "coop",
-  },
-  publicPath: "./",
+  devServer: {}
 };

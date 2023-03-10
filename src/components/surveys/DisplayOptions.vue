@@ -1,48 +1,66 @@
 <template>
-  <b-collapse v-model="displayOptions">
-    <b-card class="mb-4 px-1 display-options-container shadow">
+  <v-collapse v-model="display">
+    <v-card class="mb-4 px-1 display-options-container shadow">
       <b-form-checkbox switch size="lg" v-model="result" class="pointer">
         <span class="display-option"> {{ optionText }} <br /></span>
         <span class="display-option-description">
           {{ optionDescription }}
         </span>
       </b-form-checkbox>
-    </b-card>
-  </b-collapse>
+    </v-card>
+  </v-collapse>
 </template>
 
 <script lang="ts">
-import { Vue, Prop, Component } from "vue-property-decorator";
+import { defineComponent } from "vue";
 
-@Component({
-  components: {},
-})
-export default class Survey extends Vue {
-  @Prop({ type: Boolean, default: false })
-  displayOptions!: boolean;
-
-  @Prop({ type: Array, default: [] })
-  options!: { text: string; value: boolean; description: string }[];
-
-  xResult = false;
-
-  get result(): boolean {
-    return this.xResult;
-  }
-
-  set result(result: boolean) {
-    this.xResult = result;
-    this.$emit("result", result);
-  }
-
-  get optionDescription(): string {
-    const value = this.options.find((option) => option.value === this.result);
-    return typeof value !== "undefined" ? value.description : "";
-  }
-
-  get optionText(): string {
-    const value = this.options.find((option) => option.value === this.result);
-    return typeof value !== "undefined" ? value.text : "";
-  }
-}
+export default defineComponent({
+  name: "DisplayOptions",
+  props: {
+    displayOptions: {
+      type: Boolean,
+      default: false,
+    },
+    options: {
+      type: Array as () => {
+        text: string;
+        value: boolean;
+        description: string;
+      }[],
+      default: () => [],
+    },
+  },
+  emits: ["result"],
+  data() {
+    return {
+      xResult: false,
+      display: this.displayOptions,
+    };
+  },
+  computed: {
+    result: {
+      get(): boolean {
+        return this.xResult;
+      },
+      set(result: boolean) {
+        this.xResult = result;
+        this.$emit("result", result);
+      },
+    },
+    optionDescription(): string {
+      const value = this.options.find(
+        (option: { text: string; value: boolean; description: string }) =>
+          option.value === this.result
+      );
+      return typeof value !== "undefined" ? value.description : "";
+    },
+    optionText(): string {
+      const value = this.options.find(
+        (option: { text: string; value: boolean; description: string }) =>
+          option.value === this.result
+      );
+      return typeof value !== "undefined" ? value.text : "";
+    },
+  },
+});
 </script>

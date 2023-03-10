@@ -1,30 +1,30 @@
 <template>
-  <b-card no-body class="survey-results-outer-container">
+  <v-card no-body class="survey-results-outer-container">
     <b-tabs v-model="tabIndex" pills card>
       <template #tabs-end>
-        <b-button
+        <v-button
           class="ml-auto"
           variant="info"
           :pressed="showOptions"
           @click="showOptions = !showOptions"
         >
-          <b-icon icon="gear" aria-hidden="true" class="mr-2"></b-icon>
+          <v-icon icon="gear" aria-hidden="true" class="mr-2"></v-icon>
           Display options
-          <b-icon
+          <v-icon
             icon="chevron-down"
             aria-hidden="true"
             class="ml-2 display-options-icon"
             :class="{ active: showOptions }"
-          ></b-icon>
-        </b-button>
+          ></v-icon>
+        </v-button>
       </template>
       <b-tab title="Charts">
         <template #title>
-          <b-icon
+          <v-icon
             icon="clipboard-data"
             aria-hidden="true"
             class="mr-2"
-          ></b-icon>
+          ></v-icon>
           <strong>Charts</strong>
         </template>
 
@@ -41,7 +41,7 @@
 
       <b-tab title="Tabular" class="px-1">
         <template #title>
-          <b-icon icon="table" aria-hidden="true" class="mr-2"></b-icon>
+          <v-icon icon="table" aria-hidden="true" class="mr-2"></v-icon>
           <strong>Table</strong>
         </template>
 
@@ -55,7 +55,7 @@
       </b-tab>
       <b-tab title="PDF_Statistics" class="px-1">
         <template #title>
-          <b-icon icon="file-pdf" aria-hidden="true" class="mr-2"></b-icon>
+          <v-icon icon="file-pdf" aria-hidden="true" class="mr-2"></v-icon>
           <strong>PDF Statistics</strong>
         </template>
         <h4>
@@ -64,24 +64,21 @@
             >LimeSurvey Staistic Endpoint</a
           >.<br />
           The content of this PDF can only be changed via LimeSurvey.<br />
-          <b-button
+          <v-button
             class="mt-3"
             :href="blobURL"
             :download="pdfFileName"
             target="_blank"
           >
             PDF Statistics
-          </b-button>
+          </v-button>
         </h4>
       </b-tab>
     </b-tabs>
-  </b-card>
+  </v-card>
 </template>
 
 <script lang="ts">
-import { Vue, Prop, Component, Watch } from "vue-property-decorator";
-import LineChart from "@/components/surveys/LineChart.vue";
-import PieChart from "@/components/surveys/PieChart.vue";
 import Tabular from "@/components/surveys/Tabular.vue";
 import Charts from "@/components/surveys/Charts.vue";
 import {
@@ -92,72 +89,89 @@ import { api } from "@/store";
 import { QuestionModel } from "@/store/question.model";
 import SurveyModel from "@/store/survey.model";
 import { ParticipantModel } from "@/store/participant.model";
+import { defineComponent } from "vue";
 
-@Component({
+export default defineComponent({
+  name: "SurveyComponent",
   components: {
-    LineChart,
-    PieChart,
     Tabular,
     Charts,
   },
-})
-export default class Survey extends Vue {
-  showOptions = false;
-  chartDisplayOptions = false;
-  tableDisplayOptions = false;
-  tabIndex = 0;
-
-  @Prop({ type: Boolean, default: false })
-  useLogicalTime!: boolean;
-
-  @Prop({ type: Object, default: () => [] })
-  questions!: Record<string, QuestionModel>;
-
-  @Prop({ type: Array, default: () => [] })
-  responses!: ResponseModel[];
-
-  @Prop({ type: Object, required: true })
-  survey!: SurveyModel;
-
-  @Prop({ type: Array, default: () => [] })
-  participants!: ParticipantModel[];
-
-  @Prop({ type: Date, default: () => new Date() })
-  from!: Date;
-
-  @Prop({ type: Date, default: () => new Date() })
-  until!: Date;
-
-  blobURL = "";
-
-  @Watch("tabIndex")
-  onTabChange(tab: number): void {
-    if (tab === 2) {
-      this.setSurveyBlob();
-    }
-  }
-
-  get pdfFileName(): string {
-    return `statistics_${this.survey.sid}.pdf`;
-  }
-
-  async setSurveyBlob(): Promise<void> {
-    const blob = await api.exportStatistics(this.survey.sid);
-    this.blobURL = URL.createObjectURL(blob);
-  }
-
-  get questionKeys(): string[] {
-    return Array.from(
-      new Set<string>(
-        this.responses
-          .map((response) => Object.keys(getQuestionsFromResponses(response)))
-          .flat()
-      )
-    ).sort();
-  }
-
-  get questionTexts(): Record<string, string> {
-    return getQuestionsFromResponses(this.responses[0]);
-  }
-}
+  props: {
+    useLogicalTime: {
+      type: Boolean,
+      default: false,
+    },
+    questions: {
+      type: Object as () => Record<string, QuestionModel>,
+    },
+    responses: {
+      type: Array<ResponseModel>,
+      default: () => [],
+    },
+    survey: {
+      type: Object as () => SurveyModel,
+      required: true,
+    },
+    participants: {
+      type: Array<ParticipantModel>,
+      default: () => [],
+    },
+    from: {
+      type: Date,
+      default: () => new Date(),
+    },
+    until: {
+      type: Date,
+      default: () => new Date(),
+    },
+  },
+  data() {
+    return {
+      showOptions: false,
+      chartDisplayOptions: false,
+      tableDisplayOptions: false,
+      tabIndex: 0,
+      blobURL: "",
+    };
+  },
+  methods: {
+    getQuestionText(key: string): string {
+      return this.questionTexts[key];
+    },
+    onTabChange(tab: number): void {
+      if (tab === 2) {
+        this.setSurveyBlob();
+      }
+    },
+    async setSurveyBlob(): Promise<void> {
+      const blob = await api.exportStatistics(this.survey.sid);
+      this.blobURL = URL.createObjectURL(blob);
+    },
+  },
+  watch: {
+    tabIndex(tab: number) {
+      if (tab === 2) {
+        this.setSurveyBlob();
+      }
+    },
+  },
+  computed: {
+    pdfFileName(): string {
+      return `statistics_${this.survey.sid}.pdf`;
+    },
+    questionKeys(): string[] {
+      return Array.from(
+        new Set<string>(
+          this.responses
+            .map((response) => Object.keys(getQuestionsFromResponses(response)))
+            .flat()
+        )
+      ).sort();
+    },
+    questionTexts(): Record<string, string> {
+      return getQuestionsFromResponses(this.responses[0]);
+    },
+  },
+});
 </script>

@@ -2,17 +2,12 @@
   <div>
     <nav-component class="mb-4" />
 
-    <b-container fluid class="main-container">
-      <b-alert
-        :show="$store.getters.hasError"
-        variant="danger"
-        dismissible
-        @dismissed="clearError"
-      >
+    <v-container fluid class="main-container">
+      <b-alert :show="$store.getters.hasError" variant="danger" dismissible>
         {{ $store.state.error }}
       </b-alert>
       <router-view />
-    </b-container>
+    </v-container>
 
     <footer class="footer-container text-center d-print-none py-3">
       <span>AWAKE</span>
@@ -21,17 +16,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
 import NavComponent from "@/components/Navigation.vue";
+import { defineComponent } from "vue";
 
-@Component({
+export default defineComponent({
+  name: "App",
   components: {
     NavComponent,
   },
-})
-export default class App extends Vue {
-  clearError(): void {
-    this.$store.commit("setError", undefined);
-  }
-}
+});
 </script>

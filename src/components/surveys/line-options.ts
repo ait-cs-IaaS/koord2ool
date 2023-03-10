@@ -5,7 +5,7 @@ import { ChartOptions } from "chart.js";
  *
  * @see {@link LineChartComponent}
  */
-export default {
+export const chartOptions = {
   showLine: true,
   elements: {
     point: {

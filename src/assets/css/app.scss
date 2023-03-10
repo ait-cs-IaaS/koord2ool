@@ -160,7 +160,7 @@ body {
 
 .btn:focus,
 input:focus,
-input[type='checkbox']:focus {
+input[type="checkbox"]:focus {
   box-shadow: none !important;
 }
 
@@ -196,7 +196,7 @@ input[type='checkbox']:focus {
       background-color: lighten($accent, 20) !important;
     }
 
-    & .b-icon.bi {
+    & .v-icon.bi {
       color: darken($info, 5) !important;
     }
 
@@ -239,7 +239,6 @@ input[type='checkbox']:focus {
   color: darken($info, 40);
 }
 
-
 // Time Slider
 
 .vue-slider-process {
@@ -254,7 +253,6 @@ input[type='checkbox']:focus {
 .vue-slider-rail {
   background-color: darken($info, 5);
 }
-
 
 .vue-slider {
   & .vue-slider-mark {

@@ -22,54 +22,55 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
 import VueSlider from "vue-slider-component";
 import "vue-slider-component/theme/antd.css";
+import { defineComponent } from "vue";
 
-@Component({
+export default defineComponent({
+  name: "TimeSlider",
   components: {
     VueSlider,
   },
-})
-export default class TimeSlider extends Vue {
-  @Prop({ type: Date, required: true })
-  minDate!: Date;
-
-  @Prop({ type: Date, required: true })
-  maxDate!: Date;
-
-  getMidnight(date: Date): Date {
-    return new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-    );
-  }
-  getMidnightTomrrow(date: Date): Date {
-    return new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-    );
-  }
-  get min(): number {
-    return Math.round(this.getMidnight(this.minDate).getTime() / 1000);
-  }
-
-  get max(): number {
-    return Math.round(this.getMidnightTomrrow(this.maxDate).getTime() / 1000);
-  }
-
-  get range(): [number, number] {
-    return [this.min, this.max];
-  }
-  set range(range: [number, number]) {
-    this.$emit("input", [new Date(range[0] * 1000), new Date(range[1] * 1000)]);
-  }
-
-  get step(): number {
-    const stepSize = this.$store.getters.getStep;
-    return stepSize * 3600;
-  }
-
-  tooltipFormater = (value: number): string => {
-    return new Date(value * 1000).toUTCString();
-  };
-}
+  props: {
+    minDate: {
+      type: Date,
+      required: true,
+    },
+    maxDate: {
+      type: Date,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      step: 86400,
+    };
+  },
+  computed: {
+    min(): number {
+      return Math.round(this.getMidnight(this.minDate).getTime() / 1000);
+    },
+    max(): number {
+      return Math.round(this.getMidnightTomrrow(this.maxDate).getTime() / 1000);
+    },
+    range(): [number, number] {
+      return [this.min, this.max];
+    },
+  },
+  methods: {
+    tooltipFormater(value: number): string {
+      return new Date(value * 1000).toUTCString();
+    },
+    getMidnight(date: Date): Date {
+      return new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+      );
+    },
+    getMidnightTomrrow(date: Date): Date {
+      return new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+      );
+    },
+  },
+});
 </script>

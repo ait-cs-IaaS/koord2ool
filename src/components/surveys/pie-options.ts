@@ -5,7 +5,7 @@ import { ChartOptions } from "chart.js";
  *
  * @see {@link PieChartComponent}
  */
-export default {
+export const chartOptions = {
   plugins: {
     legend: {
       display: true,

@@ -1,7 +1,7 @@
 <template>
-  <b-container fluid class="pl-0">
-    <b-row>
-      <b-col cols="6">
+  <v-container fluid class="pl-0">
+    <v-row>
+      <v-col cols="6">
         <h4 class="pt-5 pb-2">
           Choose a survey
           <b-btn variant="primary" @click="refresh">Refresh</b-btn>
@@ -15,39 +15,44 @@
             {{ label }}
           </b-list-group-item>
         </b-list-group>
-      </b-col>
-    </b-row>
-  </b-container>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import { RawLocation } from "vue-router";
+import { defineComponent } from "vue";
+import { mapGetters, mapState } from "vuex";
 
 type SurveyLink = {
   key: string | number;
   label: string;
-  to: RawLocation;
+  to: string;
 };
-@Component({})
-export default class SurveyListComponent extends Vue {
-  @Prop({ type: String, required: true })
-  username!: string;
 
-  async refresh(): Promise<void> {
-    await this.$store.dispatch("refreshSurveys");
-  }
+export default defineComponent({
+  name: "SurveyList",
+  props: { username: { type: String, required: true } },
 
-  get surveyLinks(): SurveyLink[] {
-    const surveyIds: number[] = [...this.$store.getters.getSurveys];
-    return surveyIds.sort().map((surveyId) => {
-      const title = this.$store.state.surveys[surveyId].surveyls_title;
-      return {
-        key: surveyId,
-        label: `${surveyId} - ${title}`,
-        to: { name: "survey", params: { surveyId: surveyId.toString() } },
-      };
-    });
-  }
-}
+  computed: {
+    ...mapState(["surveys"]),
+    ...mapGetters(["getSurveys"]),
+    surveyLinks(): SurveyLink[] {
+      const surveyIds: number[] = [...this.getSurveys];
+      return surveyIds.sort().map((surveyId) => {
+        const title = this.surveys[surveyId].surveyls_title;
+        return {
+          key: surveyId,
+          label: `${surveyId} - ${title}`,
+          to: `/survey/${surveyId.toString()}`,
+        };
+      });
+    },
+  },
+  methods: {
+    async refresh(): Promise<void> {
+      await this.$store.dispatch("refreshSurveys");
+    },
+  },
+});
 </script>

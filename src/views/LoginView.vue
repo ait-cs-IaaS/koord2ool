@@ -1,6 +1,6 @@
 <template>
-  <b-row class="login">
-    <b-col>
+  <v-row class="login">
+    <v-col>
       <div>
         <h1>Log in</h1>
         <p>
@@ -18,51 +18,61 @@
           :disabled="authenticating"
         />
       </div>
-    </b-col>
-  </b-row>
+    </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
 import Login from "@/components/Login.vue";
-import SurveyList from "@/components/SurveyList.vue";
+import { defineComponent } from "vue";
 
-@Component({
+export default defineComponent({
+  name: "LoginView",
+
   components: {
     Login,
-    SurveyList,
   },
-})
-export default class LoginView extends Vue {
-  authenticating = false;
 
-  get isAuthenticated(): boolean {
-    return this.$store.getters.isAuthenticated;
-  }
+  props: {
+    returnTo: {
+      type: String,
+    },
+  },
 
-  get username(): string {
-    return this.$store.getters.username;
-  }
+  data() {
+    return {
+      authenticating: false,
+    };
+  },
 
-  get instance(): string {
-    return this.$store.getters.getInstanceDomain;
-  }
+  computed: {
+    isAuthenticated(): boolean {
+      return this.$store.getters.isAuthenticated;
+    },
 
-  @Prop({ type: String, required: false })
-  returnTo?: string;
+    username(): string {
+      return this.$store.getters.username;
+    },
 
-  setBusy(): void {
-    this.authenticating = true;
-  }
+    instance(): string {
+      return this.$store.getters.getInstanceDomain;
+    },
+  },
 
-  setFailed(): void {
-    this.authenticating = false;
-  }
+  methods: {
+    setBusy(): void {
+      this.authenticating = true;
+    },
 
-  setSuccess(): void {
-    const goTo = this.returnTo || "/";
-    this.$router.push(goTo);
-  }
+    setFailed(): void {
+      this.authenticating = false;
+    },
+
+    setSuccess(): void {
+      const goTo = this.returnTo || "/";
+      this.$router.push(goTo);
+    },
+  },
 
   mounted(): void {
     this.$nextTick(() => {
@@ -70,6 +80,6 @@ export default class LoginView extends Vue {
         this.$router.push("/");
       }
     });
-  }
-}
+  },
+});
 </script>

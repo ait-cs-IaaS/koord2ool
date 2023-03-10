@@ -1,32 +1,32 @@
 <template>
   <main class="survey">
-    <b-row
+    <v-row
       class="survey-header"
       :class="{
         'survey-active': surveyActive,
         'survey-inactive': !surveyActive,
       }"
     >
-      <b-col cols="12" md="12" class="pb-4">
+      <v-col cols="12" md="12" class="pb-4">
         <h5>
-          <b-badge
+          <v-badge
             pill
             small
             :variant="surveyActive ? 'success' : 'danger'"
             class="mr-2 text-white"
           >
             {{ surveyId }}
-          </b-badge>
+          </v-badge>
         </h5>
         <h1 class="survey-title" v-if="survey">
           {{ survey.surveyls_title }}
         </h1>
         <hr />
-      </b-col>
-    </b-row>
-    <b-row class="d-print-none">
-      <b-col cols="12">
-        <b-card class="time-slider-container mb-5 shadow">
+      </v-col>
+    </v-row>
+    <v-row class="d-print-none">
+      <v-col cols="12">
+        <v-card class="time-slider-container mb-5 shadow">
           <time-slider
             v-model="responseRange"
             :minDate="minResponseDate"
@@ -76,11 +76,11 @@
               >Refresh</b-btn
             >
           </div>
-        </b-card>
-      </b-col>
-    </b-row>
-    <b-row class="survey-responses">
-      <b-col>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-row class="survey-responses">
+      <v-col>
         <survey-component
           v-if="hasResponses"
           :survey="survey"
@@ -92,13 +92,12 @@
           :useLogicalTime="!hasResponseDates"
         />
         <b-alert v-else variant="danger">No responses yet.</b-alert>
-      </b-col>
-    </b-row>
+      </v-col>
+    </v-row>
   </main>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
 import SurveyModel from "@/store/survey.model";
 import { QuestionModel } from "@/store/question.model";
 import SurveyComponent from "@/components/surveys/Survey.vue";
@@ -106,111 +105,121 @@ import TimeSlider from "@/components/TimeSlider.vue";
 import { ResponseModel } from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 
-@Component({
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "SurveyView",
+
   components: {
     SurveyComponent,
     TimeSlider,
   },
-})
-export default class SurveyView extends Vue {
-  get questionCount(): number {
-    return Object.keys(this.questions).length;
-  }
 
-  get questions(): Record<string, QuestionModel> {
-    const survey = this.survey;
-    if (
-      typeof survey !== "undefined" &&
-      typeof survey.questions !== "undefined"
-    ) {
-      return survey.questions;
-    }
-    console.warn("No questions found for survey", this.surveyId);
-    return {};
-  }
+  computed: {
+    questionCount(): number {
+      return Object.keys(this.questions).length;
+    },
 
-  get hasResponses(): boolean {
-    return this.responses.length > 0;
-  }
+    questions(): Record<string, QuestionModel> {
+      const survey = this.survey;
+      if (
+        typeof survey !== "undefined" &&
+        typeof survey.questions !== "undefined"
+      ) {
+        return survey.questions;
+      }
+      console.warn("No questions found for survey", this.surveyId);
+      return {};
+    },
 
-  get participants(): ParticipantModel[] {
-    return this.$store.getters.getParticipants(this.surveyId);
-  }
+    hasResponses(): boolean {
+      return this.responses.length > 0;
+    },
 
-  get responses(): ResponseModel[] {
-    return this.$store.getters.getResponses(this.surveyId);
-  }
+    participants(): ParticipantModel[] {
+      return this.$store.getters.getParticipants(this.surveyId);
+    },
 
-  get responsesInTimeline(): ResponseModel[] {
-    return this.responses.filter((response) => {
-      const thisTime = new Date(response.submitdate);
-      return this.fromDate <= thisTime && thisTime <= this.untilDate;
-    });
-  }
+    responses(): ResponseModel[] {
+      return this.$store.getters.getResponses(this.surveyId);
+    },
 
-  get submitDates(): string[] {
-    return this.responses.map((response) => response.submitdate);
-  }
+    fromDate(): Date {
+      return typeof this.responseRange[0] !== "undefined"
+        ? this.responseRange[0]
+        : this.minResponseDate;
+    },
 
-  get survey(): SurveyModel {
-    return this.$store.getters.getSurvey(this.surveyId);
-  }
+    untilDate(): Date {
+      return typeof this.responseRange[1] !== "undefined"
+        ? this.responseRange[1]
+        : this.maxResponseDate;
+    },
 
-  get surveyActive(): boolean {
-    return typeof this.survey !== "undefined" && this.survey.active === "Y";
-  }
+    responsesInTimeline(): ResponseModel[] {
+      return this.responses.filter((response) => {
+        const thisTime = new Date(response.submitdate);
+        return this.fromDate <= thisTime && thisTime <= this.untilDate;
+      });
+    },
 
-  get surveyId(): number {
-    const { surveyId } = this.$route.params;
-    return Number(surveyId);
-  }
+    submitDates(): string[] {
+      return this.responses.map((response) => response.submitdate);
+    },
 
-  get minResponseDate(): Date {
-    return this.$store.getters.getMinResponseDate();
-  }
+    survey(): SurveyModel {
+      return this.$store.getters.getSurvey(this.surveyId);
+    },
 
-  get maxResponseDate(): Date {
-    return this.$store.getters.getMaxResponseDate();
-  }
+    surveyActive(): boolean {
+      return typeof this.survey !== "undefined" && this.survey.active === "Y";
+    },
 
-  get hasResponseDates(): boolean {
-    return this.$store.getters.hasSubmitDateMatch();
-  }
+    surveyId(): number {
+      const { surveyId } = this.$route.params;
+      return Number(surveyId);
+    },
 
-  responseRange = [];
+    minResponseDate(): Date {
+      return this.$store.getters.getMinResponseDate();
+    },
 
-  get fromDate(): Date {
-    return typeof this.responseRange[0] !== "undefined"
-      ? this.responseRange[0]
-      : this.minResponseDate;
-  }
+    maxResponseDate(): Date {
+      return this.$store.getters.getMaxResponseDate();
+    },
 
-  get untilDate(): Date {
-    return typeof this.responseRange[1] !== "undefined"
-      ? this.responseRange[1]
-      : this.maxResponseDate;
-  }
+    hasResponseDates(): boolean {
+      return this.$store.getters.hasSubmitDateMatch();
+    },
+  },
+  data() {
+    return {
+      responseRange: [],
+    };
+  },
 
   async beforeMount(): Promise<void> {
     await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
+  },
 
   mounted(): void {
     // This shouldn't happen, but it does :(
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
-  }
+  },
 
-  @Watch("$route")
-  async onRouteChange(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
+  watch: {
+    // $route: fucnonRouteChange(): Promise<void> {
+    // await this.$store.dispatch("refreshSurvey", this.surveyId);
+  },
 
-  async refresh(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
-}
+  methods: {
+    async refresh(): Promise<void> {
+      await this.$store.dispatch("refreshSurvey", this.surveyId);
+    },
+  },
+});
 </script>
 
 <style>
