@@ -69,12 +69,13 @@
           </v-simple-table>
 
           <div class="d-flex justify-content-end">
-            <b-btn
-              variant="primary"
+            <v-btn
+              type="primary"
               @click="refresh"
               :disabled="$store.state.syncing"
-              >Refresh</b-btn
             >
+              Refresh
+            </v-btn>
           </div>
         </v-card>
       </v-col>
@@ -91,7 +92,7 @@
           :from="fromDate"
           :useLogicalTime="!hasResponseDates"
         />
-        <b-alert v-else variant="danger">No responses yet.</b-alert>
+        <v-alert v-else type="error">No responses yet.</v-alert>
       </v-col>
     </v-row>
   </main>

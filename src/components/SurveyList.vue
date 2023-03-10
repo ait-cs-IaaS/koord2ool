@@ -4,17 +4,19 @@
       <v-col cols="6">
         <h4 class="pt-5 pb-2">
           Choose a survey
-          <b-btn variant="primary" @click="refresh">Refresh</b-btn>
+          <v-btn type="primary" @click="refresh">Refresh</v-btn>
         </h4>
-        <b-list-group class="shadow">
-          <b-list-group-item
+        <v-list class="shadow">
+          <v-list-item
             v-for="{ key, label, to } in surveyLinks"
             :key="key"
             :to="to"
           >
-            {{ label }}
-          </b-list-group-item>
-        </b-list-group>
+            <v-list-item-content>
+              {{ label }}
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
       </v-col>
     </v-row>
   </v-container>

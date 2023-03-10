@@ -1,6 +1,6 @@
 <template>
   <v-card no-body class="survey-results-outer-container">
-    <b-tabs v-model="tabIndex" pills card>
+    <v-tabs v-model="tabIndex" pills card>
       <template #tabs-end>
         <v-button
           class="ml-auto"
@@ -18,7 +18,7 @@
           ></v-icon>
         </v-button>
       </template>
-      <b-tab title="Charts">
+      <v-tab title="Charts">
         <template #title>
           <v-icon
             icon="clipboard-data"
@@ -37,9 +37,9 @@
           :from="from"
           :until="until"
         ></charts>
-      </b-tab>
+      </v-tab>
 
-      <b-tab title="Tabular" class="px-1">
+      <v-tab title="Tabular" class="px-1">
         <template #title>
           <v-icon icon="table" aria-hidden="true" class="mr-2"></v-icon>
           <strong>Table</strong>
@@ -52,8 +52,8 @@
           :showOptions="showOptions"
           sort-key="submitdate"
         />
-      </b-tab>
-      <b-tab title="PDF_Statistics" class="px-1">
+      </v-tab>
+      <v-tab title="PDF_Statistics" class="px-1">
         <template #title>
           <v-icon icon="file-pdf" aria-hidden="true" class="mr-2"></v-icon>
           <strong>PDF Statistics</strong>
@@ -73,8 +73,8 @@
             PDF Statistics
           </v-button>
         </h4>
-      </b-tab>
-    </b-tabs>
+      </v-tab>
+    </v-tabs>
   </v-card>
 </template>
 

@@ -1,12 +1,19 @@
 <template>
   <v-collapse v-model="display">
     <v-card class="mb-4 px-1 display-options-container shadow">
-      <b-form-checkbox switch size="lg" v-model="result" class="pointer">
-        <span class="display-option"> {{ optionText }} <br /></span>
-        <span class="display-option-description">
-          {{ optionDescription }}
-        </span>
-      </b-form-checkbox>
+      <v-switch
+        v-model="result"
+        class="pointer"
+        label-class="display-option"
+        size="lg"
+      >
+        <template #label>
+          {{ optionText }}<br />
+          <span class="display-option-description">
+            {{ optionDescription }}
+          </span>
+        </template>
+      </v-switch>
     </v-card>
   </v-collapse>
 </template>

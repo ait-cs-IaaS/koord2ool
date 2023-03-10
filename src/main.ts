@@ -1,7 +1,6 @@
 import "@babel/polyfill";
 import "mutationobserver-shim";
 import { createApp } from "vue";
-import "./plugins/chartjs";
 import vuetify from "./plugins/vuetify";
 import App from "./App.vue";
 import router from "./router";

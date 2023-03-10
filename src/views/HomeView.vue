@@ -35,13 +35,14 @@
             <p>You can use this tool to visualize survey responses.</p>
 
             <h4 class="pt-5 pb-2">Further links:</h4>
-            <b-link
+            <v-btn
               v-if="instance"
-              :href="'https://' + instance"
+              href="https://{{ instance }}"
               target="_blank"
+              text
             >
               Limesurvey @ {{ instance }}
-            </b-link>
+            </v-btn>
           </v-col>
         </v-row>
         <survey-list :username="username" />

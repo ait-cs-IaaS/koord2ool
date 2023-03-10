@@ -3,9 +3,9 @@
     <nav-component class="mb-4" />
 
     <v-container fluid class="main-container">
-      <b-alert :show="$store.getters.hasError" variant="danger" dismissible>
+      <v-alert :show="$store.getters.hasError" type="error" dismissible>
         {{ $store.state.error }}
-      </b-alert>
+      </v-alert>
       <router-view />
     </v-container>
 
