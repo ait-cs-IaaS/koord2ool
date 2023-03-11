@@ -1,21 +1,19 @@
 <template>
-  <v-collapse v-model="display">
-    <v-card class="mb-4 px-1 display-options-container shadow">
-      <v-switch
-        v-model="result"
-        class="pointer"
-        label-class="display-option"
-        size="lg"
-      >
-        <template #label>
-          {{ optionText }}<br />
-          <span class="display-option-description">
-            {{ optionDescription }}
-          </span>
-        </template>
-      </v-switch>
-    </v-card>
-  </v-collapse>
+  <v-card class="mb-4 px-1 display-options-container shadow">
+    <v-switch
+      v-model="result"
+      class="pointer"
+      label-class="display-option"
+      size="lg"
+    >
+      <template #label>
+        {{ optionText }}<br />
+        <span class="display-option-description">
+          {{ optionDescription }}
+        </span>
+      </template>
+    </v-switch>
+  </v-card>
 </template>
 
 <script lang="ts">

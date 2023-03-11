@@ -11,7 +11,7 @@
     </v-row>
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <v-data-table
+        <v-table
           :items="sortedResponses"
           :headers="headers"
           :sort-by="sortKey"
@@ -45,7 +45,7 @@
             ></v-icon>
             <span v-else>{{ item.value }}</span>
           </template>
-        </v-data-table>
+        </v-table>
       </v-col>
     </v-row>
   </v-container>

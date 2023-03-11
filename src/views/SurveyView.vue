@@ -1,5 +1,5 @@
 <template>
-  <main class="survey">
+  <v-container fluid>
     <v-row
       class="survey-header"
       :class="{
@@ -9,14 +9,7 @@
     >
       <v-col cols="12" md="12" class="pb-4">
         <h5>
-          <v-badge
-            pill
-            small
-            :variant="surveyActive ? 'success' : 'danger'"
-            class="mr-2 text-white"
-          >
-            {{ surveyId }}
-          </v-badge>
+          {{ surveyId }}
         </h5>
         <h1 class="survey-title" v-if="survey">
           {{ survey.surveyls_title }}
@@ -24,60 +17,52 @@
         <hr />
       </v-col>
     </v-row>
-    <v-row class="d-print-none">
+    <v-row>
       <v-col cols="12">
-        <v-card class="time-slider-container mb-5 shadow">
-          <time-slider
-            v-model="responseRange"
-            :minDate="minResponseDate"
-            :maxDate="maxResponseDate"
-            v-if="hasResponseDates"
-          />
-          <v-simple-table>
-            <template v-slot:default>
-              <tbody>
-                <tr v-if="!hasResponseDates">
-                  <td colspan="2">
-                    Responses have no responseDate set.
-                    <a
-                      href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
-                      target="_blank"
-                      >Info</a
-                    >
-                  </td>
-                </tr>
-                <tr v-if="hasResponses">
-                  <td colspan="2">
-                    showing {{ responsesInTimeline.length }} of
-                    {{ responses.length }} answer(s)
-                  </td>
-                </tr>
-                <tr>
-                  <td>Number of questions</td>
-                  <td>{{ questionCount }}</td>
-                </tr>
-                <tr v-if="survey.startdate !== null">
-                  <td>Start</td>
-                  <td>{{ survey.startdate }}</td>
-                </tr>
-                <tr v-if="survey.expires !== null">
-                  <td>Expires</td>
-                  <td>{{ survey.expires }}</td>
-                </tr>
-              </tbody>
-            </template>
-          </v-simple-table>
-
-          <div class="d-flex justify-content-end">
-            <v-btn
-              type="primary"
-              @click="refresh"
-              :disabled="$store.state.syncing"
+        <time-slider
+          v-model="responseRange"
+          :minDate="minResponseDate"
+          :maxDate="maxResponseDate"
+          v-if="hasResponseDates"
+        />
+        <v-row v-if="!hasResponseDates">
+          <v-col>
+            Responses have no responseDate set.
+            <a
+              href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
+              target="_blank"
+              >Info</a
             >
-              Refresh
-            </v-btn>
-          </div>
-        </v-card>
+          </v-col>
+        </v-row>
+        <v-row v-if="hasResponses">
+          <v-col>
+            showing {{ responsesInTimeline.length }} of
+            {{ responses.length }} answer(s)
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="6">Number of questions</v-col>
+          <v-col cols="6">{{ questionCount }}</v-col>
+        </v-row>
+        <v-row v-if="survey.startdate !== null">
+          <v-col cols="6">Start</v-col>
+          <v-col cols="6">{{ survey.startdate }}</v-col>
+        </v-row>
+        <v-row v-if="survey.expires !== null">
+          <v-col cols="6">Expires</v-col>
+          <v-col cols="6">{{ survey.expires }}</v-col>
+        </v-row>
+
+        <div class="d-flex justify-content-end">
+          <v-btn
+            type="primary"
+            @click="refresh"
+            :disabled="$store.state.syncing"
+          >
+            Refresh
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
     <v-row class="survey-responses">
@@ -95,7 +80,7 @@
         <v-alert v-else type="error">No responses yet.</v-alert>
       </v-col>
     </v-row>
-  </main>
+  </v-container>
 </template>
 
 <script lang="ts">

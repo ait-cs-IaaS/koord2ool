@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent>
+  <v-form @submit.prevent height="200px">
     <v-container fluid class="pl-0 mt-5">
       <v-row>
         <v-col cols="4">
