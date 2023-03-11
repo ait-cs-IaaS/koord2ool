@@ -1,18 +1,16 @@
 <template>
-  <div>
-    <nav-component class="mb-4" />
+  <v-app>
+    <nav-component />
 
-    <v-container fluid class="main-container">
-      <v-alert :show="$store.getters.hasError" type="error" dismissible>
+    <v-main>
+      <v-alert v-if="$store.getters.hasError" type="error" closable>
         {{ $store.state.error }}
       </v-alert>
       <router-view />
-    </v-container>
+    </v-main>
 
-    <footer class="footer-container text-center d-print-none py-3">
-      <span>AWAKE</span>
-    </footer>
-  </div>
+    <v-footer app absolute> AWAKE </v-footer>
+  </v-app>
 </template>
 
 <script lang="ts">

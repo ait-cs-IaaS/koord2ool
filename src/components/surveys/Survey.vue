@@ -2,9 +2,9 @@
   <v-card no-body class="survey-results-outer-container">
     <v-tabs v-model="tabIndex" pills card>
       <template #tabs-end>
-        <v-button
+        <v-btn
           class="ml-auto"
-          variant="info"
+          type="info"
           :pressed="showOptions"
           @click="showOptions = !showOptions"
         >
@@ -16,7 +16,7 @@
             class="ml-2 display-options-icon"
             :class="{ active: showOptions }"
           ></v-icon>
-        </v-button>
+        </v-btn>
       </template>
       <v-tab title="Charts">
         <template #title>
@@ -64,14 +64,14 @@
             >LimeSurvey Staistic Endpoint</a
           >.<br />
           The content of this PDF can only be changed via LimeSurvey.<br />
-          <v-button
+          <v-btn
             class="mt-3"
             :href="blobURL"
             :download="pdfFileName"
             target="_blank"
           >
             PDF Statistics
-          </v-button>
+          </v-btn>
         </h4>
       </v-tab>
     </v-tabs>

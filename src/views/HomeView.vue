@@ -15,9 +15,7 @@
           </v-col>
 
           <v-col cols="4">
-            <v-button to="/login" variant="outline-primary" class="mt-4">
-              Authenticate
-            </v-button>
+            <v-btn to="/login" class="mt-4"> Authenticate </v-btn>
           </v-col>
         </v-row>
       </v-container>

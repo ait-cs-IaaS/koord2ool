@@ -67,9 +67,6 @@ export default defineComponent({
       return this.username.length > 0;
     },
 
-    /**
-     * Returns true iff the login action should be enabled.
-     */
     canAuthenticate(): boolean {
       return !this.disabled && this.username !== "" && this.password !== "";
     },
