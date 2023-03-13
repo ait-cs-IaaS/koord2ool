@@ -1,23 +1,19 @@
 <template>
   <v-container fluid class="pl-0">
     <v-row>
-      <v-col cols="6">
-        <h4 class="pt-5 pb-2">
-          Choose a survey
-          <v-btn type="primary" @click="refresh">Refresh</v-btn>
-        </h4>
-        <v-list class="shadow">
-          <v-list-item
-            v-for="{ key, label, to } in surveyLinks"
-            :key="key"
-            :to="to"
-          >
-            <v-list-item-content>
-              {{ label }}
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </v-col>
+      Choose a survey
+      <v-btn type="primary" @click="refresh">Refresh</v-btn>
+      <v-list>
+        <v-list-item
+          v-for="{ key, label, to } in surveyLinks"
+          :key="key"
+          :to="to"
+        >
+          <v-list-item-content>
+            {{ label }}
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
     </v-row>
   </v-container>
 </template>

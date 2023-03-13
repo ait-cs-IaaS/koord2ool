@@ -1,6 +1,7 @@
 import "@babel/polyfill";
 import "mutationobserver-shim";
 import { createApp } from "vue";
+import "@mdi/font/css/materialdesignicons.css";
 import vuetify from "./plugins/vuetify";
 import App from "./App.vue";
 import router from "./router";

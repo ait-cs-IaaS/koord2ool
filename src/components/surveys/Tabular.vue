@@ -103,11 +103,13 @@ export default defineComponent({
       staleOptions: [
         {
           text: "Visible stale",
+          icon: "mdi-land-rows-horizontal",
           value: false,
           description: "Visible stale: decorate updated rows.",
         },
         {
           text: "Hidden stale",
+          icon: "mdi-eye-off",
           value: true,
           description: "Hidden stale: show all rows as default rows.",
         },

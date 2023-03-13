@@ -1,17 +1,21 @@
 <template>
-  <v-app>
+  <v-app class="main">
     <nav-component />
 
     <v-main>
-      <v-alert v-if="$store.getters.hasError" type="error" closable>
-        {{ $store.state.error }}
-      </v-alert>
       <router-view />
     </v-main>
 
-    <v-footer app absolute> AWAKE </v-footer>
+    <v-footer app> AWAKE </v-footer>
   </v-app>
 </template>
+
+<style scoped lang="scss">
+:deep(.v-application__wrap) {
+  min-height: 97vh !important;
+  max-width: fit-content !important;
+}
+</style>
 
 <script lang="ts">
 import NavComponent from "@/components/Navigation.vue";

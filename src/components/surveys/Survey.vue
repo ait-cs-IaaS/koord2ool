@@ -1,85 +1,58 @@
 <template>
-  <v-card no-body class="survey-results-outer-container">
-    <v-tabs v-model="tabIndex" pills card>
-      <template #tabs-end>
-        <v-btn
-          class="ml-auto"
-          type="info"
-          :pressed="showOptions"
-          @click="showOptions = !showOptions"
-        >
-          <v-icon icon="gear" aria-hidden="true" class="mr-2"></v-icon>
-          Display options
-          <v-icon
-            icon="chevron-down"
-            aria-hidden="true"
-            class="ml-2 display-options-icon"
-            :class="{ active: showOptions }"
-          ></v-icon>
-        </v-btn>
-      </template>
-      <v-tab title="Charts">
-        <template #title>
-          <v-icon
-            icon="clipboard-data"
-            aria-hidden="true"
-            class="mr-2"
-          ></v-icon>
-          <strong>Charts</strong>
-        </template>
-
-        <charts
-          :questionKeys="questionKeys"
-          :responses="responses"
-          :questions="questions"
-          :participants="participants"
-          :showOptions="showOptions"
-          :from="from"
-          :until="until"
-        ></charts>
-      </v-tab>
-
-      <v-tab title="Tabular" class="px-1">
-        <template #title>
-          <v-icon icon="table" aria-hidden="true" class="mr-2"></v-icon>
-          <strong>Table</strong>
-        </template>
-
-        <tabular
-          :show-keys="questionKeys"
-          :responses="responses"
-          :participants="participants"
-          :showOptions="showOptions"
-          sort-key="submitdate"
-        />
-      </v-tab>
-      <v-tab title="PDF_Statistics" class="px-1">
-        <template #title>
-          <v-icon icon="file-pdf" aria-hidden="true" class="mr-2"></v-icon>
-          <strong>PDF Statistics</strong>
-        </template>
-        <h4>
-          Below you can Download a PDF export from
-          <a href="https://manual.limesurvey.org/Statistics" target="_blank"
-            >LimeSurvey Staistic Endpoint</a
-          >.<br />
-          The content of this PDF can only be changed via LimeSurvey.<br />
-          <v-btn
-            class="mt-3"
-            :href="blobURL"
-            :download="pdfFileName"
-            target="_blank"
-          >
-            PDF Statistics
-          </v-btn>
-        </h4>
-      </v-tab>
+  <v-card>
+    <v-tabs v-model="tab" grow>
+      <v-tab title="Charts" value="charts" />
+      <v-tab title="Tabular" value="tabular" />
+      <v-tab title="PDF Statistics" value="stats" />
     </v-tabs>
+    <v-card-text>
+      <v-window v-model="tab">
+        <v-window-item value="charts">
+          <charts
+            :questionKeys="questionKeys"
+            :responses="responses"
+            :questions="questions"
+            :participants="participants"
+            :showOptions="showOptions"
+            :from="from"
+            :until="until"
+          ></charts>
+        </v-window-item>
+
+        <v-window-item value="tabular">
+          <!-- <tabular
+            :show-keys="questionKeys"
+            :responses="responses"
+            :participants="participants"
+            :showOptions="showOptions"
+            sort-key="submitdate"
+          /> -->
+        </v-window-item>
+
+        <v-window-item value="stats">
+          <h4>
+            Below you can Download a PDF export from
+            <a href="https://manual.limesurvey.org/Statistics" target="_blank">
+              LimeSurvey Staistic Endpoint
+            </a>
+            The content of this PDF can only be changed via LimeSurvey.
+            <v-btn
+              class="mt-3"
+              :href="blobURL"
+              :download="pdfFileName"
+              target="_blank"
+            >
+              PDF Statistics
+            </v-btn>
+          </h4>
+        </v-window-item>
+      </v-window>
+    </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts">
-import Tabular from "@/components/surveys/Tabular.vue";
+// import Tabular from "@/components/surveys/Tabular.vue";
 import Charts from "@/components/surveys/Charts.vue";
 import {
   ResponseModel,
@@ -94,7 +67,7 @@ import { defineComponent } from "vue";
 export default defineComponent({
   name: "SurveyComponent",
   components: {
-    Tabular,
+    // Tabular,
     Charts,
   },
   props: {
@@ -131,7 +104,7 @@ export default defineComponent({
       showOptions: false,
       chartDisplayOptions: false,
       tableDisplayOptions: false,
-      tabIndex: 0,
+      tab: "",
       blobURL: "",
     };
   },
@@ -150,7 +123,7 @@ export default defineComponent({
     },
   },
   watch: {
-    tabIndex(tab: number) {
+    tab(tab: number) {
       if (tab === 2) {
         this.setSurveyBlob();
       }

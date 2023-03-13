@@ -1,20 +1,17 @@
 <template>
-  <v-container fluid class="px-3 mx-0">
-    <v-row class="pt-3">
-      <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <display-options
-          :displayOptions="showOptions"
-          :options="timeOptions"
-          @result="useLogicalTime = $event"
-        />
-      </v-col>
+  <v-container fluid>
+    <v-row>
+      <display-options
+        :displayOptions="showOptions"
+        :options="timeOptions"
+        @result="useLogicalTime = $event"
+      />
     </v-row>
     <v-row class="pt-3">
       <v-col
         cols="12"
         lg="12"
         xl="6"
-        class="avoid-page-break px-1 py-1"
         v-for="questionKey of questionKeys"
         :key="questionKey"
       >
@@ -24,7 +21,7 @@
           :counters="countResponsesFor(questionKey)"
           :data="createTimelineFor(questionKey)"
           :useLogicalTime="useLogicalTime"
-        ></chart-card>
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -83,12 +80,14 @@ export default defineComponent({
       timeOptions: [
         {
           text: "Real",
+          icon: "mdi-clock",
           value: false,
           description:
             "Actual time: time-based charts will use actual timestamps of survey responses.",
         },
         {
           text: "Logical",
+          icon: "mdi-timer-sand-empty",
           value: true,
           description:
             "Logical time: time-based charts will show change in responses evenly for readability purposes.",

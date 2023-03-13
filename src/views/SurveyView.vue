@@ -1,30 +1,23 @@
 <template>
   <v-container fluid>
-    <v-row
-      class="survey-header"
-      :class="{
-        'survey-active': surveyActive,
-        'survey-inactive': !surveyActive,
-      }"
-    >
-      <v-col cols="12" md="12" class="pb-4">
+    <v-row>
+      <v-col cols="12">
         <h5>
           {{ surveyId }}
         </h5>
         <h1 class="survey-title" v-if="survey">
           {{ survey.surveyls_title }}
         </h1>
-        <hr />
       </v-col>
     </v-row>
     <v-row>
       <v-col cols="12">
-        <time-slider
+        <!-- <time-slider
           v-model="responseRange"
           :minDate="minResponseDate"
           :maxDate="maxResponseDate"
           v-if="hasResponseDates"
-        />
+        /> -->
         <v-row v-if="!hasResponseDates">
           <v-col>
             Responses have no responseDate set.
@@ -42,43 +35,31 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="6">Number of questions</v-col>
-          <v-col cols="6">{{ questionCount }}</v-col>
+          <v-col cols="1">Number of questions</v-col>
+          <v-col cols="2">{{ questionCount }}</v-col>
         </v-row>
         <v-row v-if="survey.startdate !== null">
-          <v-col cols="6">Start</v-col>
-          <v-col cols="6">{{ survey.startdate }}</v-col>
+          <v-col cols="1">Start</v-col>
+          <v-col cols="2">{{ survey.startdate }}</v-col>
         </v-row>
         <v-row v-if="survey.expires !== null">
-          <v-col cols="6">Expires</v-col>
-          <v-col cols="6">{{ survey.expires }}</v-col>
+          <v-col cols="1">Expires</v-col>
+          <v-col cols="2">{{ survey.expires }}</v-col>
         </v-row>
-
-        <div class="d-flex justify-content-end">
-          <v-btn
-            type="primary"
-            @click="refresh"
-            :disabled="$store.state.syncing"
-          >
-            Refresh
-          </v-btn>
-        </div>
       </v-col>
     </v-row>
-    <v-row class="survey-responses">
-      <v-col>
-        <survey-component
-          v-if="hasResponses"
-          :survey="survey"
-          :responses="responsesInTimeline"
-          :questions="questions"
-          :participants="participants"
-          :until="untilDate"
-          :from="fromDate"
-          :useLogicalTime="!hasResponseDates"
-        />
-        <v-alert v-else type="error">No responses yet.</v-alert>
-      </v-col>
+    <v-row>
+      <survey-component
+        v-if="hasResponses"
+        :survey="survey"
+        :responses="responsesInTimeline"
+        :questions="questions"
+        :participants="participants"
+        :until="untilDate"
+        :from="fromDate"
+        :useLogicalTime="!hasResponseDates"
+      />
+      <v-alert v-else type="error">No responses yet.</v-alert>
     </v-row>
   </v-container>
 </template>
@@ -87,7 +68,7 @@
 import SurveyModel from "@/store/survey.model";
 import { QuestionModel } from "@/store/question.model";
 import SurveyComponent from "@/components/surveys/Survey.vue";
-import TimeSlider from "@/components/TimeSlider.vue";
+// import TimeSlider from "@/components/TimeSlider.vue";
 import { ResponseModel } from "@/store/response.model";
 import { ParticipantModel } from "@/store/participant.model";
 
@@ -98,7 +79,7 @@ export default defineComponent({
 
   components: {
     SurveyComponent,
-    TimeSlider,
+    // TimeSlider,
   },
 
   computed: {
