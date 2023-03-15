@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12">
+      <v-col>
         <h5>
           {{ surveyId }}
         </h5>
@@ -11,13 +11,13 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="12">
-        <!-- <time-slider
-          v-model="responseRange"
+      <v-col>
+        <time-slider
+          v-model:inputRange="responseRange as rangeArray"
           :minDate="minResponseDate"
           :maxDate="maxResponseDate"
           v-if="hasResponseDates"
-        /> -->
+        />
         <v-row v-if="!hasResponseDates">
           <v-col>
             Responses have no responseDate set.
@@ -35,20 +35,21 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="1">Number of questions</v-col>
+          <v-col cols="2">Number of questions</v-col>
           <v-col cols="2">{{ questionCount }}</v-col>
         </v-row>
         <v-row v-if="survey.startdate !== null">
-          <v-col cols="1">Start</v-col>
+          <v-col cols="2">Start</v-col>
           <v-col cols="2">{{ survey.startdate }}</v-col>
         </v-row>
         <v-row v-if="survey.expires !== null">
-          <v-col cols="1">Expires</v-col>
+          <v-col cols="2">Expires</v-col>
           <v-col cols="2">{{ survey.expires }}</v-col>
         </v-row>
       </v-col>
     </v-row>
     <v-row>
+      <v-col>
       <survey-component
         v-if="hasResponses"
         :survey="survey"
@@ -60,26 +61,31 @@
         :useLogicalTime="!hasResponseDates"
       />
       <v-alert v-else type="error">No responses yet.</v-alert>
+      </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script lang="ts">
-import SurveyModel from "@/store/survey.model";
-import { QuestionModel } from "@/store/question.model";
-import SurveyComponent from "@/components/surveys/Survey.vue";
-// import TimeSlider from "@/components/TimeSlider.vue";
-import { ResponseModel } from "@/store/response.model";
-import { ParticipantModel } from "@/store/participant.model";
+import SurveyModel from "../store/survey.model";
+import { QuestionModel } from "../store/question.model";
+import SurveyComponent from "../components/surveys/Survey.vue";
+import TimeSlider from "../components/TimeSlider.vue";
+import { ResponseModel } from "../store/response.model";
+import { ParticipantModel } from "../store/participant.model";
 
 import { defineComponent } from "vue";
+
+interface rangeArray extends Array<Date> {
+  length: 2;
+}
 
 export default defineComponent({
   name: "SurveyView",
 
   components: {
     SurveyComponent,
-    // TimeSlider,
+    TimeSlider,
   },
 
   computed: {
@@ -145,23 +151,14 @@ export default defineComponent({
     surveyId(): number {
       const { surveyId } = this.$route.params;
       return Number(surveyId);
-    },
-
-    minResponseDate(): Date {
-      return this.$store.getters.getMinResponseDate();
-    },
-
-    maxResponseDate(): Date {
-      return this.$store.getters.getMaxResponseDate();
-    },
-
-    hasResponseDates(): boolean {
-      return this.$store.getters.hasSubmitDateMatch();
-    },
+    }
   },
-  data() {
+  data: function () {
     return {
-      responseRange: [],
+      minResponseDate: new Date(),
+      maxResponseDate: new Date(),
+      hasResponseDates: false,
+      responseRange: [new Date(), new Date()],
     };
   },
 
@@ -174,6 +171,10 @@ export default defineComponent({
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
+    this.minResponseDate = this.$store.getters.getMinResponseDate()
+    this.maxResponseDate = this.$store.getters.getMaxResponseDate()
+    this.hasResponseDates = this.$store.getters.hasSubmitDateMatch()
+    this.responseRange = [this.minResponseDate, this.maxResponseDate]
   },
 
   watch: {
@@ -188,20 +189,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-@media print {
-  .pie-chart {
-    max-height: 8rem;
-    max-width: 8rem;
-  }
-
-  .avoid-page-break {
-    page-break-inside: avoid;
-  }
-}
-tbody td:first-child {
-  width: 1%;
-  white-space: nowrap;
-}
-</style>

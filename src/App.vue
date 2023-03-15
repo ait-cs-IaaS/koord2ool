@@ -1,8 +1,12 @@
+<script setup lang="ts">
+import NavComponent from "./components/Navigation.vue";
+</script>
+
 <template>
-  <v-app class="main">
+  <v-app>
     <nav-component />
 
-    <v-main>
+    <v-main style="margin: 42px;">
       <router-view />
     </v-main>
 
@@ -10,21 +14,8 @@
   </v-app>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 :deep(.v-application__wrap) {
-  min-height: 97vh !important;
-  max-width: fit-content !important;
+  max-height: fit-content !important;
 }
 </style>
-
-<script lang="ts">
-import NavComponent from "@/components/Navigation.vue";
-import { defineComponent } from "vue";
-
-export default defineComponent({
-  name: "App",
-  components: {
-    NavComponent,
-  },
-});
-</script>

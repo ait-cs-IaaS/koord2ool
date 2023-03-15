@@ -28,14 +28,14 @@
 </template>
 
 <script lang="ts">
-import { ResponseModel } from "@/store/response.model";
-import ChartCard from "@/components/surveys/ChartCard.vue";
-import { ParticipantModel } from "@/store/participant.model";
-import { QuestionModel, getQuestionText } from "@/store/question.model";
-import DisplayOptions from "@/components/surveys/DisplayOptions.vue";
+import { ResponseModel } from "../../store/response.model";
+import { ParticipantModel } from "../../store/participant.model";
+import { QuestionModel, getQuestionText } from "../../store/question.model";
+import ChartCard from "./ChartCard.vue";
+import DisplayOptions from "./DisplayOptions.vue";
 import { ChartData, ChartDataset } from "chart.js";
 import moment from "moment";
-import { MinMax } from "@/helpers/min-max";
+import { MinMax } from "../../helpers/min-max";
 import { defineComponent } from "vue";
 
 export default defineComponent({

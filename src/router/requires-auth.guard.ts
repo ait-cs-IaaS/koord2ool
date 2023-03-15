@@ -1,5 +1,5 @@
 import { NavigationGuard } from "vue-router";
-import store from "@/store";
+import store from "../store";
 
 /**
  * This is a guard function that only allows navigation to a route iff the user

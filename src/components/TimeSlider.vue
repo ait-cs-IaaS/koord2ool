@@ -1,36 +1,23 @@
 <template>
-  <div>
-    <h4>
-      <b>Set range</b>
-    </h4>
-    <vue-slider
-      v-model="range"
-      :enable-cross="false"
-      :tooltip="'always'"
-      tooltip-placement="top"
-      :tooltip-formatter="tooltipFormater"
-      :min="min"
-      :max="max"
-      :absorb="true"
-      :interval="step"
-      :marks="true"
-      :hide-label="true"
-      :lazy="true"
-      class="mx-5 mt-5 mb-5 pb-4 text-primary"
-    ></vue-slider>
-  </div>
+  <Slider v-model="range" :min="minValue" :max="maxValue" :format="tooltipFormater" />
 </template>
 
+<style src="@vueform/slider/themes/default.css"></style>
+
 <script lang="ts">
-import VueSlider from "vue-slider-component";
-import "vue-slider-component/theme/antd.css";
+import Slider from "@vueform/slider";
 import { defineComponent } from "vue";
+
+interface rangeArray extends Array<Date> {
+  length: 2;
+}
 
 export default defineComponent({
   name: "TimeSlider",
   components: {
-    VueSlider,
+    Slider,
   },
+  emits: ["update:inputRange"],
   props: {
     minDate: {
       type: Date,
@@ -40,26 +27,33 @@ export default defineComponent({
       type: Date,
       required: true,
     },
+    inputRange: {
+      type: Array as () => rangeArray,
+      required: true
+    }
   },
-  data() {
+  data: function () {
     return {
       step: 86400,
+      minValue: Math.round(this.getMidnight(this.minDate).getTime()),
+      maxValue: Math.round(this.getMidnightTomrrow(this.maxDate).getTime()),
     };
   },
   computed: {
-    min(): number {
-      return Math.round(this.getMidnight(this.minDate).getTime() / 1000);
-    },
-    max(): number {
-      return Math.round(this.getMidnightTomrrow(this.maxDate).getTime() / 1000);
-    },
-    range(): [number, number] {
-      return [this.min, this.max];
+    range: {
+      get(): [number, number] {
+        return [this.inputRange[0].getTime(), this.inputRange[1].getTime()]
+      },
+      set(value: [number, number]) {
+        const result = [new Date(value[0]), new Date(value[1])];
+        console.debug("TimeSlider: range changed", result)
+        this.$emit("update:inputRange", result);
+      }
     },
   },
   methods: {
     tooltipFormater(value: number): string {
-      return new Date(value * 1000).toUTCString();
+      return new Date(value).toUTCString();
     },
     getMidnight(date: Date): Date {
       return new Date(

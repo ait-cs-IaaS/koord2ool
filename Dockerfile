@@ -1,5 +1,5 @@
 FROM node:18 AS builder
-ARG VUE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
+ARG VITE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
 ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 WORKDIR /usr/src/koordtool

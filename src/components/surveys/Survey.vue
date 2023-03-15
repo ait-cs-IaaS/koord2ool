@@ -20,13 +20,13 @@
         </v-window-item>
 
         <v-window-item value="tabular">
-          <!-- <tabular
+          <tabular
             :show-keys="questionKeys"
             :responses="responses"
             :participants="participants"
             :showOptions="showOptions"
             sort-key="submitdate"
-          /> -->
+          />
         </v-window-item>
 
         <v-window-item value="stats">
@@ -52,22 +52,22 @@
 </template>
 
 <script lang="ts">
-// import Tabular from "@/components/surveys/Tabular.vue";
-import Charts from "@/components/surveys/Charts.vue";
+import Tabular from "./Tabular.vue";
+import Charts from "./Charts.vue";
 import {
   ResponseModel,
   getQuestionsFromResponses,
-} from "@/store/response.model";
-import { api } from "@/store";
-import { QuestionModel } from "@/store/question.model";
-import SurveyModel from "@/store/survey.model";
-import { ParticipantModel } from "@/store/participant.model";
+} from "../../store/response.model";
+import { api } from "../../store";
+import { QuestionModel } from "../..//store/question.model";
+import SurveyModel from "../../store/survey.model";
+import { ParticipantModel } from "../../store/participant.model";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "SurveyComponent",
   components: {
-    // Tabular,
+    Tabular,
     Charts,
   },
   props: {
@@ -134,17 +134,30 @@ export default defineComponent({
       return `statistics_${this.survey.sid}.pdf`;
     },
     questionKeys(): string[] {
-      return Array.from(
-        new Set<string>(
-          this.responses
-            .map((response) => Object.keys(getQuestionsFromResponses(response)))
-            .flat()
-        )
-      ).sort();
+      console.debug(this.responses)
+      return [];
+      // return Array.from(
+      //   new Set<string>(
+      //     this.responses
+      //       .map((response) => Object.keys(getQuestionsFromResponses(response)))
+      //       .flat()
+      //   )
+      // ).sort();
     },
     questionTexts(): Record<string, string> {
       return getQuestionsFromResponses(this.responses[0]);
     },
+  },
+  mounted() {
+    this.tab = "charts";
+    console.debug("QUESTIONS: ")
+    console.debug(this.questions)
+    console.debug("SURVEY: ")
+    console.debug(this.survey)
+    console.debug("RESPONSES: ")
+    console.debug(this.responses)
+    console.debug("PARTICIPANTS: ")
+    console.debug(this.participants)
   },
 });
 </script>

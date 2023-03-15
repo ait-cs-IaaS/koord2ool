@@ -52,9 +52,9 @@
 </template>
 
 <script lang="ts">
-import { ResponseModel } from "@/store/response.model";
-import { ParticipantModel } from "@/store/participant.model";
-import DisplayOptions from "@/components/surveys/DisplayOptions.vue";
+import { ResponseModel } from "../../store/response.model";
+import { ParticipantModel } from "../../store/participant.model";
+import DisplayOptions from "./DisplayOptions.vue";
 
 import { defineComponent } from "vue";
 

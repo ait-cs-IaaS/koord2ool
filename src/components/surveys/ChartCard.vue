@@ -44,8 +44,8 @@
 </template>
 
 <script lang="ts">
-import LineChart from "@/components/surveys/LineChart.vue";
-import DoughnutChart from "@/components/surveys/DoughnutChart.vue";
+import LineChart from "./LineChart.vue";
+import DoughnutChart from "./DoughnutChart.vue";
 import { ChartData } from "chart.js";
 import colors from "./colors";
 import { defineComponent } from "vue";

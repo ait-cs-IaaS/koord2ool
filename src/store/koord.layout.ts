@@ -1,7 +1,7 @@
-import SurveyModel from "@/store/survey.model";
-import { ResponseModel } from "@/store/response.model";
-import { ParticipantModel } from "@/store/participant.model";
-import SettingsModel from "@/store/settings.model";
+import SurveyModel from "./survey.model";
+import { ResponseModel } from "./response.model";
+import { ParticipantModel } from "./participant.model";
+import SettingsModel from "./settings.model";
 
 /**
  * This is the layout for the internal Vuex store.

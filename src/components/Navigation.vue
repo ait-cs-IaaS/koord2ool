@@ -1,10 +1,10 @@
 <template>
-  <v-app-bar :elevation="5">
+  <v-app-bar app :elevation="5">
     <v-toolbar-title>
-      <span class="logo">koord2ool</span>
+      <h2 class="text-indigo-darken-2">koord2ool</h2>
     </v-toolbar-title>
 
-    <v-spacer></v-spacer>
+    <v-spacer />
     <v-btn v-if="!isAuthenticated" to="/login" prepend-icon="mdi-login"
       >Login</v-btn
     >

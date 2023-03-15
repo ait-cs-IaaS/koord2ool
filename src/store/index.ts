@@ -1,17 +1,17 @@
 import Vuex from "vuex";
 import VuexPersistence from "vuex-persist";
-import KoordLayout from "@/store/koord.layout";
-import { LimesurveyApi } from "@/plugins";
-import SurveyModel from "@/store/survey.model";
+import KoordLayout from "./koord.layout";
+import { LimesurveyApi } from "../plugins";
+import SurveyModel from "./survey.model";
 import {
   ResponseModel,
   hasSubmitDateMatch,
   minResponseDate,
   maxResponseDate,
-} from "@/store/response.model";
-import { QuestionModel } from "@/store/question.model";
+} from "./response.model";
+import { QuestionModel } from "./question.model";
 import QuestionPropertyModel from "./question_property.model";
-import { ParticipantModel } from "@/store/participant.model";
+import { ParticipantModel } from "./participant.model";
 
 export const api = new LimesurveyApi();
 
@@ -32,7 +32,7 @@ const store = new Vuex.Store<KoordLayout>({
     participants: {},
     responses: {},
     surveys: {},
-    settings: { step: 6, limeSurveyUri: process.env.VUE_APP_LIMESURVEY_API },
+    settings: { step: 6, limeSurveyUri: import.meta.env.VITE_APP_LIMESURVEY_API },
     selectedSurveyID: undefined,
     syncing: false,
   },
@@ -63,7 +63,7 @@ const store = new Vuex.Store<KoordLayout>({
       if (state.settings.limeSurveyUri === undefined) {
         store.commit(
           "setError",
-          "LimeSurvey RPC endpoint unconfigured. Please set the VUE_APP_LIMESURVEY_API environment variable."
+          "LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable."
         );
         return "";
       }
@@ -115,7 +115,7 @@ const store = new Vuex.Store<KoordLayout>({
         if (sid === undefined) {
           return undefined;
         }
-        return minResponseDate(state.responses[sid]);
+        return minResponseDate(state.responses[sid]) as Date;
       },
     getMaxResponseDate:
       (state) =>

@@ -1,10 +1,10 @@
-import SurveyModel from "@/store/survey.model";
-import { ResponseModel } from "@/store/response.model";
-import { QuestionModel } from "@/store/question.model";
-import QuestionPropertyModel from "@/store/question_property.model";
-import { ParticipantModel, ParticipantError } from "@/store/participant.model";
-import store from "@/store";
-import router from "@/router";
+import SurveyModel from "../store/survey.model";
+import { ResponseModel } from "../store/response.model";
+import { QuestionModel } from "../store/question.model";
+import QuestionPropertyModel from "../store/question_property.model";
+import { ParticipantModel, ParticipantError } from "../store/participant.model";
+import store from "../store";
+import router from "../router";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -16,7 +16,11 @@ export class LimesurveyApi {
 
   private nextId = 1;
 
-  constructor(private readonly endpoint = process.env.VUE_APP_LIMESURVEY_API) {
+  constructor(private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API) {
+    console.debug(`LimeSurvey API endpoint: ${endpoint}`);
+    if (typeof endpoint === "undefined") {
+      throw new Error("LimeSurvey API endpoint not configured");
+    }
     if (!/\/admin\/remotecontrol$/.test(endpoint)) {
       console.warn(
         `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
@@ -186,6 +190,9 @@ export class LimesurveyApi {
     if (authenticated) {
       this.requireAuth();
       params = [this.session, ...params];
+    }
+    if (this.endpoint === undefined) {
+      throw new Error("LimeSurvey API endpoint not configured");
     }
     const response = await fetch(this.endpoint, {
       method: "POST",

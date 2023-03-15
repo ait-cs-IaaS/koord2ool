@@ -1,4 +1,4 @@
-import { QuestionModel } from "@/store/question.model";
+import { QuestionModel } from "./question.model";
 
 /**
  * This is a stub of the DTO returned by LimeSurvey when retrieving surveys.

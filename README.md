@@ -32,7 +32,7 @@ The resulting artifact is then published to the GitHub Container Registry: `dock
 Koord2ool can also be built from source, following steps are necesarry.
 
 - Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
-- Run `npm install`.Optionally set `VUE_APP_LIMESURVEY_API` and install dependencies with npm install.
+- Run `npm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
 - Run `npm run build`. Generated files are available in the dist folder and can be pushed to the web server.
 - Server files from `dist` folder with any web server (e.g., nginx)
 - Install and Configure LimeSurvey

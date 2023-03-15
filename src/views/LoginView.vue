@@ -1,7 +1,6 @@
 <template>
-  <v-row class="login">
-    <v-col>
-      <div>
+  <v-container fluid>
+    <v-row>
         <h1>Log in</h1>
         <p>
           Please authenticate using your
@@ -17,13 +16,12 @@
           @auth-success="setSuccess"
           :disabled="authenticating"
         />
-      </div>
-    </v-col>
-  </v-row>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
-import Login from "@/components/Login.vue";
+import Login from "../components/Login.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({

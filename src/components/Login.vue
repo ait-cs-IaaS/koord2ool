@@ -73,14 +73,14 @@ export default defineComponent({
   },
 
   mounted(): void {
-    const { VUE_APP_LIMESURVEY_LOGIN, VUE_APP_LIMESURVEY_PASSWORD } =
-      process.env;
-    if (VUE_APP_LIMESURVEY_LOGIN && VUE_APP_LIMESURVEY_PASSWORD) {
+    const { VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD } =
+      import.meta.env;
+    if (VITE_APP_LIMESURVEY_LOGIN && VITE_APP_LIMESURVEY_PASSWORD) {
       this.$nextTick(() => {
         // Authenticate with LimeSurvey automatically if these environment variables are set.
         this.authenticate(
-          VUE_APP_LIMESURVEY_LOGIN,
-          VUE_APP_LIMESURVEY_PASSWORD
+          VITE_APP_LIMESURVEY_LOGIN,
+          VITE_APP_LIMESURVEY_PASSWORD
         );
       });
     }
