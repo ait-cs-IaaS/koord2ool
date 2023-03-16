@@ -18,10 +18,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo "DOCKER_TAG=$(echo ${{ github.ref_name }} | sed 's/[^a-z0-9_-]/__/gi')" >> $GITHUB_ENV
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: true
           tags: |
             ghcr.io/ait-cs-iaas/koord2ool:latest
-            ghcr.io/ait-cs-iaas/koord2ool:${{github.ref_name}}
+            ghcr.io/ait-cs-iaas/koord2ool:${{env.DOCKER_TAG}}

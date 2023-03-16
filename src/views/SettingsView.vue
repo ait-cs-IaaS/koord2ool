@@ -7,9 +7,9 @@
       <v-col>
         <h2>Time slider interval in hours:</h2>
         <v-btn-toggle v-model="settings.step" mandatory>
-          <v-btn icon="mdi-numeric-1" value="1" />
-          <v-btn icon="mdi-numeric-6" value="6" />
-          <v-btn icon="mdi-hours-24" value="24" />
+          <v-btn icon="mdi-numeric-1" :value="1" />
+          <v-btn icon="mdi-numeric-6" :value="6" />
+          <v-btn icon="mdi-hours-24" :value="24" />
         </v-btn-toggle>
       </v-col>
     </v-row>

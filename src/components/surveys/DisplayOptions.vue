@@ -23,6 +23,7 @@
             </template>
           </v-tooltip>
         </v-btn-toggle>
+        <slot name="additional-options" />
       </v-expansion-panel-text>
     </v-expansion-panel>
   </v-expansion-panels>

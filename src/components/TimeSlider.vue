@@ -1,12 +1,14 @@
 <template>
-  <Slider v-model="range" :min="minValue" :max="maxValue" :format="tooltipFormater" />
+  <Slider v-model="range" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
 <style src="@vueform/slider/themes/default.css"></style>
 
 <script lang="ts">
 import Slider from "@vueform/slider";
+import { mapState } from "pinia";
 import { defineComponent } from "vue";
+import { koordStore } from "../store";
 
 interface rangeArray extends Array<Date> {
   length: 2;
@@ -34,12 +36,15 @@ export default defineComponent({
   },
   data: function () {
     return {
-      step: 86400,
       minValue: Math.round(this.getMidnight(this.minDate).getTime()),
       maxValue: Math.round(this.getMidnightTomrrow(this.maxDate).getTime()),
     };
   },
   computed: {
+    stepSize(): number {
+      return this.settings.step * 3600 * 1000;
+    },
+    ...mapState(koordStore, ["settings"]),
     range: {
       get(): [number, number] {
         return [this.inputRange[0].getTime(), this.inputRange[1].getTime()]

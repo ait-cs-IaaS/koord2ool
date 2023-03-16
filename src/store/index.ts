@@ -266,6 +266,6 @@ export const koordStore = defineStore('koord', {
     },
   },
   persist: {
-    paths: ["limesurvey"],
+    paths: ["limesurvey", "settings"],
   },
 });

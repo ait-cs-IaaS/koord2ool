@@ -1,9 +1,9 @@
 <template>
   <v-card>
     <v-tabs v-model="tab" grow>
-      <v-tab title="Charts" value="charts" />
-      <v-tab title="Tabular" value="tabular" />
-      <v-tab title="PDF Statistics" value="stats" />
+      <v-tab color="blue"  prepend-icon="mdi-chart-areaspline" title="Charts" value="charts" />
+      <v-tab color="green" prepend-icon="mdi-table" title="Tabular" value="tabular" />
+      <v-tab color="red"   prepend-icon="mdi-file-pdf-box" title="PDF Statistics" value="stats" />
     </v-tabs>
     <v-card-text>
       <v-window v-model="tab">
@@ -49,6 +49,14 @@
     </v-card-text>
   </v-card>
 </template>
+
+<style scoped>
+.v-tab {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.1);
+}
+</style>
 
 <script lang="ts">
 import Tabular from "./Tabular.vue";

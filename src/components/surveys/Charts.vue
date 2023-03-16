@@ -5,7 +5,16 @@
         :displayOptions="showOptions"
         :options="timeOptions"
         @result="useLogicalTime = $event"
-      />
+      >
+      <template v-slot:additional-options>
+        <h2>Time slider interval in hours: {{ settings.step }}</h2>
+        <v-btn-toggle v-model="settings.step" mandatory>
+          <v-btn icon="mdi-numeric-1" :value="1" />
+          <v-btn icon="mdi-numeric-6" :value="6" />
+          <v-btn icon="mdi-hours-24" :value="24" />
+        </v-btn-toggle>
+      </template>
+      </display-options>
     </v-row>
     <v-row class="pt-3">
       <v-col
@@ -37,6 +46,8 @@ import { ChartData, ChartDataset } from "chart.js";
 import moment from "moment";
 import { MinMax } from "../../helpers/min-max";
 import { defineComponent } from "vue";
+import { mapState } from "pinia";
+import { koordStore } from "../../store";
 
 export default defineComponent({
   name: "ChartsComponent",
@@ -73,6 +84,9 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+  },
+  computed: {
+    ...mapState(koordStore, ["settings"]),
   },
   data() {
     return {

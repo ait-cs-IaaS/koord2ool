@@ -5,20 +5,20 @@
         <h5>
           {{ surveyId }}
         </h5>
-        <h1 class="survey-title" v-if="survey">
+        <h1 v-if="survey">
           {{ survey.surveyls_title }}
         </h1>
       </v-col>
     </v-row>
-    <v-row>
-      <v-col>
+    <v-row class="ml-6 mr-6 mt-6">
+      <v-col class="ml-8 mr-8">
         <time-slider
           v-model:inputRange="responseRange as rangeArray"
           :minDate="minResponseDate"
           :maxDate="maxResponseDate"
-          v-if="hasResponseDates"
+          v-if="hasSubmitDateMatch()"
         />
-        <v-row v-if="!hasResponseDates">
+        <v-row v-if="!hasSubmitDateMatch()">
           <v-col>
             Responses have no responseDate set.
             <a
@@ -58,7 +58,7 @@
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
-          :useLogicalTime="!hasResponseDates"
+          :useLogicalTime="!hasSubmitDateMatch()"
         />
         <v-alert v-else type="error">No responses yet.</v-alert>
       </v-col>
@@ -172,7 +172,6 @@ export default defineComponent({
   },
   data: function () {
     return {
-      hasResponseDates: false,
       responseRange: [this.getMinResponseDate()(), this.getMaxResponseDate()()],
     };
   },
@@ -184,12 +183,6 @@ export default defineComponent({
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
-    this.hasResponseDates = this.hasSubmitDateMatch();
-  },
-
-  watch: {
-    // $route: fucnonRouteChange(): Promise<void> {
-    // await this.$store.dispatch("refreshSurvey", this.surveyId);
   },
 
   methods: {
