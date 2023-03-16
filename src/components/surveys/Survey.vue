@@ -21,11 +21,10 @@
 
         <v-window-item value="tabular">
           <tabular
-            :show-keys="questionKeys"
+            :q-keys="questionKeys"
             :responses="responses"
             :participants="participants"
             :showOptions="showOptions"
-            sort-key="submitdate"
           />
         </v-window-item>
 
@@ -134,15 +133,13 @@ export default defineComponent({
       return `statistics_${this.survey.sid}.pdf`;
     },
     questionKeys(): string[] {
-      console.debug(this.responses)
-      return [];
-      // return Array.from(
-      //   new Set<string>(
-      //     this.responses
-      //       .map((response) => Object.keys(getQuestionsFromResponses(response)))
-      //       .flat()
-      //   )
-      // ).sort();
+      return Array.from(
+        new Set<string>(
+          this.responses
+            .map((response) => Object.keys(getQuestionsFromResponses(response)))
+            .flat()
+        )
+      ).sort();
     },
     questionTexts(): Record<string, string> {
       return getQuestionsFromResponses(this.responses[0]);
@@ -150,14 +147,6 @@ export default defineComponent({
   },
   mounted() {
     this.tab = "charts";
-    console.debug("QUESTIONS: ")
-    console.debug(this.questions)
-    console.debug("SURVEY: ")
-    console.debug(this.survey)
-    console.debug("RESPONSES: ")
-    console.debug(this.responses)
-    console.debug("PARTICIPANTS: ")
-    console.debug(this.participants)
   },
 });
 </script>

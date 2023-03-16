@@ -5,6 +5,22 @@
     </v-toolbar-title>
 
     <v-spacer />
+    <v-menu>
+      <template v-slot:activator="{ props }">
+        <v-btn prepend-icon="mdi-chevron-down" v-bind="props">Surveys</v-btn>
+      </template>
+
+      <v-list>
+        <v-list-item
+          v-for="{ key, label, to } in surveyLinks"
+          :key="key"
+          :to="to"
+        >
+          <v-list-item-title>{{ label }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+
     <v-btn v-if="!isAuthenticated" to="/login" prepend-icon="mdi-login"
       >Login</v-btn
     >
@@ -30,7 +46,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapGetters, mapState } from "vuex";
+import { mapState, mapActions } from "pinia";
+import { koordStore } from "../store";
 
 type SurveyLink = {
   key: number;
@@ -41,11 +58,12 @@ type SurveyLink = {
 export default defineComponent({
   name: "NavigationComponent",
   computed: {
-    ...mapState(["syncing", "surveys", "username"]),
-    ...mapGetters(["isAuthenticated", "getSurveys"]),
+    ...mapState(koordStore, ["surveys", "username", "isAuthenticated", "getSurveys"]),
 
     surveyLinks(): SurveyLink[] {
+      console.debug("getSurveys", this.getSurveys)
       const surveyIds: number[] = [...this.getSurveys];
+      console.debug("surveyIds", surveyIds)
       return surveyIds.sort().map((surveyId: number) => {
         const title: string = this.surveys[surveyId].surveyls_title;
         return {
@@ -55,6 +73,12 @@ export default defineComponent({
         };
       });
     },
+  },
+  methods: {
+    ...mapActions(koordStore, ["refreshSurveys"]),
+  },
+  async mounted() {
+    await this.refreshSurveys()
   },
 });
 </script>

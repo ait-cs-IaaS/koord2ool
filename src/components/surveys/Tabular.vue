@@ -11,41 +11,17 @@
     </v-row>
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <v-table
-          :items="sortedResponses"
+        <v-data-table
+          :items="responses"
           :headers="headers"
-          :sort-by="sortKey"
-          :sort-desc="sortDirection === -1"
           no-data-text="There are no records to show"
-          class="table-default shadow"
         >
-          <template v-slot:item.token:="{ item }">
-            <span :data-token="item.token">
-              {{ getParticipant(item.token) }}
+          <template v-slot:item.token="{ item }">
+            <span>
+              {{ getParticipant(item.raw.token) }}
             </span>
-            <div v-if="item.$validUntil && !hideStale" class="update-info">
-              (updated {{ item.$validUntil }})
-            </div>
           </template>
-          <template #item.submitdate="{ item }">
-            <v-icon
-              v-if="item.value === 'Y'"
-              icon="check-circle-fill"
-              class="table-check-icon"
-            ></v-icon>
-            <v-icon
-              v-else-if="item.value === 'N'"
-              icon="x-circle-fill"
-              class="table-cross-icon"
-            ></v-icon>
-            <v-icon
-              v-else-if="item.value === ''"
-              icon="dash"
-              class="table-dash-icon"
-            ></v-icon>
-            <span v-else>{{ item.value }}</span>
-          </template>
-        </v-table>
+        </v-data-table>
       </v-col>
     </v-row>
   </v-container>
@@ -59,9 +35,9 @@ import DisplayOptions from "./DisplayOptions.vue";
 import { defineComponent } from "vue";
 
 interface Header {
-  text: string;
-  value: string;
-  align: "left" | "center" | "right";
+  title: string;
+  key: string;
+  align: "start" | "end";
   sortable: boolean;
 }
 
@@ -71,18 +47,9 @@ export default defineComponent({
     DisplayOptions,
   },
   props: {
-    showKeys: {
+    qKeys: {
       type: Array<string>,
-      default: () => ["submitdate", "token"],
-    },
-    sortDirection: {
-      type: Number,
-      default: () => 1,
-      validator: (value: unknown) => value === -1 || value === 1,
-    },
-    sortKey: {
-      type: String,
-      required: false,
+      default: () => [],
     },
     responses: {
       type: Array<ResponseModel>,
@@ -96,6 +63,12 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+  },
+  mounted() {
+    console.debug("TabularComponent mounted");
+    console.debug(this.responses)
+    console.debug(this.participants)
+    console.debug(this.headers)
   },
   data() {
     return {
@@ -117,6 +90,13 @@ export default defineComponent({
     };
   },
   computed: {
+    showKeys(): string[] {
+      const qk = this.qKeys;
+      qk.unshift("participant");
+      qk.unshift("submitdate");
+      qk.unshift("token");
+      return qk;
+    },
     headers(): Header[] {
       const headers = this.responses.reduce(
         (acc: Record<string, Header>, response: ResponseModel) => {
@@ -124,9 +104,9 @@ export default defineComponent({
           keys.forEach((key) => {
             if (!acc[key]) {
               acc[key] = {
-                text: key,
-                value: key,
-                align: "left",
+                title: key,
+                key: key,
+                align: "start",
                 sortable: true,
               };
             }
@@ -136,21 +116,13 @@ export default defineComponent({
         {}
       );
       return Object.values(headers).filter((header: Header) =>
-        this.showKeys.includes(header.value)
+        this.showKeys.includes(header.key)
       );
-    },
-    sortedResponses() {
-      return this.sortKey
-        ? [...this.responses].sort((a: ResponseModel, b: ResponseModel) => {
-            const left = a[this.sortKey || "submitdate"] || "";
-            const right = b[this.sortKey || "submitdate"] || "";
-            return left.localeCompare(right) * this.sortDirection;
-          })
-        : this.responses;
-    },
+    }
   },
   methods: {
     getParticipant(token: string): string {
+      console.debug("getParticipant", token)
       const participant = this.participants.find(
         (participant: ParticipantModel) => participant.token === token
       );

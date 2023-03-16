@@ -2,7 +2,7 @@
   <div class="mt-10">
     <div class="d-flex justify-space-between">
         <span class="ml-3">Choose a survey</span>
-        <v-btn class="mr-3" color="green" @click="">Refresh</v-btn>
+        <v-btn class="mr-3" color="green" @click="refreshSurveys">Refresh</v-btn>
     </div>
   <v-list dense fill-height fluid class="list-group">
     <v-list-item
@@ -37,7 +37,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapGetters, mapState } from "vuex";
+import { mapState, mapActions } from "pinia";
+import { koordStore } from "../store";
 
 type SurveyLink = {
   key: string | number;
@@ -50,8 +51,7 @@ export default defineComponent({
   props: { username: { type: String, required: true } },
 
   computed: {
-    ...mapState(["surveys"]),
-    ...mapGetters(["getSurveys"]),
+    ...mapState(koordStore, ["surveys", "getSurveys"]),
     surveyLinks(): SurveyLink[] {
       const surveyIds: number[] = [...this.getSurveys];
       return surveyIds.sort().map((surveyId) => {
@@ -65,9 +65,10 @@ export default defineComponent({
     },
   },
   methods: {
-    async refresh(): Promise<void> {
-      await this.$store.dispatch("refreshSurveys");
-    },
+    ...mapActions(koordStore, ["refreshSurveys"]),
+  },
+  async mounted() {
+    await this.refreshSurveys()
   },
 });
 </script>

@@ -30,7 +30,7 @@
           <v-btn
             type="submit"
             color="primary"
-            @click="authenticate(username, password)"
+            @click="login(username, password)"
             :disabled="disabled || !canAuthenticate"
           >
             Log in
@@ -42,7 +42,9 @@
 </template>
 
 <script lang="ts">
+import { mapActions } from "pinia";
 import { defineComponent } from "vue";
+import { koordStore } from "../store";
 
 export default defineComponent({
   name: "LoginComponent",
@@ -78,7 +80,7 @@ export default defineComponent({
     if (VITE_APP_LIMESURVEY_LOGIN && VITE_APP_LIMESURVEY_PASSWORD) {
       this.$nextTick(() => {
         // Authenticate with LimeSurvey automatically if these environment variables are set.
-        this.authenticate(
+        this.login(
           VITE_APP_LIMESURVEY_LOGIN,
           VITE_APP_LIMESURVEY_PASSWORD
         );
@@ -87,6 +89,7 @@ export default defineComponent({
   },
 
   methods: {
+    ...mapActions(koordStore, ["authenticate"]),
     getCredentials(
       login?: unknown,
       password?: unknown
@@ -98,17 +101,11 @@ export default defineComponent({
       return { username: useLogin, password: usePassword };
     },
 
-    /**
-     * Starts the authentication process with LimeSurvey.
-     *
-     * @param login the login to use
-     * @param password the password to use
-     */
-    async authenticate(login?: string, password?: string): Promise<void> {
+    async login(login?: string, password?: string): Promise<void> {
       this.$emit("auth-before", login);
       try {
         const credentials = this.getCredentials(login, password);
-        const okay = await this.$store.dispatch("authenticate", credentials);
+        const okay = await this.authenticate(credentials);
         if (okay) {
           this.$emit("auth-success", login);
         } else {
@@ -117,7 +114,6 @@ export default defineComponent({
         }
       } catch (e) {
         this.$emit("auth-fail", login, e);
-        this.$store.commit("setError", e);
       }
     },
   },

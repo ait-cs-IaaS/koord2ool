@@ -19,7 +19,7 @@
           :id="questionKey"
           :question="questionText(questionKey)"
           :counters="countResponsesFor(questionKey)"
-          :data="createTimelineFor(questionKey)"
+          :chartjsdata="createTimelineFor(questionKey)"
           :useLogicalTime="useLogicalTime"
         />
       </v-col>

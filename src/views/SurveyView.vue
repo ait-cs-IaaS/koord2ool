@@ -50,17 +50,17 @@
     </v-row>
     <v-row>
       <v-col>
-      <survey-component
-        v-if="hasResponses"
-        :survey="survey"
-        :responses="responsesInTimeline"
-        :questions="questions"
-        :participants="participants"
-        :until="untilDate"
-        :from="fromDate"
-        :useLogicalTime="!hasResponseDates"
-      />
-      <v-alert v-else type="error">No responses yet.</v-alert>
+        <survey-component
+          v-if="hasResponses"
+          :survey="survey"
+          :responses="responsesInTimeline"
+          :questions="questions"
+          :participants="participants"
+          :until="untilDate"
+          :from="fromDate"
+          :useLogicalTime="!hasResponseDates"
+        />
+        <v-alert v-else type="error">No responses yet.</v-alert>
       </v-col>
     </v-row>
   </v-container>
@@ -75,6 +75,8 @@ import { ResponseModel } from "../store/response.model";
 import { ParticipantModel } from "../store/participant.model";
 
 import { defineComponent } from "vue";
+import { koordStore } from "../store";
+import { mapState, mapActions } from "pinia";
 
 interface rangeArray extends Array<Date> {
   length: 2;
@@ -89,6 +91,18 @@ export default defineComponent({
   },
 
   computed: {
+    ...mapState(koordStore, [
+      "getParticipants",
+      "getResponses",
+      "getSurvey",
+      "hasSubmitDateMatch"
+    ]),
+    maxResponseDate(): Date {
+      return this.getMaxResponseDate()(this.surveyId);
+    },
+    minResponseDate(): Date {
+      return this.getMinResponseDate()(this.surveyId);
+    },
     questionCount(): number {
       return Object.keys(this.questions).length;
     },
@@ -110,11 +124,11 @@ export default defineComponent({
     },
 
     participants(): ParticipantModel[] {
-      return this.$store.getters.getParticipants(this.surveyId);
+      return this.getParticipants(this.surveyId);
     },
 
     responses(): ResponseModel[] {
-      return this.$store.getters.getResponses(this.surveyId);
+      return this.getResponses(this.surveyId);
     },
 
     fromDate(): Date {
@@ -130,10 +144,13 @@ export default defineComponent({
     },
 
     responsesInTimeline(): ResponseModel[] {
-      return this.responses.filter((response) => {
+      console.debug("Unfiltered responses: ", this.responses);
+      const r = this.responses.filter((response) => {
         const thisTime = new Date(response.submitdate);
         return this.fromDate <= thisTime && thisTime <= this.untilDate;
       });
+      console.debug("Filtered responses: ", r);
+      return r;
     },
 
     submitDates(): string[] {
@@ -141,7 +158,7 @@ export default defineComponent({
     },
 
     survey(): SurveyModel {
-      return this.$store.getters.getSurvey(this.surveyId);
+      return this.getSurvey(this.surveyId);
     },
 
     surveyActive(): boolean {
@@ -151,30 +168,23 @@ export default defineComponent({
     surveyId(): number {
       const { surveyId } = this.$route.params;
       return Number(surveyId);
-    }
+    },
   },
   data: function () {
     return {
-      minResponseDate: new Date(),
-      maxResponseDate: new Date(),
       hasResponseDates: false,
-      responseRange: [new Date(), new Date()],
+      responseRange: [this.getMinResponseDate()(), this.getMaxResponseDate()()],
     };
   },
 
-  async beforeMount(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  },
-
   mounted(): void {
+    this.refresh();
+
     // This shouldn't happen, but it does :(
     if (typeof this.survey === "undefined") {
       throw new Error("Couldn't find a local copy of the survey.");
     }
-    this.minResponseDate = this.$store.getters.getMinResponseDate()
-    this.maxResponseDate = this.$store.getters.getMaxResponseDate()
-    this.hasResponseDates = this.$store.getters.hasSubmitDateMatch()
-    this.responseRange = [this.minResponseDate, this.maxResponseDate]
+    this.hasResponseDates = this.hasSubmitDateMatch();
   },
 
   watch: {
@@ -183,8 +193,11 @@ export default defineComponent({
   },
 
   methods: {
+    ...mapActions(koordStore, ["refreshSurvey"]),
+    ...mapState(koordStore, ["getMaxResponseDate", "getMinResponseDate"]),
+
     async refresh(): Promise<void> {
-      await this.$store.dispatch("refreshSurvey", this.surveyId);
+      await this.refreshSurvey(this.surveyId);
     },
   },
 });

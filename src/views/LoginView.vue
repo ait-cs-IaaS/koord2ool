@@ -1,21 +1,21 @@
 <template>
   <v-container fluid>
     <v-row>
-        <h1>Log in</h1>
-        <p>
-          Please authenticate using your
-          <span class="font-weight-bold"
-            >LimeSurvey
-            <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
-          >
-          log-in credentials.
-        </p>
-        <login
-          @auth-before="setBusy"
-          @auth-fail="setFailed"
-          @auth-success="setSuccess"
-          :disabled="authenticating"
-        />
+      <h1>Log in</h1>
+      <p>
+        Please authenticate using your
+        <span class="font-weight-bold"
+          >LimeSurvey
+          <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
+        >
+        log-in credentials.
+      </p>
+      <login
+        @auth-before="setBusy"
+        @auth-fail="setFailed"
+        @auth-success="setSuccess"
+        :disabled="authenticating"
+      />
     </v-row>
   </v-container>
 </template>
@@ -23,6 +23,8 @@
 <script lang="ts">
 import Login from "../components/Login.vue";
 import { defineComponent } from "vue";
+import { mapState, mapActions } from "pinia";
+import { koordStore } from "../store";
 
 export default defineComponent({
   name: "LoginView",
@@ -44,20 +46,11 @@ export default defineComponent({
   },
 
   computed: {
-    isAuthenticated(): boolean {
-      return this.$store.getters.isAuthenticated;
-    },
-
-    username(): string {
-      return this.$store.getters.username;
-    },
-
-    instance(): string {
-      return this.$store.getters.getInstanceDomain;
-    },
+    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
   },
 
   methods: {
+    ...mapActions(koordStore, ["refreshSurveys"]),
     setBusy(): void {
       this.authenticating = true;
     },
@@ -67,6 +60,7 @@ export default defineComponent({
     },
 
     setSuccess(): void {
+      this.refreshSurveys();
       const goTo = this.returnTo || "/";
       this.$router.push(goTo);
     },
