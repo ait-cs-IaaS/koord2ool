@@ -1,5 +1,5 @@
 <template>
-  <Doughnut :data="chartData" :options="options" />
+  <Doughnut :data="chartData" :style="chartStyle" :options="options" />
 </template>
 
 <script lang="ts">
@@ -11,7 +11,6 @@ import {
   ChartDataset,
 } from "chart.js";
 import { Doughnut } from "vue-chartjs";
-import { v4 } from "uuid";
 import colors from "./colors";
 import { chartOptions } from "./doughnut-options";
 import { defineComponent } from "vue";
@@ -24,11 +23,7 @@ export default defineComponent({
     counters: {
       type: Array,
       default: () => [],
-    },
-    chartId: {
-      type: String,
-      default: () => `doughnut-${v4()}`,
-    },
+    }
   },
   components: {
     Doughnut,
@@ -36,6 +31,9 @@ export default defineComponent({
   data() {
     return {
       options: chartOptions,
+      chartStyle: {
+        height: "300px",
+      },
     };
   },
   computed: {

@@ -19,8 +19,6 @@
     <v-row class="pt-3">
       <v-col
         cols="12"
-        lg="12"
-        xl="6"
         v-for="questionKey of questionKeys"
         :key="questionKey"
       >

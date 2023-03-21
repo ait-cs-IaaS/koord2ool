@@ -1,7 +1,7 @@
 <template>
-  <v-card class="h-100 shadow">
+  <v-card>
     <v-container fluid>
-      <v-row>
+      <v-row class="chartrow">
         <v-col cols="12" lg="4" class="title-col">
           <v-card-title>
             <span class="question-id">{{ id }} – </span>
@@ -12,13 +12,8 @@
             <p
               v-for="(answer, index) in counters"
               :key="index"
-              class="legend-row mb-2"
             >
-              <span
-                class="legend-color"
-                :style="{ 'background-color': bcolors[index % bcolors.length] }"
-              ></span>
-              <span class="legend-label">
+              <span>
                 {{ answer["name"] }}
                 <strong>({{ answer["value"] }})</strong>
               </span>
@@ -42,6 +37,12 @@
     </v-container>
   </v-card>
 </template>
+
+<style scoped>
+.chartrow {
+  border-bottom: 1px solid #e0e0e0;
+}
+</style>
 
 <script lang="ts">
 import LineChart from "./LineChart.vue";

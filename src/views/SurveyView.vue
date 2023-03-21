@@ -176,22 +176,13 @@ export default defineComponent({
     };
   },
 
-  mounted(): void {
-    this.refresh();
-
-    // This shouldn't happen, but it does :(
-    if (typeof this.survey === "undefined") {
-      throw new Error("Couldn't find a local copy of the survey.");
-    }
+  async mounted(): Promise<void> {
+    await this.refreshSurvey(this.surveyId);
   },
 
   methods: {
     ...mapActions(koordStore, ["refreshSurvey"]),
     ...mapState(koordStore, ["getMaxResponseDate", "getMinResponseDate"]),
-
-    async refresh(): Promise<void> {
-      await this.refreshSurvey(this.surveyId);
-    },
   },
 });
 </script>

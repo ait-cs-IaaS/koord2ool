@@ -1,5 +1,5 @@
 <template>
-  <line-chart :data="chartjsData" :options="chartOptions" />
+  <line-chart :data="chartjsData" :style="chartStyle" :options="chartOptions" />
 </template>
 
 <script lang="ts">
@@ -51,6 +51,9 @@ export default defineComponent({
   data() {
     return {
       chartOptions: chartOptions,
+      chartStyle: {
+        height: "300px",
+      },
     };
   },
 });
