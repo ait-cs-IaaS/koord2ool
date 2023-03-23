@@ -38,5 +38,7 @@ export default interface KoordLayout {
 
   selectedSurveyID?: number;
 
+  responseRange: number[];
+
   settings: SettingsModel;
 }

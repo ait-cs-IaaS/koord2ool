@@ -29,7 +29,8 @@ export const koordStore = defineStore('koord', {
     participants: {},
     responses: {},
     surveys: {},
-    settings: { step: 6, onlyActive: true, useLogicalTime: false, responseRange: [0, new Date().getTime()] },
+    settings: { step: 6, onlyActive: true, useLogicalTime: false },
+    responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
     syncing: false,
   }),
@@ -111,16 +112,16 @@ export const koordStore = defineStore('koord', {
         return maxResponseDate(state.responses[sid]);
       },
     fromDate(state): Date {
-      if (state.settings.responseRange[0] === undefined) {
+      if (state.responseRange[0] === undefined) {
         return this.getMinResponseDate();
       }
-      return new Date(state.settings.responseRange[0]);
+      return new Date(state.responseRange[0]);
     },
     untilDate(state): Date {
-      if (state.settings.responseRange[1] === undefined) {
+      if (state.responseRange[1] === undefined) {
         return this.getMaxResponseDate();
       }
-      return new Date(state.settings.responseRange[1]);
+      return new Date(state.responseRange[1]);
     }
   },
   actions: {

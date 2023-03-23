@@ -1,5 +1,5 @@
 <template>
-  <Slider v-model="settings.responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
+  <Slider v-model="responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
 <style src="@vueform/slider/themes/default.css"></style>
@@ -19,7 +19,7 @@ export default defineComponent({
     return {};
   },
   computed: {
-    ...mapState(koordStore, ["settings", "getMaxResponseDate", "getMinResponseDate"]),
+    ...mapState(koordStore, ["settings", "responseRange", "getMaxResponseDate", "getMinResponseDate"]),
 
     minValue(): number {
       return Math.round(this.getMidnight(this.getMinResponseDate()).getTime());

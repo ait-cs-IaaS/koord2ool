@@ -2,7 +2,6 @@ export interface SettingsModel {
   useLogicalTime: boolean;
   step: number;
   onlyActive: boolean;
-  responseRange: number[];
 }
 
 export type SettingsKey = keyof SettingsModel;

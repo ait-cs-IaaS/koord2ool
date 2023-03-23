@@ -57,7 +57,10 @@
           :from="fromDate"
           :useLogicalTime="!hasSubmitDateMatch()"
         />
-        <v-alert v-else type="error">No responses yet.</v-alert>
+        <div v-else>
+          <v-btn @click="refreshSurvey(surveyId)">Refresh</v-btn>
+          <v-alert type="error">No responses yet.</v-alert>
+        </div>
       </v-col>
     </v-row>
   </v-container>
@@ -159,7 +162,14 @@ export default defineComponent({
   async mounted(): Promise<void> {
     await this.refreshSurvey(this.surveyId);
   },
-
+  watch: {
+    surveyId: {
+      immediate: true,
+      async handler(newVal: number): Promise<void> {
+        await this.refreshSurvey(newVal);
+      }
+    }
+  },
   methods: {
     ...mapActions(koordStore, ["refreshSurvey"]),
     ...mapState(koordStore, ["getMaxResponseDate", "getMinResponseDate"]),

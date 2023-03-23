@@ -15,7 +15,7 @@ import NavComponent from "./components/Navigation.vue";
 </template>
 
 <style scoped>
-:deep(.v-application__wrap) {
+.v-application__wrap {
   max-height: fit-content !important;
 }
 </style>

@@ -16,6 +16,7 @@ import {
   ChartData,
   TimeScale,
   TimeSeriesScale,
+Filler,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
 import { chartOptions } from "./line-options";
@@ -29,6 +30,7 @@ ChartJS.register(
   LineElement,
   TimeScale,
   TimeSeriesScale,
+  Filler,
   Title,
   Tooltip,
   Legend,
