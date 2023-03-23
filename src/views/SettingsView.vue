@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row class="login">
-      <v-col> Currently connected to: {{ import.meta.env.VITE_APP_LIMESURVEY_API }} </v-col>
+      <v-col> Currently connected to: {{ instance }} </v-col>
     </v-row>
     <v-row>
       <v-col>
@@ -24,7 +24,7 @@ import { koordStore } from "../store";
 export default defineComponent({
   name: "SettingsView",
   computed: {
-    ...mapState(koordStore, ["settings"]),
+    ...mapState(koordStore, ["settings", "instance"]),
   },
 });
 </script>
