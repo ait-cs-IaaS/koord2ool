@@ -69,7 +69,6 @@ export function hasSubmitDateMatch(responses: ResponseModel[]): boolean {
 }
 
 export function minResponseDate(responses: ResponseModel[]): Date {
-  console.debug("minResponseDate", responses)
   return responses
     .map((response) => new Date(response.submitdate))
     .reduce((min, date) => (date < min ? date : min), new Date());

@@ -1,43 +1,34 @@
 <template>
-  <v-form @submit.prevent height="200px">
-    <v-container fluid class="pl-0 mt-5">
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="username"
-            label="User"
-            :disabled="disabled"
-            :rules="[acceptUser]"
-            required
-          />
-        </v-col>
-      </v-row>
-
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            v-model="password"
-            label="Password"
-            type="password"
-            :disabled="disabled"
-            :rules="[acceptPassword]"
-            required
-          />
-        </v-col>
-      </v-row>
-      <v-row class="mt-4">
-        <v-col>
-          <v-btn
-            type="submit"
-            color="primary"
-            @click="login(username, password)"
-            :disabled="disabled || !canAuthenticate"
-          >
-            Log in
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
+  <v-form @submit.prevent fluid>
+    <v-col>
+      <v-text-field
+        v-model="username"
+        label="User"
+        :disabled="disabled"
+        :rules="[acceptUser]"
+        required
+      />
+    </v-col>
+    <v-col>
+      <v-text-field
+        v-model="password"
+        label="Password"
+        type="password"
+        :disabled="disabled"
+        :rules="[acceptPassword]"
+        required
+      />
+    </v-col>
+    <v-col>
+      <v-btn
+        type="submit"
+        color="primary"
+        @click="login(username, password)"
+        :disabled="disabled || !canAuthenticate"
+      >
+        Log in
+      </v-btn>
+    </v-col>
   </v-form>
 </template>
 
@@ -80,10 +71,7 @@ export default defineComponent({
     if (VITE_APP_LIMESURVEY_LOGIN && VITE_APP_LIMESURVEY_PASSWORD) {
       this.$nextTick(() => {
         // Authenticate with LimeSurvey automatically if these environment variables are set.
-        this.login(
-          VITE_APP_LIMESURVEY_LOGIN,
-          VITE_APP_LIMESURVEY_PASSWORD
-        );
+        this.login(VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD);
       });
     }
   },

@@ -14,19 +14,24 @@ import {
   Tooltip,
   Legend,
   ChartData,
+  TimeScale,
+  TimeSeriesScale,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
 import { chartOptions } from "./line-options";
 import { defineComponent } from "vue";
+import 'chartjs-adapter-moment';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  TimeScale,
+  TimeSeriesScale,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 export default defineComponent({
@@ -42,11 +47,7 @@ export default defineComponent({
     chartId: {
       type: String,
       default: () => `line-${v4()}`,
-    },
-    isLogicalTime: {
-      type: Boolean,
-      default: () => false,
-    },
+    }
   },
   data() {
     return {

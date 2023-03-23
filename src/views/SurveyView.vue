@@ -13,9 +13,6 @@
     <v-row class="ml-6 mr-6 mt-6">
       <v-col class="ml-8 mr-8">
         <time-slider
-          v-model:inputRange="responseRange as rangeArray"
-          :minDate="minResponseDate"
-          :maxDate="maxResponseDate"
           v-if="hasSubmitDateMatch()"
         />
         <v-row v-if="!hasSubmitDateMatch()">
@@ -78,9 +75,6 @@ import { defineComponent } from "vue";
 import { koordStore } from "../store";
 import { mapState, mapActions } from "pinia";
 
-interface rangeArray extends Array<Date> {
-  length: 2;
-}
 
 export default defineComponent({
   name: "SurveyView",
@@ -95,7 +89,10 @@ export default defineComponent({
       "getParticipants",
       "getResponses",
       "getSurvey",
-      "hasSubmitDateMatch"
+      "hasSubmitDateMatch",
+      "settings",
+      "fromDate",
+      "untilDate",
     ]),
     maxResponseDate(): Date {
       return this.getMaxResponseDate()(this.surveyId);
@@ -131,26 +128,11 @@ export default defineComponent({
       return this.getResponses(this.surveyId);
     },
 
-    fromDate(): Date {
-      return typeof this.responseRange[0] !== "undefined"
-        ? this.responseRange[0]
-        : this.minResponseDate;
-    },
-
-    untilDate(): Date {
-      return typeof this.responseRange[1] !== "undefined"
-        ? this.responseRange[1]
-        : this.maxResponseDate;
-    },
-
     responsesInTimeline(): ResponseModel[] {
-      console.debug("Unfiltered responses: ", this.responses);
-      const r = this.responses.filter((response) => {
+      return this.responses.filter((response) => {
         const thisTime = new Date(response.submitdate);
         return this.fromDate <= thisTime && thisTime <= this.untilDate;
       });
-      console.debug("Filtered responses: ", r);
-      return r;
     },
 
     submitDates(): string[] {
@@ -171,9 +153,7 @@ export default defineComponent({
     },
   },
   data: function () {
-    return {
-      responseRange: [this.getMinResponseDate()(), this.getMaxResponseDate()()],
-    };
+    return { };
   },
 
   async mounted(): Promise<void> {

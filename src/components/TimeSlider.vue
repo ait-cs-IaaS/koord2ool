@@ -1,5 +1,5 @@
 <template>
-  <Slider v-model="range" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
+  <Slider v-model="settings.responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
 <style src="@vueform/slider/themes/default.css"></style>
@@ -10,55 +10,33 @@ import { mapState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../store";
 
-interface rangeArray extends Array<Date> {
-  length: 2;
-}
-
 export default defineComponent({
   name: "TimeSlider",
   components: {
     Slider,
   },
-  emits: ["update:inputRange"],
-  props: {
-    minDate: {
-      type: Date,
-      required: true,
-    },
-    maxDate: {
-      type: Date,
-      required: true,
-    },
-    inputRange: {
-      type: Array as () => rangeArray,
-      required: true
-    }
-  },
   data: function () {
-    return {
-      minValue: Math.round(this.getMidnight(this.minDate).getTime()),
-      maxValue: Math.round(this.getMidnightTomrrow(this.maxDate).getTime()),
-    };
+    return {};
   },
   computed: {
+    ...mapState(koordStore, ["settings", "getMaxResponseDate", "getMinResponseDate"]),
+
+    minValue(): number {
+      return Math.round(this.getMidnight(this.getMinResponseDate()).getTime());
+    },
+
+    maxValue(): number {
+      return Math.round(this.getMidnightTomrrow(this.getMaxResponseDate()).getTime());
+    },
+
     stepSize(): number {
       return this.settings.step * 3600 * 1000;
-    },
-    ...mapState(koordStore, ["settings"]),
-    range: {
-      get(): [number, number] {
-        return [this.inputRange[0].getTime(), this.inputRange[1].getTime()]
-      },
-      set(value: [number, number]) {
-        const result = [new Date(value[0]), new Date(value[1])];
-        console.debug("TimeSlider: range changed", result)
-        this.$emit("update:inputRange", result);
-      }
     },
   },
   methods: {
     tooltipFormater(value: number): string {
-      return new Date(value).toUTCString();
+      const options : Intl.DateTimeFormatOptions = { year: 'numeric', month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+      return new Date(value).toLocaleDateString('de-AT', options);
     },
     getMidnight(date: Date): Date {
       return new Date(

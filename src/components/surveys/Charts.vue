@@ -3,31 +3,17 @@
     <v-row>
       <display-options
         :displayOptions="showOptions"
-        :options="timeOptions"
-        @result="useLogicalTime = $event"
+        :options="options"
       >
-      <template v-slot:additional-options>
-        <h2>Time slider interval in hours: {{ settings.step }}</h2>
-        <v-btn-toggle v-model="settings.step" mandatory>
-          <v-btn icon="mdi-numeric-1" :value="1" />
-          <v-btn icon="mdi-numeric-6" :value="6" />
-          <v-btn icon="mdi-hours-24" :value="24" />
-        </v-btn-toggle>
-      </template>
       </display-options>
     </v-row>
     <v-row class="pt-3">
-      <v-col
-        cols="12"
-        v-for="questionKey of questionKeys"
-        :key="questionKey"
-      >
+      <v-col cols="12" v-for="questionKey of questionKeys" :key="questionKey">
         <chart-card
           :id="questionKey"
           :question="questionText(questionKey)"
           :counters="countResponsesFor(questionKey)"
           :chartjsdata="createTimelineFor(questionKey)"
-          :useLogicalTime="useLogicalTime"
         />
       </v-col>
     </v-row>
@@ -41,11 +27,16 @@ import { QuestionModel, getQuestionText } from "../../store/question.model";
 import ChartCard from "./ChartCard.vue";
 import DisplayOptions from "./DisplayOptions.vue";
 import { ChartData, ChartDataset } from "chart.js";
-import moment from "moment";
 import { MinMax } from "../../helpers/min-max";
 import { defineComponent } from "vue";
 import { mapState } from "pinia";
 import { koordStore } from "../../store";
+import { SettingsKey, Option } from "../../store/settings.model";
+
+interface responseCount {
+  name: string;
+  value: number;
+}
 
 export default defineComponent({
   name: "ChartsComponent",
@@ -88,23 +79,41 @@ export default defineComponent({
   },
   data() {
     return {
-      useLogicalTime: false,
-      timeOptions: [
-        {
-          text: "Real",
-          icon: "mdi-clock",
-          value: false,
-          description:
-            "Actual time: time-based charts will use actual timestamps of survey responses.",
-        },
-        {
-          text: "Logical",
-          icon: "mdi-timer-sand-empty",
-          value: true,
-          description:
-            "Logical time: time-based charts will show change in responses evenly for readability purposes.",
-        },
-      ],
+      options: {
+        useLogicalTime: [
+          {
+            text: "Real",
+            icon: "mdi-clock",
+            value: false,
+            description:
+              "Actual time: time-based charts will use actual timestamps of survey responses.",
+          },
+          {
+            text: "Logical",
+            icon: "mdi-timer-sand-empty",
+            value: true,
+            description:
+              "Logical time: time-based charts will show change in responses evenly for readability purposes.",
+          },
+        ],
+        step: [
+          {
+            text: "1 hour",
+            icon: "mdi-numeric-1",
+            value: 1,
+          },
+          {
+            text: "6 hours",
+            icon: "mdi-numeric-6",
+            value: 6,
+          },
+          {
+            text: "24 hours",
+            icon: "mdi-hours-24",
+            value: 24,
+          },
+        ],
+      } as Record<SettingsKey, Option[]>,
     };
   },
   methods: {
@@ -112,38 +121,34 @@ export default defineComponent({
       return getQuestionText(questionKey, this.questions);
     },
 
-    countResponsesFor(
-      questionKey: string
-    ): Array<{ name: string; value: number }> {
-      const map = new Map<string, number>();
-      this.responses
-        .filter((response) => {
-          const time = moment(response.submitdate);
-          return (
-            time.isSameOrBefore(this.until) &&
-            (typeof response.$validUntil === "undefined" ||
-              moment(response.$validUntil).isAfter(this.until))
-          );
-        })
-        .forEach((response) => {
-          const value = response[questionKey] || "N/A";
-          map.set(value, (map.get(value) || 0) + 1);
-        });
-      const asAry: { name: string; value: number }[] = [];
-      map.forEach((value, key) => asAry.push({ name: key, value }));
+    countResponsesFor(questionKey: string): responseCount[] {
+      const responseCounts: responseCount[] = [];
+      const lastResponses: Record<string, ResponseModel> = {};
 
-      asAry.sort((a, b) => {
-        if (a.name.length === b.name.length) {
-          if (a.name === b.name) return 0;
-          return a.name > b.name ? -1 : 1;
-        } else {
-          return a.name.length - b.name.length;
+      this.responses.forEach((response) => {
+        const token = response.token;
+        if (!lastResponses[token] || new Date(response.submitdate) > new Date(lastResponses[token].submitdate)) {
+          lastResponses[token] = response;
         }
       });
 
-      this.createTimelineFor(questionKey);
+      Object.values(lastResponses).forEach((response) => {
+        const value = response[questionKey] || "N/A";
+        const existingIndex = responseCounts.findIndex((item) => item.name === value);
 
-      return asAry;
+        if (existingIndex !== -1) {
+          responseCounts[existingIndex].value++;
+        } else {
+          responseCounts.push({ name: value, value: 1 });
+        }
+      });
+
+      responseCounts.sort((a, b) => {
+        if (a.name.length === b.name.length) return 0;
+        return a.name.length - b.name.length;
+      });
+
+      return responseCounts;
     },
 
     createTimelineFor(questionKey: string): ChartData<"line"> {
@@ -163,7 +168,7 @@ export default defineComponent({
         }))
         .sort((a, b) => a.time.valueOf() - b.time.valueOf())
         .forEach(({ token, time, value }, index) => {
-          const x = this.useLogicalTime ? index : time.valueOf();
+          const x = this.settings.useLogicalTime ? index : time.valueOf();
           labels.push(x);
           timeRange.observe(x);
 
@@ -217,6 +222,8 @@ export default defineComponent({
 
       return { labels, datasets };
     },
+  },
+  mounted() {
   },
 });
 </script>

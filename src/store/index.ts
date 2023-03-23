@@ -29,7 +29,7 @@ export const koordStore = defineStore('koord', {
     participants: {},
     responses: {},
     surveys: {},
-    settings: { step: 6, limeSurveyUri: import.meta.env.VITE_APP_LIMESURVEY_API },
+    settings: { step: 6, onlyActive: true, useLogicalTime: false, responseRange: [0, new Date().getTime()] },
     selectedSurveyID: undefined,
     syncing: false,
   }),
@@ -49,16 +49,16 @@ export const koordStore = defineStore('koord', {
         : "User",
 
     instance: (state) => {
-      const endpoint = state.settings.limeSurveyUri;
+      const endpoint = import.meta.env.VITE_APP_LIMESURVEY_API;
       if (!/\/admin\/remotecontrol$/.test(endpoint)) {
         state.error = new Error(`LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`);
         return "";
       }
-      if (state.settings.limeSurveyUri === undefined) {
+      if (endpoint === undefined) {
         state.error = new Error("LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable.");
         return "";
       }
-      const domain = new URL(state.settings.limeSurveyUri);
+      const domain = new URL(endpoint);
       if (domain.hostname === undefined) {
         state.error = new Error(`LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`);
         return "";
@@ -96,7 +96,7 @@ export const koordStore = defineStore('koord', {
       },
     getMinResponseDate:
       (state) =>
-      (sid: number | undefined = state.selectedSurveyID) => {
+      (sid: number | undefined = state.selectedSurveyID): Date => {
         if (sid === undefined || state.responses[sid] === undefined) {
           return new Date(0);
         }
@@ -104,12 +104,24 @@ export const koordStore = defineStore('koord', {
       },
     getMaxResponseDate:
       (state) =>
-      (sid: number | undefined = state.selectedSurveyID) => {
+      (sid: number | undefined = state.selectedSurveyID): Date => {
         if (sid === undefined || state.responses[sid] === undefined) {
           return new Date();
         }
         return maxResponseDate(state.responses[sid]);
       },
+    fromDate(state): Date {
+      if (state.settings.responseRange[0] === undefined) {
+        return this.getMinResponseDate();
+      }
+      return new Date(state.settings.responseRange[0]);
+    },
+    untilDate(state): Date {
+      if (state.settings.responseRange[1] === undefined) {
+        return this.getMaxResponseDate();
+      }
+      return new Date(state.settings.responseRange[1]);
+    }
   },
   actions: {
     async authenticate(

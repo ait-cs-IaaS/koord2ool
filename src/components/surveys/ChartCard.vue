@@ -29,7 +29,6 @@
           <div class="py-4">
             <line-chart
               :chartjsData="chartjsdata"
-              :isLogicalTime="useLogicalTime"
             />
           </div>
         </v-col>
@@ -67,8 +66,7 @@ export default defineComponent({
     chartjsdata: {
       type: Object as () => ChartData<"line">,
       default: () => ({} as ChartData<"line">),
-    },
-    useLogicalTime: { type: Boolean, default: false },
+    }
   },
   computed: {
     bcolors(): string[] {

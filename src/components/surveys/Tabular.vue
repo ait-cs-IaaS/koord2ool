@@ -4,15 +4,14 @@
       <v-col cols="12" class="avoid-page-break px-1 py-1">
         <display-options
           :displayOptions="showOptions"
-          :options="staleOptions"
-          @result="hideStale = $event"
+          :options="options"
         />
       </v-col>
     </v-row>
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
         <v-data-table
-          :items="responses"
+          :items="filteredRecords"
           :headers="headers"
           no-data-text="There are no records to show"
         >
@@ -31,8 +30,10 @@
 import { ResponseModel } from "../../store/response.model";
 import { ParticipantModel } from "../../store/participant.model";
 import DisplayOptions from "./DisplayOptions.vue";
-
+import { SettingsKey, Option } from "../../store/settings.model";
+import { koordStore } from "../../store";
 import { defineComponent } from "vue";
+import { mapState } from "pinia";
 
 interface Header {
   title: string;
@@ -65,31 +66,41 @@ export default defineComponent({
     },
   },
   mounted() {
-    console.debug("TabularComponent mounted");
-    console.debug(this.responses)
-    console.debug(this.participants)
-    console.debug(this.headers)
   },
   data() {
     return {
-      hideStale: false,
-      staleOptions: [
-        {
-          text: "Visible stale",
-          icon: "mdi-land-rows-horizontal",
-          value: false,
-          description: "Visible stale: decorate updated rows.",
-        },
-        {
-          text: "Hidden stale",
-          icon: "mdi-eye-off",
-          value: true,
-          description: "Hidden stale: show all rows as default rows.",
-        },
-      ],
+      options: {
+        onlyActive: [
+          {
+            text: "All rows",
+            icon: "mdi-filter-off",
+            value: false,
+            description: "Show all answers a user gave.",
+          },
+          {
+            text: "Only active",
+            icon: "mdi-filter",
+            value: true,
+            description: "Show only the last answer per user.",
+          },
+        ],
+      } as Record<SettingsKey, Option[]>,
     };
   },
   computed: {
+    ...mapState(koordStore, ["settings"]),
+    filteredRecords(): ResponseModel[] {
+      return this.responses.filter((response: ResponseModel, index: number, array: ResponseModel[]) => {
+        if (this.settings.onlyActive) {
+          const token = response.token;
+          const lastResponse = array.filter(item => item.token === token).reduce((prev, current) => {
+            return (new Date(prev.submitdate) > new Date(current.submitdate)) ? prev : current;
+          });
+          return response === lastResponse;
+        }
+        return true;
+      });
+    },
     showKeys(): string[] {
       const qk = this.qKeys;
       qk.unshift("participant");
@@ -129,11 +140,7 @@ export default defineComponent({
       return participant
         ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
         : token;
-    },
-
-    filterRecords(item: ResponseModel): boolean {
-      return !this.hideStale || !item.$validUntil;
-    },
+    }
   },
 });
 </script>

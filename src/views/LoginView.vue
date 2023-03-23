@@ -2,6 +2,8 @@
   <v-container fluid>
     <v-row>
       <h1>Log in</h1>
+    </v-row>
+    <v-row>
       <p>
         Please authenticate using your
         <span class="font-weight-bold"
@@ -10,12 +12,16 @@
         >
         log-in credentials.
       </p>
+    </v-row>
+    <v-row>
+      <v-col cols="4">
       <login
         @auth-before="setBusy"
         @auth-fail="setFailed"
         @auth-success="setSuccess"
         :disabled="authenticating"
       />
+      </v-col>
     </v-row>
   </v-container>
 </template>

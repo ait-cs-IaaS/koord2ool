@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row class="login">
-      <v-col> Currently connected to: {{ settings.limeSurveyUri }} </v-col>
+      <v-col> Currently connected to: {{ import.meta.env.VITE_APP_LIMESURVEY_API }} </v-col>
     </v-row>
     <v-row>
       <v-col>
