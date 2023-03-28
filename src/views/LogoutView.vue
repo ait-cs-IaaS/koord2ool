@@ -1,19 +1,25 @@
 <template>
-  <b-row class="login">
-    <b-col> Logging out&hellip; </b-col>
-  </b-row>
+  <v-row class="login">
+    <v-col> Logging out&hellip; </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { defineComponent } from "vue";
+import { mapActions } from "pinia";
+import { koordStore } from "../store";
 
-@Component({})
-export default class LogoutView extends Vue {
+export default defineComponent({
+  name: "LogoutView",
+
+  methods: {
+    ...mapActions(koordStore, ["logout"]),
+  },
   mounted(): void {
     this.$nextTick(() => {
-      this.$store.commit("setApi", {});
+      this.logout();
       this.$router.push("/");
     });
-  }
-}
+  },
+});
 </script>

@@ -1,37 +1,24 @@
+<script setup lang="ts">
+import NavComponent from "./components/Navigation.vue";
+</script>
+
 <template>
-  <div>
-    <nav-component class="mb-4" />
+  <v-app>
+    <nav-component />
 
-    <b-container fluid class="main-container">
-      <b-alert
-        :show="$store.getters.hasError"
-        variant="danger"
-        dismissible
-        @dismissed="clearError"
-      >
-        {{ $store.state.error }}
-      </b-alert>
+    <v-main class="main">
       <router-view />
-    </b-container>
+    </v-main>
 
-    <footer class="footer-container text-center d-print-none py-3">
-      <span>AWAKE</span>
-    </footer>
-  </div>
+    <v-footer app> AWAKE </v-footer>
+  </v-app>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import NavComponent from "@/components/Navigation.vue";
-
-@Component({
-  components: {
-    NavComponent,
-  },
-})
-export default class App extends Vue {
-  clearError(): void {
-    this.$store.commit("setError", undefined);
-  }
+<style scoped>
+.main {
+  margin: 42px;
 }
-</script>
+.v-application__wrap {
+  max-height: fit-content !important;
+}
+</style>

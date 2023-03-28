@@ -1,11 +1,9 @@
-import SurveyModel from "@/store/survey.model";
-import { ResponseModel } from "@/store/response.model";
-import { ParticipantModel } from "@/store/participant.model";
-import SettingsModel from "@/store/settings.model";
+import SurveyModel from "./survey.model";
+import { ResponseModel } from "./response.model";
+import { ParticipantModel } from "./participant.model";
+import { SettingsModel } from "./settings.model";
 
-/**
- * This is the layout for the internal Vuex store.
- */
+
 export default interface KoordLayout {
   /**
    * The LimeSurvey API facade, if authenticated.
@@ -25,7 +23,7 @@ export default interface KoordLayout {
   /**
    * A list of survey participants, identified by its survey ID.
    */
-  participants: Record<number, ParticipantModel>;
+  participants: Record<number, ParticipantModel[]>;
 
   /**
    * Any active error that should be presented to the user.
@@ -39,6 +37,8 @@ export default interface KoordLayout {
   syncing: boolean;
 
   selectedSurveyID?: number;
+
+  responseRange: number[];
 
   settings: SettingsModel;
 }

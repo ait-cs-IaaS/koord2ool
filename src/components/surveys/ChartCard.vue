@@ -1,78 +1,77 @@
 <template>
-  <b-card class="h-100 shadow">
-    <b-container fluid>
-      <b-row>
-        <b-col cols="12" lg="4" class="title-col">
-          <b-card-title>
+  <v-card>
+    <v-container fluid>
+      <v-row class="chartrow">
+        <v-col cols="12" lg="4" class="title-col">
+          <v-card-title>
             <span class="question-id">{{ id }} – </span>
             <span class="question-title">{{ question }}</span>
-          </b-card-title>
+          </v-card-title>
 
-          <b-card-text class="mb-0">
+          <v-card-text class="mb-0">
             <p
               v-for="(answer, index) in counters"
               :key="index"
-              class="legend-row mb-2"
             >
-              <span
-                class="legend-color"
-                :style="{ 'background-color': bcolors[index % bcolors.length] }"
-              ></span>
-              <span class="legend-label">
+              <span>
                 {{ answer["name"] }}
                 <strong>({{ answer["value"] }})</strong>
               </span>
             </p>
-          </b-card-text>
-        </b-col>
-        <b-col cols="12" lg="3" class="doughnut-col">
+          </v-card-text>
+        </v-col>
+        <v-col cols="12" lg="3" class="doughnut-col">
           <div class="px-2 py-4">
             <doughnut-chart :counters="counters" />
           </div>
-        </b-col>
-        <b-col cols="12" lg="5" class="px-4 line-col">
+        </v-col>
+        <v-col cols="12" lg="5" class="px-4 line-col">
           <div class="py-4">
-            <line-chart :data="data" :isLogicalTime="useLogicalTime" />
+            <line-chart
+              :chartjsData="chartjsdata"
+            />
           </div>
-        </b-col>
-      </b-row>
-    </b-container>
-  </b-card>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-card>
 </template>
 
+<style scoped>
+.chartrow {
+  border-bottom: 1px solid #e0e0e0;
+}
+</style>
+
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import LineChart from "@/components/surveys/LineChart.vue";
-import PieChart from "@/components/surveys/PieChart.vue";
-import DoughnutChart from "@/components/surveys/DoughnutChart.vue";
+import LineChart from "./LineChart.vue";
+import DoughnutChart from "./DoughnutChart.vue";
 import { ChartData } from "chart.js";
 import colors from "./colors";
+import { defineComponent } from "vue";
 
-@Component({
+export default defineComponent({
+  name: "ChartCard",
   components: {
     LineChart,
-    PieChart,
     DoughnutChart,
   },
-})
-export default class LineChartComponent extends Vue {
-  @Prop({ type: String, default: () => "" })
-  question!: string;
-
-  @Prop({ type: String, default: () => [] })
-  id!: string;
-
-  @Prop({ type: Array, default: () => [] })
-  counters!: [];
-
-  @Prop({ type: Object })
-  data!: ChartData<"line">;
-
-  @Prop({ type: Boolean, default: () => false })
-  useLogicalTime!: boolean;
-
-  get bcolors(): string[] {
-    return colors;
-  }
-}
+  props: {
+    question: { type: String, default: "" },
+    id: { type: String, default: "" },
+    counters: {
+      type: Array as () => { name: string; value: number }[],
+      default: () => [],
+    },
+    chartjsdata: {
+      type: Object as () => ChartData<"line">,
+      default: () => ({} as ChartData<"line">),
+    }
+  },
+  computed: {
+    bcolors(): string[] {
+      return colors;
+    },
+  },
+});
 </script>

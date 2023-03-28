@@ -1,75 +1,53 @@
 <template>
-  <div>
-    <h4>
-      <b>Set range</b>
-    </h4>
-    <vue-slider
-      v-model="range"
-      :enable-cross="false"
-      :tooltip="'always'"
-      tooltip-placement="top"
-      :tooltip-formatter="tooltipFormater"
-      :min="min"
-      :max="max"
-      :absorb="true"
-      :interval="step"
-      :marks="true"
-      :hide-label="true"
-      :lazy="true"
-      class="mx-5 mt-5 mb-5 pb-4 text-primary"
-    ></vue-slider>
-  </div>
+  <Slider v-model="responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
+<style src="@vueform/slider/themes/default.css"></style>
+
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import VueSlider from "vue-slider-component";
-import "vue-slider-component/theme/antd.css";
+import Slider from "@vueform/slider";
+import { mapState } from "pinia";
+import { defineComponent } from "vue";
+import { koordStore } from "../store";
 
-@Component({
+export default defineComponent({
+  name: "TimeSlider",
   components: {
-    VueSlider,
+    Slider,
   },
-})
-export default class TimeSlider extends Vue {
-  @Prop({ type: Date, required: true })
-  minDate!: Date;
+  data: function () {
+    return {};
+  },
+  computed: {
+    ...mapState(koordStore, ["settings", "responseRange", "getMaxResponseDate", "getMinResponseDate"]),
 
-  @Prop({ type: Date, required: true })
-  maxDate!: Date;
+    minValue(): number {
+      return Math.round(this.getMidnight(this.getMinResponseDate()).getTime());
+    },
 
-  getMidnight(date: Date): Date {
-    return new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-    );
-  }
-  getMidnightTomrrow(date: Date): Date {
-    return new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-    );
-  }
-  get min(): number {
-    return Math.round(this.getMidnight(this.minDate).getTime() / 1000);
-  }
+    maxValue(): number {
+      return Math.round(this.getMidnightTomrrow(this.getMaxResponseDate()).getTime());
+    },
 
-  get max(): number {
-    return Math.round(this.getMidnightTomrrow(this.maxDate).getTime() / 1000);
-  }
-
-  get range(): [number, number] {
-    return [this.min, this.max];
-  }
-  set range(range: [number, number]) {
-    this.$emit("input", [new Date(range[0] * 1000), new Date(range[1] * 1000)]);
-  }
-
-  get step(): number {
-    const stepSize = this.$store.getters.getStep;
-    return stepSize * 3600;
-  }
-
-  tooltipFormater = (value: number): string => {
-    return new Date(value * 1000).toUTCString();
-  };
-}
+    stepSize(): number {
+      return this.settings.step * 3600 * 1000;
+    },
+  },
+  methods: {
+    tooltipFormater(value: number): string {
+      const options : Intl.DateTimeFormatOptions = { year: 'numeric', month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+      return new Date(value).toLocaleDateString('de-AT', options);
+    },
+    getMidnight(date: Date): Date {
+      return new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+      );
+    },
+    getMidnightTomrrow(date: Date): Date {
+      return new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+      );
+    },
+  },
+});
 </script>

@@ -1,68 +1,76 @@
 <template>
-  <b-row class="login">
-    <b-col>
-      <div>
-        <h1>Log in</h1>
-        <p>
-          Please authenticate using your
-          <span class="font-weight-bold"
-            >LimeSurvey
-            <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
-          >
-          log-in credentials.
-        </p>
-        <login
-          @auth-before="setBusy"
-          @auth-fail="setFailed"
-          @auth-success="setSuccess"
-          :disabled="authenticating"
-        />
-      </div>
-    </b-col>
-  </b-row>
+  <v-container fluid>
+    <v-row>
+      <h1>Log in</h1>
+    </v-row>
+    <v-row>
+      <p>
+        Please authenticate using your
+        <span class="font-weight-bold"
+          >LimeSurvey
+          <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
+        >
+        log-in credentials.
+      </p>
+    </v-row>
+    <v-row>
+      <v-col cols="4">
+      <login
+        @auth-before="setBusy"
+        @auth-fail="setFailed"
+        @auth-success="setSuccess"
+        :disabled="authenticating"
+      />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import Login from "@/components/Login.vue";
-import SurveyList from "@/components/SurveyList.vue";
+import Login from "../components/Login.vue";
+import { defineComponent } from "vue";
+import { mapState, mapActions } from "pinia";
+import { koordStore } from "../store";
 
-@Component({
+export default defineComponent({
+  name: "LoginView",
+
   components: {
     Login,
-    SurveyList,
   },
-})
-export default class LoginView extends Vue {
-  authenticating = false;
 
-  get isAuthenticated(): boolean {
-    return this.$store.getters.isAuthenticated;
-  }
+  props: {
+    returnTo: {
+      type: String,
+    },
+  },
 
-  get username(): string {
-    return this.$store.getters.username;
-  }
+  data() {
+    return {
+      authenticating: false,
+    };
+  },
 
-  get instance(): string {
-    return this.$store.getters.getInstanceDomain;
-  }
+  computed: {
+    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
+  },
 
-  @Prop({ type: String, required: false })
-  returnTo?: string;
+  methods: {
+    ...mapActions(koordStore, ["refreshSurveys"]),
+    setBusy(): void {
+      this.authenticating = true;
+    },
 
-  setBusy(): void {
-    this.authenticating = true;
-  }
+    setFailed(): void {
+      this.authenticating = false;
+    },
 
-  setFailed(): void {
-    this.authenticating = false;
-  }
-
-  setSuccess(): void {
-    const goTo = this.returnTo || "/";
-    this.$router.push(goTo);
-  }
+    setSuccess(): void {
+      this.refreshSurveys();
+      const goTo = this.returnTo || "/";
+      this.$router.push(goTo);
+    },
+  },
 
   mounted(): void {
     this.$nextTick(() => {
@@ -70,6 +78,6 @@ export default class LoginView extends Vue {
         this.$router.push("/");
       }
     });
-  }
-}
+  },
+});
 </script>

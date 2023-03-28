@@ -1,139 +1,63 @@
 <template>
-  <div class="mb-4 my-2 line-container">
-    <canvas :id="chartId" ref="chartCanvas" class="line-chart" />
-  </div>
+  <line-chart :data="chartjsData" :style="chartStyle" :options="chartOptions" />
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { v4 } from "uuid";
-import { Chart, ChartData } from "chart.js";
-import colors from "./colors";
-import lineOptions from "./line-options";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartData,
+  TimeScale,
+  TimeSeriesScale,
+Filler,
+} from "chart.js";
+import { Line as LineChart } from "vue-chartjs";
+import { chartOptions } from "./line-options";
+import { defineComponent } from "vue";
+import 'chartjs-adapter-moment';
 
-@Component({})
-export default class LineChartComponent extends Vue {
-  /**
-   * The unique DOM ID for this chart.
-   * This is usually a combination of "line-" followed by a random UUID (v4).
-   */
-  @Prop({ type: String, default: () => `line-${v4()}` })
-  chartId!: string;
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  TimeScale,
+  TimeSeriesScale,
+  Filler,
+  Title,
+  Tooltip,
+  Legend,
+);
 
-  @Prop({ type: Object, required: true })
-  data!: ChartData<"line">;
-
-  @Prop({ type: Boolean, default: () => false })
-  isLogicalTime!: boolean;
-
-  private chartJsInstance?: Chart<"line">;
-
-  /**
-   * A link to the <canvas> DOM element.
-   */
-  get domElement(): HTMLCanvasElement {
-    return this.$refs.chartCanvas as HTMLCanvasElement;
-  }
-
-  get forChartJs(): ChartData<"line"> {
-    const replica = { ...this.data };
-    const useColors = [...colors];
-    replica.datasets.forEach((dataset, index) => {
-      dataset.backgroundColor = `${useColors[index % useColors.length]}20`;
-      dataset.borderColor = useColors[index % useColors.length];
-      dataset.fill = false;
-    });
-    return replica;
-  }
-
-  mounted(): void {
-    this.$nextTick(() => this.create());
-  }
-
-  @Watch("isLogicalTime", { immediate: false })
-  private recreate(): void {
-    this.destroy();
-    this.create();
-  }
-
-  @Watch("data")
-  private create(): Chart<"line"> {
-    if (typeof this.chartJsInstance === "undefined") {
-      this.chartJsInstance = new Chart<"line">(this.domElement, {
-        type: "line",
-        data: this.forChartJs,
-        options: {
-          ...lineOptions,
-          scales: {
-            ...(this.isLogicalTime
-              ? {
-                  x: {
-                    type: "linear",
-                    title: {
-                      display: true,
-                      text: "Logical Time",
-                    },
-                    grid: {
-                      borderColor: "#848484",
-                      display: true,
-                    },
-                  },
-                }
-              : {
-                  x: {
-                    type: "time",
-                    time: {
-                      isoWeekday: true,
-                      minUnit: "hour",
-                      round: "hour",
-                      displayFormats: {
-                        day: "HH:MM - MMM DD",
-                      },
-                      tooltipFormat: "MMM DD, YYYY",
-                    },
-                    grid: {
-                      borderColor: "#848484",
-                      display: true,
-                    },
-                    title: {
-                      display: false,
-                    },
-                  },
-                }),
-            y: {
-              beginAtZero: true,
-              stacked: "single",
-              ticks: {
-                precision: 0,
-              },
-              grid: {
-                borderColor: "#848484",
-                display: false,
-              },
-            },
-          },
-        },
-      });
-    } else {
-      this.chartJsInstance.data = this.data;
-
-      this.chartJsInstance.data.datasets.forEach((dataset, index) => {
-        dataset.backgroundColor = colors[index % colors.length] + "20";
-        dataset.borderColor = colors[index % colors.length];
-        dataset.fill = false;
-      });
-
-      this.chartJsInstance.update("none");
+export default defineComponent({
+  name: "LineChartComponent",
+  components: {
+    LineChart,
+  },
+  props: {
+    chartjsData: {
+      type: Object as () => ChartData<"line">,
+      required: true,
+    },
+    chartId: {
+      type: String,
+      default: () => `line-${v4()}`,
     }
-
-    return this.chartJsInstance;
-  }
-
-  private destroy(): void {
-    if (typeof this.chartJsInstance !== "undefined") {
-      this.chartJsInstance.destroy();
-      this.chartJsInstance = undefined;
-    }
-  }
-}
+  },
+  data() {
+    return {
+      chartOptions: chartOptions,
+      chartStyle: {
+        height: "300px",
+      },
+    };
+  },
+});
 </script>

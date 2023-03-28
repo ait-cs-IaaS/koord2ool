@@ -1,86 +1,52 @@
 <template>
-  <main class="survey">
-    <b-row
-      class="survey-header"
-      :class="{
-        'survey-active': surveyActive,
-        'survey-inactive': !surveyActive,
-      }"
-    >
-      <b-col cols="12" md="12" class="pb-4">
+  <v-container fluid>
+    <v-row>
+      <v-col>
         <h5>
-          <b-badge
-            pill
-            small
-            :variant="surveyActive ? 'success' : 'danger'"
-            class="mr-2 text-white"
-          >
-            {{ surveyId }}
-          </b-badge>
+          {{ surveyId }}
         </h5>
-        <h1 class="survey-title" v-if="survey">
+        <h1 v-if="survey">
           {{ survey.surveyls_title }}
         </h1>
-        <hr />
-      </b-col>
-    </b-row>
-    <b-row class="d-print-none">
-      <b-col cols="12">
-        <b-card class="time-slider-container mb-5 shadow">
-          <time-slider
-            v-model="responseRange"
-            :minDate="minResponseDate"
-            :maxDate="maxResponseDate"
-            v-if="hasResponseDates"
-          />
-          <v-simple-table>
-            <template v-slot:default>
-              <tbody>
-                <tr v-if="!hasResponseDates">
-                  <td colspan="2">
-                    Responses have no responseDate set.
-                    <a
-                      href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
-                      target="_blank"
-                      >Info</a
-                    >
-                  </td>
-                </tr>
-                <tr v-if="hasResponses">
-                  <td colspan="2">
-                    showing {{ responsesInTimeline.length }} of
-                    {{ responses.length }} answer(s)
-                  </td>
-                </tr>
-                <tr>
-                  <td>Number of questions</td>
-                  <td>{{ questionCount }}</td>
-                </tr>
-                <tr v-if="survey.startdate !== null">
-                  <td>Start</td>
-                  <td>{{ survey.startdate }}</td>
-                </tr>
-                <tr v-if="survey.expires !== null">
-                  <td>Expires</td>
-                  <td>{{ survey.expires }}</td>
-                </tr>
-              </tbody>
-            </template>
-          </v-simple-table>
-
-          <div class="d-flex justify-content-end">
-            <b-btn
-              variant="primary"
-              @click="refresh"
-              :disabled="$store.state.syncing"
-              >Refresh</b-btn
+      </v-col>
+    </v-row>
+    <v-row class="ml-6 mr-6 mt-6">
+      <v-col class="ml-8 mr-8">
+        <time-slider
+          v-if="hasSubmitDateMatch()"
+        />
+        <v-row v-if="!hasSubmitDateMatch()">
+          <v-col>
+            Responses have no responseDate set.
+            <a
+              href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
+              target="_blank"
+              >Info</a
             >
-          </div>
-        </b-card>
-      </b-col>
-    </b-row>
-    <b-row class="survey-responses">
-      <b-col>
+          </v-col>
+        </v-row>
+        <v-row v-if="hasResponses">
+          <v-col>
+            showing {{ responsesInTimeline.length }} of
+            {{ responses.length }} answer(s)
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="2">Number of questions</v-col>
+          <v-col cols="2">{{ questionCount }}</v-col>
+        </v-row>
+        <v-row v-if="survey.startdate !== null">
+          <v-col cols="2">Start</v-col>
+          <v-col cols="2">{{ survey.startdate }}</v-col>
+        </v-row>
+        <v-row v-if="survey.expires !== null">
+          <v-col cols="2">Expires</v-col>
+          <v-col cols="2">{{ survey.expires }}</v-col>
+        </v-row>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
         <survey-component
           v-if="hasResponses"
           :survey="survey"
@@ -89,143 +55,124 @@
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
-          :useLogicalTime="!hasResponseDates"
+          :useLogicalTime="!hasSubmitDateMatch()"
         />
-        <b-alert v-else variant="danger">No responses yet.</b-alert>
-      </b-col>
-    </b-row>
-  </main>
+        <div v-else>
+          <v-btn @click="refreshSurvey(surveyId)">Refresh</v-btn>
+          <v-alert type="error">No responses yet.</v-alert>
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import SurveyModel from "@/store/survey.model";
-import { QuestionModel } from "@/store/question.model";
-import SurveyComponent from "@/components/surveys/Survey.vue";
-import TimeSlider from "@/components/TimeSlider.vue";
-import { ResponseModel } from "@/store/response.model";
-import { ParticipantModel } from "@/store/participant.model";
+import SurveyModel from "../store/survey.model";
+import { QuestionModel } from "../store/question.model";
+import SurveyComponent from "../components/surveys/Survey.vue";
+import TimeSlider from "../components/TimeSlider.vue";
+import { ResponseModel } from "../store/response.model";
+import { ParticipantModel } from "../store/participant.model";
 
-@Component({
+import { defineComponent } from "vue";
+import { koordStore } from "../store";
+import { mapState, mapActions } from "pinia";
+
+
+export default defineComponent({
+  name: "SurveyView",
+
   components: {
     SurveyComponent,
     TimeSlider,
   },
-})
-export default class SurveyView extends Vue {
-  get questionCount(): number {
-    return Object.keys(this.questions).length;
-  }
 
-  get questions(): Record<string, QuestionModel> {
-    const survey = this.survey;
-    if (
-      typeof survey !== "undefined" &&
-      typeof survey.questions !== "undefined"
-    ) {
-      return survey.questions;
+  computed: {
+    ...mapState(koordStore, [
+      "getParticipants",
+      "getResponses",
+      "getSurvey",
+      "hasSubmitDateMatch",
+      "settings",
+      "fromDate",
+      "untilDate",
+    ]),
+    maxResponseDate(): Date {
+      return this.getMaxResponseDate()(this.surveyId);
+    },
+    minResponseDate(): Date {
+      return this.getMinResponseDate()(this.surveyId);
+    },
+    questionCount(): number {
+      return Object.keys(this.questions).length;
+    },
+
+    questions(): Record<string, QuestionModel> {
+      const survey = this.survey;
+      if (
+        typeof survey !== "undefined" &&
+        typeof survey.questions !== "undefined"
+      ) {
+        return survey.questions;
+      }
+      console.warn("No questions found for survey", this.surveyId);
+      return {};
+    },
+
+    hasResponses(): boolean {
+      return this.responses.length > 0;
+    },
+
+    participants(): ParticipantModel[] {
+      return this.getParticipants(this.surveyId);
+    },
+
+    responses(): ResponseModel[] {
+      return this.getResponses(this.surveyId);
+    },
+
+    responsesInTimeline(): ResponseModel[] {
+      return this.responses.filter((response) => {
+        const thisTime = new Date(response.submitdate);
+        return this.fromDate <= thisTime && thisTime <= this.untilDate;
+      });
+    },
+
+    submitDates(): string[] {
+      return this.responses.map((response) => response.submitdate);
+    },
+
+    survey(): SurveyModel {
+      return this.getSurvey(this.surveyId);
+    },
+
+    surveyActive(): boolean {
+      return typeof this.survey !== "undefined" && this.survey.active === "Y";
+    },
+
+    surveyId(): number {
+      const { surveyId } = this.$route.params;
+      return Number(surveyId);
+    },
+  },
+  data: function () {
+    return { };
+  },
+
+  async mounted(): Promise<void> {
+    await this.refreshSurvey(this.surveyId);
+  },
+  watch: {
+    surveyId: {
+      immediate: true,
+      async handler(newVal: number): Promise<void> {
+        await this.refreshSurvey(newVal);
+      }
     }
-    console.warn("No questions found for survey", this.surveyId);
-    return {};
-  }
-
-  get hasResponses(): boolean {
-    return this.responses.length > 0;
-  }
-
-  get participants(): ParticipantModel[] {
-    return this.$store.getters.getParticipants(this.surveyId);
-  }
-
-  get responses(): ResponseModel[] {
-    return this.$store.getters.getResponses(this.surveyId);
-  }
-
-  get responsesInTimeline(): ResponseModel[] {
-    return this.responses.filter((response) => {
-      const thisTime = new Date(response.submitdate);
-      return this.fromDate <= thisTime && thisTime <= this.untilDate;
-    });
-  }
-
-  get submitDates(): string[] {
-    return this.responses.map((response) => response.submitdate);
-  }
-
-  get survey(): SurveyModel {
-    return this.$store.getters.getSurvey(this.surveyId);
-  }
-
-  get surveyActive(): boolean {
-    return typeof this.survey !== "undefined" && this.survey.active === "Y";
-  }
-
-  get surveyId(): number {
-    const { surveyId } = this.$route.params;
-    return Number(surveyId);
-  }
-
-  get minResponseDate(): Date {
-    return this.$store.getters.getMinResponseDate();
-  }
-
-  get maxResponseDate(): Date {
-    return this.$store.getters.getMaxResponseDate();
-  }
-
-  get hasResponseDates(): boolean {
-    return this.$store.getters.hasSubmitDateMatch();
-  }
-
-  responseRange = [];
-
-  get fromDate(): Date {
-    return typeof this.responseRange[0] !== "undefined"
-      ? this.responseRange[0]
-      : this.minResponseDate;
-  }
-
-  get untilDate(): Date {
-    return typeof this.responseRange[1] !== "undefined"
-      ? this.responseRange[1]
-      : this.maxResponseDate;
-  }
-
-  async beforeMount(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
-
-  mounted(): void {
-    // This shouldn't happen, but it does :(
-    if (typeof this.survey === "undefined") {
-      throw new Error("Couldn't find a local copy of the survey.");
-    }
-  }
-
-  @Watch("$route")
-  async onRouteChange(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
-
-  async refresh(): Promise<void> {
-    await this.$store.dispatch("refreshSurvey", this.surveyId);
-  }
-}
+  },
+  methods: {
+    ...mapActions(koordStore, ["refreshSurvey"]),
+    ...mapState(koordStore, ["getMaxResponseDate", "getMinResponseDate"]),
+  },
+});
 </script>
-
-<style>
-@media print {
-  .pie-chart {
-    max-height: 8rem;
-    max-width: 8rem;
-  }
-
-  .avoid-page-break {
-    page-break-inside: avoid;
-  }
-}
-tbody td:first-child {
-  width: 1%;
-  white-space: nowrap;
-}
-</style>

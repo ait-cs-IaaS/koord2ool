@@ -1,48 +1,70 @@
 <template>
-  <b-collapse v-model="displayOptions">
-    <b-card class="mb-4 px-1 display-options-container shadow">
-      <b-form-checkbox switch size="lg" v-model="result" class="pointer">
-        <span class="display-option"> {{ optionText }} <br /></span>
-        <span class="display-option-description">
-          {{ optionDescription }}
-        </span>
-      </b-form-checkbox>
-    </b-card>
-  </b-collapse>
+  <v-expansion-panels>
+    <v-expansion-panel>
+      <v-expansion-panel-title class="ml-1">
+        <v-icon>mdi-cog</v-icon>
+        Display Options
+      </v-expansion-panel-title>
+      <v-expansion-panel-text>
+        <v-col v-for="(option, optionKey) in options" :key="optionKey">
+          <v-btn-toggle
+            :model-value="(settings as any)[optionKey]"
+            @update:modelValue="updateResult(optionKey, $event)"
+            color="primary"
+            mandatory
+            :divided="true"
+            rounded
+          >
+            <div v-for="o in option" :key="o.text">
+              <v-tooltip v-if="o.description" :text="o.description" location="top">
+                <template v-slot:activator="{ props }">
+                  <v-btn v-bind="props" :prepend-icon="o.icon" :value="o.value" class="pt-2 pb-2">
+                    {{ o.text }}
+                  </v-btn>
+                </template>
+              </v-tooltip>
+              <v-btn v-else :prepend-icon="o.icon" :value="o.value" class="pt-2 pb-2">
+                {{ o.text }}
+              </v-btn>
+            </div>
+          </v-btn-toggle>
+        </v-col>
+        <slot name="additional-options" />
+      </v-expansion-panel-text>
+    </v-expansion-panel>
+  </v-expansion-panels>
 </template>
 
 <script lang="ts">
-import { Vue, Prop, Component } from "vue-property-decorator";
+import { mapState } from "pinia";
+import { defineComponent } from "vue";
+import { koordStore } from "../../store";
+import { SettingsKey, Option } from "../../store/settings.model";
 
-@Component({
-  components: {},
-})
-export default class Survey extends Vue {
-  @Prop({ type: Boolean, default: false })
-  displayOptions!: boolean;
-
-  @Prop({ type: Array, default: [] })
-  options!: { text: string; value: boolean; description: string }[];
-
-  xResult = false;
-
-  get result(): boolean {
-    return this.xResult;
-  }
-
-  set result(result: boolean) {
-    this.xResult = result;
-    this.$emit("result", result);
-  }
-
-  get optionDescription(): string {
-    const value = this.options.find((option) => option.value === this.result);
-    return typeof value !== "undefined" ? value.description : "";
-  }
-
-  get optionText(): string {
-    const value = this.options.find((option) => option.value === this.result);
-    return typeof value !== "undefined" ? value.text : "";
-  }
-}
+export default defineComponent({
+  name: "DisplayOptions",
+  props: {
+    displayOptions: {
+      type: Boolean,
+      default: false,
+    },
+    options: {
+      type: Object as () => Record<SettingsKey, Option[]>,
+      default: () => ({} as Record<SettingsKey, Option[]>),
+    },
+  },
+  computed: {
+    ...mapState(koordStore, ["settings"]),
+  },
+  data() {
+    return {
+      display: this.displayOptions,
+    };
+  },
+  methods: {
+    updateResult(key: SettingsKey, result: boolean | number) {
+      (this.settings as any)[key] = result;
+    },
+  },
+});
 </script>

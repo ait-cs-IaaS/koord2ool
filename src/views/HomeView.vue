@@ -1,75 +1,59 @@
 <template>
-  <b-row class="home">
-    <b-col v-if="!isAuthenticated">
-      <b-container fluid class="pl-0">
-        <b-row>
-          <b-col cols="12">
-            <h1>
-              Not logged in yet
-              <b-icon icon="person" class="ml-4 text-primary"></b-icon>
-            </h1>
-            <p class="lead mt-5">Welcome to the KoordTool.</p>
-            <p>You can use this tool to visualize survey responses.</p>
+  <v-container fluid>
+    <v-row v-if="!isAuthenticated">
+      <v-col>
+        <h1>
+          Not logged in yet
+          <v-icon icon="person" class="ml-4 text-primary"></v-icon>
+        </h1>
+        <p class="lead mt-5">Welcome to the KoordTool.</p>
+        <p>You can use this tool to visualize survey responses.</p>
 
-            <p>Please authenticate first.</p>
-          </b-col>
+        <p>Please authenticate first.</p>
 
-          <b-col cols="4">
-            <b-button to="/login" variant="outline-primary" class="mt-4">
-              Authenticate
-            </b-button>
-          </b-col>
-        </b-row>
-      </b-container>
-    </b-col>
+        <v-btn to="/login" class="mt-4"> Authenticate </v-btn>
+      </v-col>
+    </v-row>
 
-    <b-col v-else>
-      <b-container fluid class="pl-0">
-        <b-row>
-          <b-col cols="12">
-            <h1>
-              Logged in as {{ username }}
-              <b-icon icon="person-check" class="ml-4 text-success"></b-icon>
-            </h1>
-            <p class="lead mt-5">Welcome to the KoordTool.</p>
-            <p>You can use this tool to visualize survey responses.</p>
-
-            <h4 class="pt-5 pb-2">Further links:</h4>
-            <b-link
-              v-if="instance"
-              :href="'https://' + instance"
-              target="_blank"
-            >
-              Limesurvey @ {{ instance }}
-            </b-link>
-          </b-col>
-        </b-row>
+    <v-row v-else>
+      <v-col>
+        <h1>
+          Logged in as {{ username }}
+          <v-icon icon="person-check" class="ml-4 text-success"></v-icon>
+        </h1>
+        <p class="lead mt-5">Welcome to the KoordTool.</p>
+        <p>You can use this tool to visualize survey responses.</p>
+        <p>
+          <span class="font-weight-bold">Further links:</span>
+          <v-btn
+            v-if="instance"
+            :href="instance"
+            target="_blank"
+            varint="text"
+            flat
+          >
+            Limesurvey @ {{ instance }}
+          </v-btn>
+        </p>
         <survey-list :username="username" />
-      </b-container>
-    </b-col>
-  </b-row>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
-import SurveyList from "@/components/SurveyList.vue";
+import SurveyList from "../components/SurveyList.vue";
+import { defineComponent } from "vue";
+import { mapState } from "pinia";
+import { koordStore } from "../store";
 
-@Component({
+export default defineComponent({
+  name: "LoginView",
   components: {
     SurveyList,
   },
-})
-export default class HomeView extends Vue {
-  get isAuthenticated(): boolean {
-    return this.$store.getters.isAuthenticated;
-  }
-
-  get username(): string {
-    return this.$store.getters.username;
-  }
-
-  get instance(): string {
-    return this.$store.getters.getInstanceDomain;
-  }
-}
+  computed: {
+    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
+  },
+});
 </script>

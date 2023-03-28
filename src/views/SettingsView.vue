@@ -1,43 +1,28 @@
 <template>
-  <div>
-    <b-row class="login">
-      <b-col> Currently connected to: {{ limeSurveyUri }} </b-col>
-    </b-row>
-    <b-row>
-      <b-col>
-        <h2>Time slider interval in hours:</h2>
-        <v-btn-toggle v-model="step" mandatory>
-          <v-btn>
-            <v-icon>1</v-icon>
-          </v-btn>
-          <v-btn>
-            <v-icon>2</v-icon>
-          </v-btn>
-          <v-btn>
-            <v-icon>6</v-icon>
-          </v-btn>
-          <v-btn>
-            <v-icon>24</v-icon>
-          </v-btn>
-        </v-btn-toggle>
-      </b-col>
-    </b-row>
-  </div>
+  <v-row class="login">
+    <v-col> Currently connected to: {{ instance }} </v-col>
+  </v-row>
+  <v-row>
+    <v-col>
+      <h2>Time slider interval in hours:</h2>
+      <v-btn-toggle v-model="settings.step" mandatory>
+        <v-btn icon="mdi-numeric-1" :value="1" />
+        <v-btn icon="mdi-numeric-6" :value="6" />
+        <v-btn icon="mdi-hours-24" :value="24" />
+      </v-btn-toggle>
+    </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { defineComponent } from "vue";
+import { mapState } from "pinia";
+import { koordStore } from "../store";
 
-@Component({})
-export default class SettingsView extends Vue {
-  get limeSurveyUri(): string {
-    return this.$store.getters.getLimeSurveyUri;
-  }
-  get step(): number {
-    return this.$store.getters.getStep;
-  }
-  set step(newStep: number) {
-    this.$store.commit("updateStep", newStep);
-  }
-}
+export default defineComponent({
+  name: "SettingsView",
+  computed: {
+    ...mapState(koordStore, ["settings", "instance"]),
+  },
+});
 </script>

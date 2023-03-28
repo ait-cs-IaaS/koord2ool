@@ -1,10 +1,10 @@
-import SurveyModel from "@/store/survey.model";
-import { ResponseModel } from "@/store/response.model";
-import { QuestionModel } from "@/store/question.model";
-import QuestionPropertyModel from "@/store/question_property.model";
-import { ParticipantModel, ParticipantError } from "@/store/participant.model";
-import store from "@/store";
-import router from "@/router";
+import SurveyModel from "../store/survey.model";
+import { ResponseModel } from "../store/response.model";
+import { QuestionModel } from "../store/question.model";
+import QuestionPropertyModel from "../store/question_property.model";
+import { ParticipantModel, ParticipantError } from "../store/participant.model";
+import router from "../router";
+import { koordStore } from "../store";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -16,11 +16,16 @@ export class LimesurveyApi {
 
   private nextId = 1;
 
-  constructor(private readonly endpoint = process.env.VUE_APP_LIMESURVEY_API) {
+  constructor(private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API) {
+    console.debug(`LimeSurvey API endpoint: ${endpoint}`);
+    if (typeof endpoint === "undefined") {
+      throw new Error("LimeSurvey API endpoint not configured");
+    }
     if (!/\/admin\/remotecontrol$/.test(endpoint)) {
       console.warn(
         `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
       );
+      throw new Error("LimeSurvey API endpoint not configured");
     }
   }
 
@@ -139,12 +144,13 @@ export class LimesurveyApi {
   }
 
   private restoreSession(): boolean {
-    if (store.state.limesurvey === undefined) {
+    const store = koordStore()
+    if (store.limesurvey === undefined) {
       console.error("Failed to restore state.");
       return false;
     }
-    const username = store.state.limesurvey.username;
-    const session = store.state.limesurvey.session;
+    const username = store.limesurvey.username;
+    const session = store.limesurvey.session;
     if (username === undefined || session === undefined) {
       console.error("No Session Key found.");
       return false;
@@ -165,12 +171,14 @@ export class LimesurveyApi {
   }
 
   private checkResult(result: Record<string, string>): void {
+    const store = koordStore()
+
     if (result.status !== undefined) {
       if (result.status === "Invalid session key") {
         this.session = undefined;
         this.username = undefined;
-        store.state.limesurvey = undefined;
-        store.commit("setError", "Invalid session Key redirected to login");
+        store.limesurvey = undefined;
+        store.error = new Error("Invalid session Key redirected to login");
         console.debug(`Invalid session Key redirected to login`);
         router.push({ name: "login" });
       }
@@ -183,11 +191,13 @@ export class LimesurveyApi {
     ...params: unknown[]
   ): Promise<T> {
     console.debug(`Calling ${rpcMethod}`);
+    const store = koordStore()
+
     if (authenticated) {
       this.requireAuth();
       params = [this.session, ...params];
     }
-    const response = await fetch(this.endpoint, {
+    const response = await fetch(this.endpoint!, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -200,11 +210,13 @@ export class LimesurveyApi {
       }),
     });
     if (!response.ok) {
-      throw new Error(`Calling ${rpcMethod} failed`);
+      const error = new Error(`Calling ${rpcMethod} failed`);
+      store.error = error;
+      throw error;
     }
     const { result, error } = await response.json();
     if (error) {
-      store.commit("setError", error);
+      store.error = new Error(error);
       throw new Error(error);
     }
     this.checkResult(result);

@@ -1,53 +1,74 @@
 <template>
-  <b-container fluid class="pl-0">
-    <b-row>
-      <b-col cols="6">
-        <h4 class="pt-5 pb-2">
-          Choose a survey
-          <b-btn variant="primary" @click="refresh">Refresh</b-btn>
-        </h4>
-        <b-list-group class="shadow">
-          <b-list-group-item
-            v-for="{ key, label, to } in surveyLinks"
-            :key="key"
-            :to="to"
-          >
-            {{ label }}
-          </b-list-group-item>
-        </b-list-group>
-      </b-col>
-    </b-row>
-  </b-container>
+  <div class="mt-10">
+    <div class="d-flex justify-space-between">
+        <span class="ml-3">Choose a survey</span>
+        <v-btn class="mr-3" color="green" @click="refreshSurveys">Refresh</v-btn>
+    </div>
+  <v-list dense fill-height fluid class="list-group">
+    <v-list-item
+      v-for="{ key, label, to } in surveyLinks"
+      :key="key"
+      :to="to"
+      class="list-group-item"
+    >
+      {{ label }}
+    </v-list-item>
+  </v-list>
+  </div>
+
 </template>
 
+<style>
+.v-list-subheader {
+  align-items: center;
+  justify-content: space-between !important;
+}
+
+.list-group-item {
+  border-color: #a0a0a0;
+  border-width: 1px 1px 0 1px;
+}
+
+.list-group-item:last-child {
+  border-bottom-width: 0;
+  border-width: 1px 1px 1px 1px;
+}
+</style>
+
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import { RawLocation } from "vue-router";
+import { defineComponent } from "vue";
+import { mapState, mapActions } from "pinia";
+import { koordStore } from "../store";
 
 type SurveyLink = {
   key: string | number;
   label: string;
-  to: RawLocation;
+  to: string;
 };
-@Component({})
-export default class SurveyListComponent extends Vue {
-  @Prop({ type: String, required: true })
-  username!: string;
 
-  async refresh(): Promise<void> {
-    await this.$store.dispatch("refreshSurveys");
-  }
+export default defineComponent({
+  name: "SurveyList",
+  props: { username: { type: String, required: true } },
 
-  get surveyLinks(): SurveyLink[] {
-    const surveyIds: number[] = [...this.$store.getters.getSurveys];
-    return surveyIds.sort().map((surveyId) => {
-      const title = this.$store.state.surveys[surveyId].surveyls_title;
-      return {
-        key: surveyId,
-        label: `${surveyId} - ${title}`,
-        to: { name: "survey", params: { surveyId: surveyId.toString() } },
-      };
-    });
-  }
-}
+  computed: {
+    ...mapState(koordStore, ["surveys", "getSurveys"]),
+    surveyLinks(): SurveyLink[] {
+      const surveyIds: number[] = [...this.getSurveys];
+      return surveyIds.sort().map((surveyId) => {
+        const title = this.surveys[surveyId].surveyls_title;
+        return {
+          key: surveyId,
+          label: `${surveyId} - ${title}`,
+          to: `/survey/${surveyId}`,
+        };
+      });
+    },
+  },
+  methods: {
+    ...mapActions(koordStore, ["refreshSurveys"]),
+  },
+  async mounted() {
+    await this.refreshSurveys()
+  },
+});
 </script>
