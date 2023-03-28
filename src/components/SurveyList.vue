@@ -59,7 +59,7 @@ export default defineComponent({
         return {
           key: surveyId,
           label: `${surveyId} - ${title}`,
-          to: `/survey/${surveyId.toString()}`,
+          to: `/survey/${surveyId}`,
         };
       });
     },

@@ -6,7 +6,7 @@ import NavComponent from "./components/Navigation.vue";
   <v-app>
     <nav-component />
 
-    <v-main style="margin: 42px;">
+    <v-main class="main">
       <router-view />
     </v-main>
 
@@ -15,6 +15,9 @@ import NavComponent from "./components/Navigation.vue";
 </template>
 
 <style scoped>
+.main {
+  margin: 42px;
+}
 .v-application__wrap {
   max-height: fit-content !important;
 }

@@ -1,6 +1,6 @@
 import { ChartOptions } from "chart.js";
 
-export const chartOptions = {
+export const chartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: true,
   scales: {
@@ -11,4 +11,4 @@ export const chartOptions = {
       }
     }
   }
-} as ChartOptions<"line">;
+};

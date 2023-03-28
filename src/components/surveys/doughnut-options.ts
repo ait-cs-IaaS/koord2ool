@@ -1,5 +1,6 @@
+import { ChartOptions } from "chart.js";
 
-export const chartOptions = {
+export const chartOptions: ChartOptions<"doughnut"> = {
   responsive: true,
   maintainAspectRatio: true,
 };

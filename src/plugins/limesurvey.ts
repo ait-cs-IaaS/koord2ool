@@ -25,6 +25,7 @@ export class LimesurveyApi {
       console.warn(
         `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
       );
+      throw new Error("LimeSurvey API endpoint not configured");
     }
   }
 
@@ -196,10 +197,7 @@ export class LimesurveyApi {
       this.requireAuth();
       params = [this.session, ...params];
     }
-    if (this.endpoint === undefined) {
-      throw new Error("LimeSurvey API endpoint not configured");
-    }
-    const response = await fetch(this.endpoint, {
+    const response = await fetch(this.endpoint!, {
       method: "POST",
       headers: {
         Accept: "application/json",
