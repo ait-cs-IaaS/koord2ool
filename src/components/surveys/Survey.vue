@@ -29,21 +29,26 @@
         </v-window-item>
 
         <v-window-item value="stats">
+          <v-row class="justify-start">
+            <v-col cols="12">
           <h4>
             Below you can Download a PDF export from
             <a href="https://manual.limesurvey.org/Statistics" target="_blank">
               LimeSurvey Staistic Endpoint
             </a>
             The content of this PDF can only be changed via LimeSurvey.
+          </h4>
+          </v-col>
+          <v-col class="mt-5 mb-5" cols="12">
             <v-btn
-              class="mt-3"
               :href="blobURL"
               :download="pdfFileName"
               target="_blank"
             >
               PDF Statistics
             </v-btn>
-          </h4>
+          </v-col>
+          </v-row>
         </v-window-item>
       </v-window>
     </v-card-text>

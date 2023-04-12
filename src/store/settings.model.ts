@@ -1,6 +1,7 @@
 export interface SettingsModel {
   useLogicalTime: boolean;
   step: number;
+  expirationTime: number;
   onlyActive: boolean;
 }
 
@@ -11,4 +12,9 @@ export interface Option {
   value: boolean | number;
   icon: string;
   description?: string;
+}
+
+export interface SettingsOption {
+  title: string;
+  options: Option[];
 }

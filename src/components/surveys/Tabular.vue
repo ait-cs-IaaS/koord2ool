@@ -30,10 +30,10 @@
 import { ResponseModel } from "../../store/response.model";
 import { ParticipantModel } from "../../store/participant.model";
 import DisplayOptions from "./DisplayOptions.vue";
-import { SettingsKey, Option } from "../../store/settings.model";
 import { koordStore } from "../../store";
 import { defineComponent } from "vue";
 import { mapState } from "pinia";
+import { tableOptions } from "./options";
 
 interface Header {
   title: string;
@@ -65,26 +65,9 @@ export default defineComponent({
       default: false,
     },
   },
-  mounted() {
-  },
   data() {
     return {
-      options: {
-        onlyActive: [
-          {
-            text: "All rows",
-            icon: "mdi-filter-off",
-            value: false,
-            description: "Show all answers a user gave.",
-          },
-          {
-            text: "Only active",
-            icon: "mdi-filter",
-            value: true,
-            description: "Show only the last answer per user.",
-          },
-        ],
-      } as Record<SettingsKey, Option[]>,
+      options: tableOptions,
     };
   },
   computed: {

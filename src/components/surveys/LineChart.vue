@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts">
-import { v4 } from "uuid";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -45,17 +44,13 @@ export default defineComponent({
     chartjsData: {
       type: Object as () => ChartData<"line">,
       required: true,
-    },
-    chartId: {
-      type: String,
-      default: () => `line-${v4()}`,
     }
   },
   data() {
     return {
       chartOptions: chartOptions,
       chartStyle: {
-        height: "300px",
+        width: "100%",
       },
     };
   },

@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts">
-import { v4 } from "uuid";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -12,7 +11,7 @@ import {
   ChartDataset,
 } from "chart.js";
 import { Pie } from "vue-chartjs";
-import colors from "./colors";
+import { chartColors } from "./colors";
 import { chartOptions } from "./pie-options";
 import { defineComponent } from "vue";
 
@@ -27,11 +26,7 @@ export default defineComponent({
     counters: {
       type: Array as () => { name: string; value: number }[],
       default: () => [],
-    },
-    chartId: {
-      type: String,
-      default: () => `pie-${v4()}`,
-    },
+    }
   },
   data() {
     return {
@@ -48,7 +43,7 @@ export default defineComponent({
         this.counters.forEach(({ name, value }, index) => {
           labels.push(name);
           data.push(value);
-          backgroundColor.push(colors[index % colors.length]);
+          backgroundColor.push(chartColors[index % chartColors.length]);
         });
         datasets.push({
           data,

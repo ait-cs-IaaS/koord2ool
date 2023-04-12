@@ -1,10 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <display-options
-        :displayOptions="showOptions"
-        :options="options"
-      >
+      <display-options :displayOptions="showOptions" :options="chartOptions">
       </display-options>
     </v-row>
     <v-row class="pt-3">
@@ -31,7 +28,8 @@ import { MinMax } from "../../helpers/min-max";
 import { defineComponent } from "vue";
 import { mapState } from "pinia";
 import { koordStore } from "../../store";
-import { SettingsKey, Option } from "../../store/settings.model";
+import { chartOptions } from "./options";
+import { chartColors } from "./colors";
 
 interface responseCount {
   name: string;
@@ -75,46 +73,12 @@ export default defineComponent({
     },
   },
   computed: {
-    ...mapState(koordStore, ["settings"]),
+    ...mapState(koordStore, ["settings", "getExpireDate"]),
   },
   data() {
     return {
-      options: {
-        useLogicalTime: [
-          {
-            text: "Real",
-            icon: "mdi-clock",
-            value: false,
-            description:
-              "Actual time: time-based charts will use actual timestamps of survey responses.",
-          },
-          {
-            text: "Logical",
-            icon: "mdi-timer-sand-empty",
-            value: true,
-            description:
-              "Logical time: time-based charts will show change in responses evenly for readability purposes.",
-          },
-        ],
-        step: [
-          {
-            text: "1 hour",
-            icon: "mdi-numeric-1",
-            value: 1,
-          },
-          {
-            text: "6 hours",
-            icon: "mdi-numeric-6",
-            value: 6,
-          },
-          {
-            text: "24 hours",
-            icon: "mdi-hours-24",
-            value: 24,
-          },
-        ],
-      } as Record<SettingsKey, Option[]>,
-    };
+      chartOptions 
+    }
   },
   methods: {
     questionText(questionKey: string): string {
@@ -133,7 +97,10 @@ export default defineComponent({
       });
 
       Object.values(lastResponses).forEach((response) => {
-        const value = response[questionKey] || "N/A";
+        let value = response[questionKey] || "N/A";
+        if (new Date(response.submitdate) <= this.getExpireDate) {
+          value = "N/A"
+        }
         const existingIndex = responseCounts.findIndex((item) => item.name === value);
 
         if (existingIndex !== -1) {
@@ -149,6 +116,10 @@ export default defineComponent({
       });
 
       return responseCounts;
+    },
+
+    getBorderColor(key: string): string {
+      return chartColors[key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % chartColors.length];
     },
 
     createTimelineFor(questionKey: string): ChartData<"line"> {
@@ -215,7 +186,8 @@ export default defineComponent({
         const dataset = {
           data: answerTimeline,
           label: key,
-          fill: true,
+          fill: false,
+          borderColor: this.getBorderColor(key)
         };
         datasets.push(dataset);
       }

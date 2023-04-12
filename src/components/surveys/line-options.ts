@@ -10,5 +10,15 @@ export const chartOptions: ChartOptions<"line"> = {
         unit: "day",
       }
     }
+  },
+  plugins: {
+    filler: {
+      propagate: true,
+    },
+    legend: {
+      position: "top",
+      align: "center",
+      maxWidth: 200,
+    },
   }
 };
