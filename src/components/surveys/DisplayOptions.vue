@@ -6,7 +6,11 @@
         Display Options
       </v-expansion-panel-title>
       <v-expansion-panel-text>
-        <v-col v-for="(option, optionKey) in options" :key="optionKey">
+        <v-row>
+        <v-col v-for="(option, optionKey) in options" :key="optionKey" cols="6">
+          <h3>
+          {{  option.title }}
+          </h3>
           <v-btn-toggle
             :model-value="(settings as any)[optionKey]"
             @update:modelValue="updateResult(optionKey, $event)"
@@ -15,7 +19,7 @@
             :divided="true"
             rounded
           >
-            <div v-for="o in option" :key="o.text">
+            <div v-for="o in option.options" :key="o.text">
               <v-tooltip v-if="o.description" :text="o.description" location="top">
                 <template v-slot:activator="{ props }">
                   <v-btn v-bind="props" :prepend-icon="o.icon" :value="o.value" class="pt-2 pb-2">
@@ -29,6 +33,7 @@
             </div>
           </v-btn-toggle>
         </v-col>
+        </v-row>
         <slot name="additional-options" />
       </v-expansion-panel-text>
     </v-expansion-panel>
@@ -39,7 +44,7 @@
 import { mapState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../../store";
-import { SettingsKey, Option } from "../../store/settings.model";
+import { SettingsKey, SettingsOption } from "../../store/settings.model";
 
 export default defineComponent({
   name: "DisplayOptions",
@@ -49,8 +54,8 @@ export default defineComponent({
       default: false,
     },
     options: {
-      type: Object as () => Record<SettingsKey, Option[]>,
-      default: () => ({} as Record<SettingsKey, Option[]>),
+      type: Object as () => Record<SettingsKey, SettingsOption>,
+      default: () => ({} as Record<SettingsKey, SettingsOption>),
     },
   },
   computed: {

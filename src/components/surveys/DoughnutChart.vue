@@ -11,7 +11,7 @@ import {
   ChartDataset,
 } from "chart.js";
 import { Doughnut } from "vue-chartjs";
-import colors from "./colors";
+import { chartColors } from "./colors";
 import { chartOptions } from "./doughnut-options";
 import { defineComponent } from "vue";
 
@@ -21,7 +21,7 @@ export default defineComponent({
   name: "DoughnutChartComponent",
   props: {
     counters: {
-      type: Array,
+      type: Array as () => { name: string; value: number }[],
       default: () => [],
     }
   },
@@ -46,7 +46,7 @@ export default defineComponent({
         this.counters.forEach(({ name, value }, index) => {
           labels.push(name);
           data.push(value);
-          backgroundColor.push(colors[index % colors.length]);
+          backgroundColor.push(chartColors[index % chartColors.length]);
         });
         datasets.push({
           data,

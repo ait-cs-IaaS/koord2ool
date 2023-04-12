@@ -1,8 +1,4 @@
-/**
- * This is a set of colors that can be used to render charts.
- * These are usually used in sequence for things like doughnut charts.
- */
-export default [
+export const chartColors = [
   "#7468E8",
   "#DBE868",
   "#D0D0D0",

@@ -29,7 +29,7 @@ export const koordStore = defineStore('koord', {
     participants: {},
     responses: {},
     surveys: {},
-    settings: { step: 6, onlyActive: true, useLogicalTime: false },
+    settings: { step: 6, onlyActive: true, useLogicalTime: false, expirationTime: 7 },
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
     syncing: false,
@@ -122,6 +122,9 @@ export const koordStore = defineStore('koord', {
         return this.getMaxResponseDate();
       }
       return new Date(state.responseRange[1]);
+    },
+    getExpireDate(state): Date {
+      return new Date(new Date().getTime() - state.settings.expirationTime * 24 * 60 * 60 * 1000);
     }
   },
   actions: {

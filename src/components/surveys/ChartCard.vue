@@ -47,7 +47,6 @@
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import { ChartData } from "chart.js";
-import colors from "./colors";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -67,11 +66,6 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       default: () => ({} as ChartData<"line">),
     }
-  },
-  computed: {
-    bcolors(): string[] {
-      return colors;
-    },
-  },
+  }
 });
 </script>
