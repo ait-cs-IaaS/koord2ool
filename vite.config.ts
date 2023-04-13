@@ -24,6 +24,9 @@ export default defineConfig({
           ],
           materialdesignicons: ['@mdi/font/css/materialdesignicons.css'],
         },
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
       },
     },
   },
