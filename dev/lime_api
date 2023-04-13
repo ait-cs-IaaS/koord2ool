@@ -31,11 +31,14 @@ while getopts ":m:p:i:brd" opt; do
   esac
 done
 
+SCRIPTPATH="$(dirname $( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P ))"
+source ${SCRIPTPATH}/.env
 LIME_RPC_URL="${LIMESURVEY_RPC_API:-https://lime.cyberrange.rocks/index.php/admin/remotecontrol}"
 
 if [[ -z ${SESSION_KEY} ]]; then
 	echo "Session Key isn't set Try something like:"
-	echo 'export SESSION_KEY=$(curl -s "${LIMESURVEY_RPC_API}" -H "Accept: application/json" -H "Content-Type: application/json" --data-raw {"method":"get_session_key","params":["admin","example"],"id":1} | jq -r .result)'
+	DATA_RAW="'"'{"method":"get_session_key","params":["admin","'${LIME_ADMIN_PASSWORD}'"],"id":1}'"'"
+	echo 'export SESSION_KEY=$(curl -s "'${LIMESURVEY_RPC_API}'" -H "Accept: application/json" -H "Content-Type: application/json" --data-raw '${DATA_RAW}' | jq -r .result)'
 	exit 1
 fi
 
