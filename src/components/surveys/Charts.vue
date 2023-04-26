@@ -79,14 +79,7 @@ export default defineComponent({
   },
   computed: {
     ...mapState(koordStore, ["settings", "getExpireDate"]),
-  },
-  methods: {
-    questionText(questionKey: string): string {
-      return getQuestionText(questionKey, this.questions);
-    },
-
-    countResponsesFor(questionKey: string): responseCount[] {
-      const responseCounts: responseCount[] = [];
+    lastResponses(): ResponseModel[] {
       const lastResponses: Record<string, ResponseModel> = {};
 
       this.responses.forEach((response) => {
@@ -100,19 +93,29 @@ export default defineComponent({
         }
       });
 
-      Object.values(lastResponses).forEach((response) => {
-        let value = response[questionKey] || "N/A";
+      return Object.values(lastResponses);
+    },
+  },
+  methods: {
+    questionText(questionKey: string): string {
+      return getQuestionText(questionKey, this.questions);
+    },
+
+    countResponsesFor(questionKey: string): responseCount[] {
+      const responseCounts: responseCount[] = [];
+      this.lastResponses.forEach((response) => {
+        let answer = response[questionKey] || "N/A";
         if (new Date(response.submitdate) <= this.getExpireDate) {
-          value = "N/A";
+          answer = "N/A";
         }
         const existingIndex = responseCounts.findIndex(
-          (item) => item.name === value
+          (item) => item.name === answer
         );
 
         if (existingIndex !== -1) {
           responseCounts[existingIndex].value++;
         } else {
-          responseCounts.push({ name: value, value: 1 });
+          responseCounts.push({ name: answer, value: 1 });
         }
       });
 
