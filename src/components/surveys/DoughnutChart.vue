@@ -19,14 +19,14 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default defineComponent({
   name: "DoughnutChartComponent",
+  components: {
+    Doughnut,
+  },
   props: {
     counters: {
       type: Array as () => { name: string; value: number }[],
       default: () => [],
-    }
-  },
-  components: {
-    Doughnut,
+    },
   },
   data() {
     return {

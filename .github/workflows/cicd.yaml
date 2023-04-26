@@ -8,6 +8,19 @@ on:
     - '**'
   pull_request:
 jobs:
+  eslint:
+    name: eslint
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: install dependencies
+        run: npm ci
+      - name: lint with eslint
+        run: npm run lint_and_format
+
   build:
     name: build docker
     runs-on: ubuntu-latest

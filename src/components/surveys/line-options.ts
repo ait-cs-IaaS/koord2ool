@@ -8,8 +8,8 @@ export const chartOptions: ChartOptions<"line"> = {
       type: "time",
       time: {
         unit: "day",
-      }
-    }
+      },
+    },
   },
   plugins: {
     filler: {
@@ -20,5 +20,5 @@ export const chartOptions: ChartOptions<"line"> = {
       align: "center",
       maxWidth: 200,
     },
-  }
+  },
 };

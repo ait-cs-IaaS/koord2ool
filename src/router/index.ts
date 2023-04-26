@@ -31,5 +31,5 @@ export default createRouter({
       component: () => import("../views/SurveyView.vue"),
       beforeEnter: requiresAuthGuard,
     },
-  ]
+  ],
 });

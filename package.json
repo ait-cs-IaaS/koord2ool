@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint --ext .ts,.vue --fix src",
+    "format": "prettier --write \"src/**/*.{ts,vue}\"",
+    "lint_and_format": "npm run lint && npm run format",
+    "test": "npm run lint && npm run format"
   },
   "dependencies": {
     "@mdi/font": "^7.1.96",

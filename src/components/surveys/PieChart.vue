@@ -26,7 +26,7 @@ export default defineComponent({
     counters: {
       type: Array as () => { name: string; value: number }[],
       default: () => [],
-    }
+    },
   },
   data() {
     return {

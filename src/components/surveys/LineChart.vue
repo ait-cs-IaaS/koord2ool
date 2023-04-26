@@ -15,12 +15,12 @@ import {
   ChartData,
   TimeScale,
   TimeSeriesScale,
-Filler,
+  Filler,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
 import { chartOptions } from "./line-options";
 import { defineComponent } from "vue";
-import 'chartjs-adapter-moment';
+import "chartjs-adapter-moment";
 
 ChartJS.register(
   CategoryScale,
@@ -32,7 +32,7 @@ ChartJS.register(
   Filler,
   Title,
   Tooltip,
-  Legend,
+  Legend
 );
 
 export default defineComponent({
@@ -44,7 +44,7 @@ export default defineComponent({
     chartjsData: {
       type: Object as () => ChartData<"line">,
       required: true,
-    }
+    },
   },
   data() {
     return {

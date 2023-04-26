@@ -1,5 +1,5 @@
 <template>
-  <v-form @submit.prevent fluid>
+  <v-form fluid @submit.prevent>
     <v-col>
       <v-text-field
         v-model="username"
@@ -23,8 +23,8 @@
       <v-btn
         type="submit"
         color="primary"
-        @click="login(username, password)"
         :disabled="disabled || !canAuthenticate"
+        @click="login(username, password)"
       >
         Log in
       </v-btn>
@@ -45,6 +45,7 @@ export default defineComponent({
       default: () => false,
     },
   },
+  emits: ["auth-before", "auth-success", "auth-fail"],
   data() {
     return {
       username: "",

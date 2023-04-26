@@ -11,15 +11,14 @@ import { koordStore } from "../store";
 
 export default defineComponent({
   name: "LogoutView",
-
-  methods: {
-    ...mapActions(koordStore, ["logout"]),
-  },
   mounted(): void {
     this.$nextTick(() => {
       this.logout();
       this.$router.push("/");
     });
+  },
+  methods: {
+    ...mapActions(koordStore, ["logout"]),
   },
 });
 </script>

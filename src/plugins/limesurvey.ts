@@ -16,7 +16,9 @@ export class LimesurveyApi {
 
   private nextId = 1;
 
-  constructor(private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API) {
+  constructor(
+    private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API
+  ) {
     console.debug(`LimeSurvey API endpoint: ${endpoint}`);
     if (typeof endpoint === "undefined") {
       throw new Error("LimeSurvey API endpoint not configured");
@@ -144,7 +146,7 @@ export class LimesurveyApi {
   }
 
   private restoreSession(): boolean {
-    const store = koordStore()
+    const store = koordStore();
     if (store.limesurvey === undefined) {
       console.error("Failed to restore state.");
       return false;
@@ -171,7 +173,7 @@ export class LimesurveyApi {
   }
 
   private checkResult(result: Record<string, string>): void {
-    const store = koordStore()
+    const store = koordStore();
 
     if (result.status !== undefined) {
       if (result.status === "Invalid session key") {
@@ -191,12 +193,13 @@ export class LimesurveyApi {
     ...params: unknown[]
   ): Promise<T> {
     console.debug(`Calling ${rpcMethod}`);
-    const store = koordStore()
+    const store = koordStore();
 
     if (authenticated) {
       this.requireAuth();
       params = [this.session, ...params];
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const response = await fetch(this.endpoint!, {
       method: "POST",
       headers: {

@@ -42,8 +42,8 @@ const step = {
 };
 
 const onlyActive = {
-    title: "Active answers",
-    options: [
+  title: "Active answers",
+  options: [
     {
       text: "All rows",
       icon: "mdi-filter-off",
@@ -57,7 +57,7 @@ const onlyActive = {
       description: "Show only the last answer per user.",
     },
   ],
-}
+};
 
 const expirationTime = {
   title: "Expiration time",
@@ -88,7 +88,13 @@ const expirationTime = {
       value: 365,
     },
   ],
-}
+};
 
-export const chartOptions = { useLogicalTime, step, expirationTime } as Record<SettingsKey, SettingsOption>
-export const tableOptions = { onlyActive, expirationTime } as Record<SettingsKey, SettingsOption>
+export const chartOptions = { useLogicalTime, step, expirationTime } as Record<
+  SettingsKey,
+  SettingsOption
+>;
+export const tableOptions = { onlyActive, expirationTime } as Record<
+  SettingsKey,
+  SettingsOption
+>;

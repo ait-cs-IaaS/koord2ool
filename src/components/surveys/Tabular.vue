@@ -2,10 +2,7 @@
   <v-container fluid class="px-3 mx-0">
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <display-options
-          :displayOptions="showOptions"
-          :options="options"
-        />
+        <display-options :display-options="showOptions" :options="options" />
       </v-col>
     </v-row>
     <v-row class="pt-3">
@@ -15,7 +12,7 @@
           :headers="headers"
           no-data-text="There are no records to show"
         >
-          <template v-slot:item.token="{ item }">
+          <template #item.token="{ item }">
             <span>
               {{ getParticipant(item.raw.token) }}
             </span>
@@ -73,16 +70,22 @@ export default defineComponent({
   computed: {
     ...mapState(koordStore, ["settings"]),
     filteredRecords(): ResponseModel[] {
-      return this.responses.filter((response: ResponseModel, index: number, array: ResponseModel[]) => {
-        if (this.settings.onlyActive) {
-          const token = response.token;
-          const lastResponse = array.filter(item => item.token === token).reduce((prev, current) => {
-            return (new Date(prev.submitdate) > new Date(current.submitdate)) ? prev : current;
-          });
-          return response === lastResponse;
+      return this.responses.filter(
+        (response: ResponseModel, index: number, array: ResponseModel[]) => {
+          if (this.settings.onlyActive) {
+            const token = response.token;
+            const lastResponse = array
+              .filter((item) => item.token === token)
+              .reduce((prev, current) => {
+                return new Date(prev.submitdate) > new Date(current.submitdate)
+                  ? prev
+                  : current;
+              });
+            return response === lastResponse;
+          }
+          return true;
         }
-        return true;
-      });
+      );
     },
     showKeys(): string[] {
       const qk = this.qKeys;
@@ -112,18 +115,18 @@ export default defineComponent({
       return Object.values(headers).filter((header: Header) =>
         this.showKeys.includes(header.key)
       );
-    }
+    },
   },
   methods: {
     getParticipant(token: string): string {
-      console.debug("getParticipant", token)
+      console.debug("getParticipant", token);
       const participant = this.participants.find(
         (participant: ParticipantModel) => participant.token === token
       );
       return participant
         ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
         : token;
-    }
+    },
   },
 });
 </script>

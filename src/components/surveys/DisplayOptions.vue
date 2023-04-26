@@ -7,32 +7,50 @@
       </v-expansion-panel-title>
       <v-expansion-panel-text>
         <v-row>
-        <v-col v-for="(option, optionKey) in options" :key="optionKey" cols="6">
-          <h3>
-          {{  option.title }}
-          </h3>
-          <v-btn-toggle
-            :model-value="(settings as any)[optionKey]"
-            @update:modelValue="updateResult(optionKey, $event)"
-            color="primary"
-            mandatory
-            :divided="true"
-            rounded
+          <v-col
+            v-for="(option, optionKey) in options"
+            :key="optionKey"
+            cols="6"
           >
-            <div v-for="o in option.options" :key="o.text">
-              <v-tooltip v-if="o.description" :text="o.description" location="top">
-                <template v-slot:activator="{ props }">
-                  <v-btn v-bind="props" :prepend-icon="o.icon" :value="o.value" class="pt-2 pb-2">
-                    {{ o.text }}
-                  </v-btn>
-                </template>
-              </v-tooltip>
-              <v-btn v-else :prepend-icon="o.icon" :value="o.value" class="pt-2 pb-2">
-                {{ o.text }}
-              </v-btn>
-            </div>
-          </v-btn-toggle>
-        </v-col>
+            <h3>
+              {{ option.title }}
+            </h3>
+            <v-btn-toggle
+              :model-value="(settings as any)[optionKey]"
+              color="primary"
+              mandatory
+              :divided="true"
+              rounded
+              @update:model-value="updateResult(optionKey, $event)"
+            >
+              <div v-for="o in option.options" :key="o.text">
+                <v-tooltip
+                  v-if="o.description"
+                  :text="o.description"
+                  location="top"
+                >
+                  <template #activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      :prepend-icon="o.icon"
+                      :value="o.value"
+                      class="pt-2 pb-2"
+                    >
+                      {{ o.text }}
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+                <v-btn
+                  v-else
+                  :prepend-icon="o.icon"
+                  :value="o.value"
+                  class="pt-2 pb-2"
+                >
+                  {{ o.text }}
+                </v-btn>
+              </div>
+            </v-btn-toggle>
+          </v-col>
         </v-row>
         <slot name="additional-options" />
       </v-expansion-panel-text>
@@ -41,7 +59,7 @@
 </template>
 
 <script lang="ts">
-import { mapState } from "pinia";
+import { mapWritableState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../../store";
 import { SettingsKey, SettingsOption } from "../../store/settings.model";
@@ -58,17 +76,17 @@ export default defineComponent({
       default: () => ({} as Record<SettingsKey, SettingsOption>),
     },
   },
-  computed: {
-    ...mapState(koordStore, ["settings"]),
-  },
   data() {
     return {
       display: this.displayOptions,
     };
   },
+  computed: {
+    ...mapWritableState(koordStore, ["settings"]),
+  },
   methods: {
     updateResult(key: SettingsKey, result: boolean | number) {
-      (this.settings as any)[key] = result;
+      (this.settings[key] as boolean | number) = result;
     },
   },
 });

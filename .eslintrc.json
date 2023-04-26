@@ -1,0 +1,22 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": [
+    "plugin:vue/vue3-recommended",
+    "eslint:recommended",
+    "@vue/prettier",
+    "@vue/eslint-config-prettier",
+    "@vue/typescript/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "space-before-function-paren": 0,
+    "vue/valid-v-slot": ["error", {
+      "allowModifiers": true
+    }]
+  },
+  "root": true
+}

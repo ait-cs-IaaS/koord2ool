@@ -12,9 +12,7 @@
     </v-row>
     <v-row class="ml-6 mr-6 mt-6">
       <v-col class="ml-8 mr-8">
-        <time-slider
-          v-if="hasSubmitDateMatch()"
-        />
+        <time-slider v-if="hasSubmitDateMatch()" />
         <v-row v-if="!hasSubmitDateMatch()">
           <v-col>
             Responses have no responseDate set.
@@ -55,7 +53,7 @@
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
-          :useLogicalTime="!hasSubmitDateMatch()"
+          :use-logical-time="!hasSubmitDateMatch()"
         />
         <div v-else>
           <v-btn @click="refreshSurvey(surveyId)">Refresh</v-btn>
@@ -77,7 +75,6 @@ import { ParticipantModel } from "../store/participant.model";
 import { defineComponent } from "vue";
 import { koordStore } from "../store";
 import { mapState, mapActions } from "pinia";
-
 
 export default defineComponent({
   name: "SurveyView",
@@ -155,20 +152,17 @@ export default defineComponent({
       return Number(surveyId);
     },
   },
-  data: function () {
-    return { };
-  },
-
-  async mounted(): Promise<void> {
-    await this.refreshSurvey(this.surveyId);
-  },
   watch: {
     surveyId: {
       immediate: true,
       async handler(newVal: number): Promise<void> {
         await this.refreshSurvey(newVal);
-      }
-    }
+      },
+    },
+  },
+
+  async mounted(): Promise<void> {
+    await this.refreshSurvey(this.surveyId);
   },
   methods: {
     ...mapActions(koordStore, ["refreshSurvey"]),

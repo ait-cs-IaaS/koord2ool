@@ -15,12 +15,12 @@
     </v-row>
     <v-row>
       <v-col cols="4">
-      <login
-        @auth-before="setBusy"
-        @auth-fail="setFailed"
-        @auth-success="setSuccess"
-        :disabled="authenticating"
-      />
+        <login
+          :disabled="authenticating"
+          @auth-before="setBusy"
+          @auth-fail="setFailed"
+          @auth-success="setSuccess"
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -42,6 +42,7 @@ export default defineComponent({
   props: {
     returnTo: {
       type: String,
+      default: "/",
     },
   },
 
@@ -55,6 +56,13 @@ export default defineComponent({
     ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
   },
 
+  mounted(): void {
+    this.$nextTick(() => {
+      if (this.isAuthenticated) {
+        this.$router.push("/");
+      }
+    });
+  },
   methods: {
     ...mapActions(koordStore, ["refreshSurveys"]),
     setBusy(): void {
@@ -70,14 +78,6 @@ export default defineComponent({
       const goTo = this.returnTo || "/";
       this.$router.push(goTo);
     },
-  },
-
-  mounted(): void {
-    this.$nextTick(() => {
-      if (this.isAuthenticated) {
-        this.$router.push("/");
-      }
-    });
   },
 });
 </script>

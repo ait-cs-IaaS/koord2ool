@@ -9,10 +9,7 @@
           </v-card-title>
 
           <v-card-text class="mb-0">
-            <p
-              v-for="(answer, index) in counters"
-              :key="index"
-            >
+            <p v-for="(answer, index) in counters" :key="index">
               <span>
                 {{ answer["name"] }}
                 <strong>({{ answer["value"] }})</strong>
@@ -27,21 +24,13 @@
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
           <div class="py-4">
-            <line-chart
-              :chartjsData="chartjsdata"
-            />
+            <line-chart :chartjs-data="chartjsdata" />
           </div>
         </v-col>
       </v-row>
     </v-container>
   </v-card>
 </template>
-
-<style scoped>
-.chartrow {
-  border-bottom: 1px solid #e0e0e0;
-}
-</style>
 
 <script lang="ts">
 import LineChart from "./LineChart.vue";
@@ -65,7 +54,13 @@ export default defineComponent({
     chartjsdata: {
       type: Object as () => ChartData<"line">,
       default: () => ({} as ChartData<"line">),
-    }
-  }
+    },
+  },
 });
 </script>
+
+<style scoped>
+.chartrow {
+  border-bottom: 1px solid #e0e0e0;
+}
+</style>

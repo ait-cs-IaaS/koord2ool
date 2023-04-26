@@ -1,11 +1,11 @@
 <template>
   <v-container fluid>
     <v-row>
-      <display-options :displayOptions="showOptions" :options="chartOptions">
+      <display-options :display-options="showOptions" :options="chartOptions">
       </display-options>
     </v-row>
     <v-row class="pt-3">
-      <v-col cols="12" v-for="questionKey of questionKeys" :key="questionKey">
+      <v-col v-for="questionKey of questionKeys" :key="questionKey" cols="12">
         <chart-card
           :id="questionKey"
           :question="questionText(questionKey)"
@@ -72,13 +72,13 @@ export default defineComponent({
       default: false,
     },
   },
-  computed: {
-    ...mapState(koordStore, ["settings", "getExpireDate"]),
-  },
   data() {
     return {
-      chartOptions 
-    }
+      chartOptions,
+    };
+  },
+  computed: {
+    ...mapState(koordStore, ["settings", "getExpireDate"]),
   },
   methods: {
     questionText(questionKey: string): string {
@@ -91,7 +91,11 @@ export default defineComponent({
 
       this.responses.forEach((response) => {
         const token = response.token;
-        if (!lastResponses[token] || new Date(response.submitdate) > new Date(lastResponses[token].submitdate)) {
+        if (
+          !lastResponses[token] ||
+          new Date(response.submitdate) >
+            new Date(lastResponses[token].submitdate)
+        ) {
           lastResponses[token] = response;
         }
       });
@@ -99,9 +103,11 @@ export default defineComponent({
       Object.values(lastResponses).forEach((response) => {
         let value = response[questionKey] || "N/A";
         if (new Date(response.submitdate) <= this.getExpireDate) {
-          value = "N/A"
+          value = "N/A";
         }
-        const existingIndex = responseCounts.findIndex((item) => item.name === value);
+        const existingIndex = responseCounts.findIndex(
+          (item) => item.name === value
+        );
 
         if (existingIndex !== -1) {
           responseCounts[existingIndex].value++;
@@ -119,7 +125,10 @@ export default defineComponent({
     },
 
     getBorderColor(key: string): string {
-      return chartColors[key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % chartColors.length];
+      return chartColors[
+        key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
+          chartColors.length
+      ];
     },
 
     createTimelineFor(questionKey: string): ChartData<"line"> {
@@ -187,15 +196,13 @@ export default defineComponent({
           data: answerTimeline,
           label: key,
           fill: false,
-          borderColor: this.getBorderColor(key)
+          borderColor: this.getBorderColor(key),
         };
         datasets.push(dataset);
       }
 
       return { labels, datasets };
     },
-  },
-  mounted() {
   },
 });
 </script>

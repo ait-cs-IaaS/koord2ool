@@ -1,12 +1,16 @@
 <template>
-  <Slider v-model="responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
+  <Slider
+    v-model="responseRange"
+    :min="minValue"
+    :max="maxValue"
+    :step="stepSize"
+    :format="tooltipFormater"
+  />
 </template>
-
-<style src="@vueform/slider/themes/default.css"></style>
 
 <script lang="ts">
 import Slider from "@vueform/slider";
-import { mapState } from "pinia";
+import { mapWritableState, mapState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../store";
 
@@ -19,14 +23,21 @@ export default defineComponent({
     return {};
   },
   computed: {
-    ...mapState(koordStore, ["settings", "responseRange", "getMaxResponseDate", "getMinResponseDate"]),
+    ...mapState(koordStore, [
+      "settings",
+      "getMaxResponseDate",
+      "getMinResponseDate",
+    ]),
+    ...mapWritableState(koordStore, ["responseRange"]),
 
     minValue(): number {
       return Math.round(this.getMidnight(this.getMinResponseDate()).getTime());
     },
 
     maxValue(): number {
-      return Math.round(this.getMidnightTomrrow(this.getMaxResponseDate()).getTime());
+      return Math.round(
+        this.getMidnightTomrrow(this.getMaxResponseDate()).getTime()
+      );
     },
 
     stepSize(): number {
@@ -35,8 +46,15 @@ export default defineComponent({
   },
   methods: {
     tooltipFormater(value: number): string {
-      const options : Intl.DateTimeFormatOptions = { year: 'numeric', month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
-      return new Date(value).toLocaleDateString('de-AT', options);
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "numeric",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      };
+      return new Date(value).toLocaleDateString("de-AT", options);
     },
     getMidnight(date: Date): Date {
       return new Date(
@@ -51,3 +69,5 @@ export default defineComponent({
   },
 });
 </script>
+
+<style src="@vueform/slider/themes/default.css"></style>

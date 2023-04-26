@@ -3,7 +3,6 @@ import { ResponseModel } from "./response.model";
 import { ParticipantModel } from "./participant.model";
 import { SettingsModel } from "./settings.model";
 
-
 export default interface KoordLayout {
   /**
    * The LimeSurvey API facade, if authenticated.

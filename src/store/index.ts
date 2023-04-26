@@ -10,11 +10,10 @@ import {
 import { QuestionModel } from "./question.model";
 import QuestionPropertyModel from "./question_property.model";
 import { ParticipantModel } from "./participant.model";
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-import { createPinia, defineStore, type Pinia } from 'pinia';
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+import { createPinia, defineStore, type Pinia } from "pinia";
 
 export const api = new LimesurveyApi();
-
 
 /** Pinia Store */
 const pinia: Pinia = createPinia();
@@ -22,14 +21,19 @@ pinia.use(piniaPluginPersistedstate);
 
 export default pinia;
 
-export const koordStore = defineStore('koord', {
+export const koordStore = defineStore("koord", {
   state: (): KoordLayout => ({
     error: undefined,
     limesurvey: undefined,
     participants: {},
     responses: {},
     surveys: {},
-    settings: { step: 6, onlyActive: true, useLogicalTime: false, expirationTime: 7 },
+    settings: {
+      step: 6,
+      onlyActive: true,
+      useLogicalTime: false,
+      expirationTime: 7,
+    },
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
     syncing: false,
@@ -52,16 +56,22 @@ export const koordStore = defineStore('koord', {
     instance: (state) => {
       const endpoint = import.meta.env.VITE_APP_LIMESURVEY_API;
       if (!/\/admin\/remotecontrol$/.test(endpoint)) {
-        state.error = new Error(`LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`);
+        state.error = new Error(
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
+        );
         return "";
       }
       if (endpoint === undefined) {
-        state.error = new Error("LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable.");
+        state.error = new Error(
+          "LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable."
+        );
         return "";
       }
       const domain = new URL(endpoint);
       if (domain.hostname === undefined) {
-        state.error = new Error(`LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`);
+        state.error = new Error(
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`
+        );
         return "";
       }
       return `${domain.protocol}//${domain.hostname}`;
@@ -72,12 +82,14 @@ export const koordStore = defineStore('koord', {
       }
       return state.responses[sid];
     },
-    getParticipants: (state) => (sid: number): ParticipantModel[] => {
-      if (typeof state.participants[sid] === "undefined") {
-        return [] as ParticipantModel[];
-      }
-      return state.participants[sid];
-    },
+    getParticipants:
+      (state) =>
+      (sid: number): ParticipantModel[] => {
+        if (typeof state.participants[sid] === "undefined") {
+          return [] as ParticipantModel[];
+        }
+        return state.participants[sid];
+      },
     getSurvey: (state) => (sid: number) => {
       if (typeof state.surveys[sid] === "undefined") {
         return {} as SurveyModel;
@@ -124,13 +136,17 @@ export const koordStore = defineStore('koord', {
       return new Date(state.responseRange[1]);
     },
     getExpireDate(state): Date {
-      return new Date(new Date().getTime() - state.settings.expirationTime * 24 * 60 * 60 * 1000);
-    }
+      return new Date(
+        new Date().getTime() -
+          state.settings.expirationTime * 24 * 60 * 60 * 1000
+      );
+    },
   },
   actions: {
-    async authenticate(
-      payload: { username: string; password: string }
-    ): Promise<boolean> {
+    async authenticate(payload: {
+      username: string;
+      password: string;
+    }): Promise<boolean> {
       const session = await api.authenticate(
         payload.username,
         payload.password
@@ -162,7 +178,7 @@ export const koordStore = defineStore('koord', {
 
     async refreshSurvey(surveyId: number): Promise<void> {
       if (this.isAuthenticated) {
-        this.selectedSurveyID = surveyId
+        this.selectedSurveyID = surveyId;
         await Promise.all([
           this.refreshQuestions(surveyId),
           this.refreshResponses(surveyId),
@@ -232,9 +248,9 @@ export const koordStore = defineStore('koord', {
       return [];
     },
 
-    updateQuestionProperties(
-      payload: { question_properties: QuestionPropertyModel }
-    ) {
+    updateQuestionProperties(payload: {
+      question_properties: QuestionPropertyModel;
+    }) {
       const sid: number = +payload.question_properties.sid;
       const title: string = payload.question_properties.title;
       const questions = this.surveys[sid].questions;
@@ -262,9 +278,7 @@ export const koordStore = defineStore('koord', {
       question.subquestions = result;
     },
 
-    updateQuestions(
-      payload: { sid: number; questions: QuestionModel[] }
-    ) {
+    updateQuestions(payload: { sid: number; questions: QuestionModel[] }) {
       if (typeof this.surveys[payload.sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
         for (const question of payload.questions) {
