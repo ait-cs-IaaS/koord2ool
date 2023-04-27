@@ -1,5 +1,25 @@
 import { SettingsKey, SettingsOption } from "../../store/settings.model";
 
+const expirationTimeline = {
+  title: "Expiration timeline",
+  options: [
+    {
+      text: "Disabled",
+      icon: "mdi-timeline-remove",
+      value: false,
+      description:
+        "Responses will be shown as they were submitted, regardless of expiration time.",
+    },
+    {
+      text: "Enabled",
+      icon: "mdi-timeline-clock",
+      value: true,
+      description:
+        "Responses will be shown as they were submitted, but expired responses will be shown as N/A.",
+    },
+  ],
+};
+
 const useLogicalTime = {
   title: "Time display",
   options: [
@@ -90,10 +110,12 @@ const expirationTime = {
   ],
 };
 
-export const chartOptions = { useLogicalTime, step, expirationTime } as Record<
-  SettingsKey,
-  SettingsOption
->;
+export const chartOptions = {
+  useLogicalTime,
+  step,
+  expirationTime,
+  expirationTimeline,
+} as Record<SettingsKey, SettingsOption>;
 export const tableOptions = { onlyActive, expirationTime } as Record<
   SettingsKey,
   SettingsOption

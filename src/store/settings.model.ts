@@ -2,6 +2,7 @@ export interface SettingsModel {
   useLogicalTime: boolean;
   step: number;
   expirationTime: number;
+  expirationTimeline: boolean;
   onlyActive: boolean;
 }
 

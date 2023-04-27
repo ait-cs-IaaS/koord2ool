@@ -33,6 +33,7 @@ export const koordStore = defineStore("koord", {
       onlyActive: true,
       useLogicalTime: false,
       expirationTime: 7,
+      expirationTimeline: false,
     },
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,

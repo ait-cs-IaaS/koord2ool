@@ -1,15 +1,5 @@
-/**
- * This is a helper class to track minimum and maximum values.
- */
 export class MinMax<T = number> {
-  /**
-   * The observed minimum.
-   */
   min?: T;
-
-  /**
-   * The observed maximum.
-   */
   max?: T;
 
   constructor();
@@ -31,10 +21,10 @@ export class MinMax<T = number> {
    * @param value the value to observe.
    */
   observe(value: T): void {
-    if (typeof this.min === "undefined" || value < this.min) {
+    if (!this.min || value < this.min) {
       this.min = value;
     }
-    if (typeof this.max === "undefined" || value > this.max) {
+    if (!this.max || value > this.max) {
       this.max = value;
     }
   }
