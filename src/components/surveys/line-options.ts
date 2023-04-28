@@ -20,5 +20,9 @@ export const chartOptions: ChartOptions<"line"> = {
       align: "center",
       maxWidth: 200,
     },
+    tooltip: {
+      mode: "index",
+      intersect: false,
+    },
   },
 };
