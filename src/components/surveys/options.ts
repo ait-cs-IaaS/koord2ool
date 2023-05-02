@@ -1,4 +1,4 @@
-import { SettingsKey, SettingsOption } from "../../store/settings.model";
+import { SettingsKey, SettingsOption } from "../../types/settings.model";
 
 const useLogicalTime = {
   title: "Time display",

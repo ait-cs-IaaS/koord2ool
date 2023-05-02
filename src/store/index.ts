@@ -1,15 +1,15 @@
 import { LimesurveyApi } from "../plugins";
 import KoordLayout from "./koord.layout";
-import SurveyModel from "./survey.model";
+import { SurveyModel } from "../types/survey.model";
+import { ResponseModel } from "../types/response.model";
 import {
-  ResponseModel,
   hasSubmitDateMatch,
   minResponseDate,
   maxResponseDate,
-} from "./response.model";
-import { QuestionModel } from "./question.model";
-import QuestionPropertyModel from "./question_property.model";
-import { ParticipantModel } from "./participant.model";
+} from "../helpers/response";
+import { QuestionModel } from "../types/question.model";
+import { QuestionPropertyModel } from "../types/question_property.model";
+import { ParticipantModel } from "../types/participant.model";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import { createPinia, defineStore, type Pinia } from "pinia";
 

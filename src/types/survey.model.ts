@@ -3,7 +3,7 @@ import { QuestionModel } from "./question.model";
 /**
  * This is a stub of the DTO returned by LimeSurvey when retrieving surveys.
  */
-export default interface SurveyModel {
+export interface SurveyModel {
   sid: number;
 
   surveyls_title: string;

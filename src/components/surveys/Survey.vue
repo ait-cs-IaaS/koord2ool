@@ -72,14 +72,12 @@
 <script lang="ts">
 import Tabular from "./Tabular.vue";
 import Charts from "./Charts.vue";
-import {
-  ResponseModel,
-  getQuestionsFromResponses,
-} from "../../store/response.model";
+import { ResponseModel } from "../../types/response.model";
+import { getQuestionsFromResponses } from "../../helpers/response";
 import { api } from "../../store";
-import { QuestionModel } from "../..//store/question.model";
-import SurveyModel from "../../store/survey.model";
-import { ParticipantModel } from "../../store/participant.model";
+import { QuestionModel } from "../..//types/question.model";
+import { SurveyModel } from "../../types/survey.model";
+import { ParticipantModel } from "../../types/participant.model";
 import { defineComponent } from "vue";
 
 export default defineComponent({

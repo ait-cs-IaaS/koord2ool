@@ -8,7 +8,7 @@ export interface SubQuestionModel {
   title: string;
 }
 
-export default interface QuestionPropertyModel {
+export interface QuestionPropertyModel {
   qid: string;
   parent_qid: string;
   sid: string;

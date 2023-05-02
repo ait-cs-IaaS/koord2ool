@@ -62,7 +62,7 @@
 import { mapWritableState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../../store";
-import { SettingsKey, SettingsOption } from "../../store/settings.model";
+import { SettingsKey, SettingsOption } from "../../types/settings.model";
 
 export default defineComponent({
   name: "DisplayOptions",

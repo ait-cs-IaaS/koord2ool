@@ -1,8 +1,8 @@
-import SurveyModel from "../store/survey.model";
-import { ResponseModel } from "../store/response.model";
-import { QuestionModel } from "../store/question.model";
-import QuestionPropertyModel from "../store/question_property.model";
-import { ParticipantModel, ParticipantError } from "../store/participant.model";
+import SurveyModel from "../types/survey.model";
+import { ResponseModel } from "../types/response.model";
+import { QuestionModel } from "../types/question.model";
+import QuestionPropertyModel from "../types/question_property.model";
+import { ParticipantModel, ParticipantError } from "../types/participant.model";
 import router from "../router";
 import { koordStore } from "../store";
 

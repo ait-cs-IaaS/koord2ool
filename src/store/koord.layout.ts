@@ -1,6 +1,6 @@
 import SurveyModel from "./survey.model";
 import { ResponseModel } from "./response.model";
-import { ParticipantModel } from "./participant.model";
+import { ParticipantModel } from "../types/participant.model";
 import { SettingsModel } from "./settings.model";
 
 export default interface KoordLayout {

@@ -1,21 +1,12 @@
 import { ChartData, ChartDataset } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
 import { koordStore } from "../store";
-import { ResponseModel } from "../store/response.model";
+import {
+  ResponseModel,
+  responseCount,
+  FilteredResponse,
+} from "../types/response.model";
 // import { MinMax } from "./min-max";
-
-export interface responseCount {
-  name: string;
-  value: number;
-}
-
-interface FilteredResponse {
-  token: string;
-  time: Date;
-  value: string;
-}
-
-const store = koordStore();
 
 // function processResponses(responses: FilteredResponse[]) {
 //   const labels: (Date | number)[] = [];
@@ -136,6 +127,7 @@ function isResponseExpired(response: ResponseModel, expireDate: Date): boolean {
 }
 
 function getAnswer(questionKey: string, response: ResponseModel): string {
+  const store = koordStore();
   if (isResponseExpired(response, store.getExpireDate)) {
     return "N/A";
   }
@@ -154,6 +146,7 @@ function responseMapper(
 }
 
 function expirationDate(relativeDate: Date): Date {
+  const store = koordStore();
   return new Date(
     relativeDate.getTime() + store.settings.expirationTime * 24 * 60 * 60 * 1000
   );
@@ -191,7 +184,7 @@ export function addExpiredEntries(
   return newResponses;
 }
 
-function filterResponses(
+export function filterResponses(
   questionKey: string,
   responses: ResponseModel[]
 ): FilteredResponse[] {
