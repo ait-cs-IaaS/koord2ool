@@ -6,87 +6,6 @@ import {
   responseCount,
   FilteredResponse,
 } from "../types/response.model";
-// import { MinMax } from "./min-max";
-
-// function processResponses(responses: FilteredResponse[]) {
-//   const labels: (Date | number)[] = [];
-//   const timeline = new Map<string, { x: number; y: number }[]>();
-//   const lastChoice = new Map<string, string>();
-//   const timeRange = new MinMax();
-
-//   responses.forEach(({ token, time, value }, index) => {
-//     const x = store.settings.useLogicalTime ? index : time.valueOf();
-//     labels.push(x);
-//     timeRange.observe(x);
-
-//     const timelineForAnswer = timeline.get(value) || [];
-//     const newRecord = {
-//       x,
-//       y: timelineForAnswer.length
-//         ? timelineForAnswer[timelineForAnswer.length - 1].y + 1
-//         : 1,
-//     };
-//     timelineForAnswer.push(newRecord);
-//     timeline.set(value, timelineForAnswer);
-
-//     const oldAnswer = lastChoice.get(token);
-//     if (typeof oldAnswer !== "undefined") {
-//       const oldTimelineForAnswer = timeline.get(oldAnswer) || [];
-//       const newRecord = {
-//         x,
-//         y: oldTimelineForAnswer[oldTimelineForAnswer.length - 1].y - 1,
-//       };
-//       oldTimelineForAnswer.push(newRecord);
-//       timeline.set(oldAnswer, oldTimelineForAnswer);
-//     }
-//     lastChoice.set(token, value);
-//   });
-
-//   return { labels, timeline, timeRange };
-// }
-
-// function createDatasets(
-//   timeline: Map<string, { x: number; y: number }[]>,
-//   timeRange: MinMax
-// ): ChartDataset<"line">[] {
-//   const { min, max } = timeRange;
-//   const datasets: ChartDataset<"line">[] = [];
-
-//   for (const [key, answerTimeline] of timeline.entries()) {
-//     if (!answerTimeline.length) continue;
-//     if (typeof min === "number" && answerTimeline[0].x > min) {
-//       answerTimeline.unshift({ x: min, y: 0 });
-//     }
-//     if (
-//       typeof max === "number" &&
-//       answerTimeline[answerTimeline.length - 1].x < max
-//     ) {
-//       answerTimeline.push({
-//         x: max,
-//         y: answerTimeline[answerTimeline.length - 1].y,
-//       });
-//     }
-
-//     const dataset = {
-//       data: answerTimeline,
-//       label: key,
-//       fill: false,
-//       borderColor: getBorderColor(key),
-//     };
-//     datasets.push(dataset);
-//   }
-
-//   return datasets;
-// }
-
-// function getExpireDate(submittime: number | null): Date {
-//   if (submittime) {
-//     return new Date(
-//       submittime - store.settings.expirationTime * 24 * 60 * 60 * 1000
-//     );
-//   }
-//   return store.getExpireDate;
-// }
 
 function getBorderColor(key: string): string {
   return chartColors[
@@ -220,15 +139,13 @@ export function addCurrentStateForEachToken(
           )
           .sort((a, b) => b.time.getTime() - a.time.getTime())[0];
 
-        if (previousEntry) {
-          const currentState: FilteredResponse = {
-            token: token,
-            time: response.time,
-            value: previousEntry.value,
-          };
+        const currentState: FilteredResponse = {
+          token: token,
+          time: response.time,
+          value: previousEntry ? previousEntry.value : "N/A",
+        };
 
-          newResponses.push(currentState);
-        }
+        newResponses.push(currentState);
       }
     });
   });
@@ -244,10 +161,6 @@ export function createTimelineFor(
   const enrichedResponses = addExpiredEntries(filteredResponses);
   const result = addCurrentStateForEachToken(enrichedResponses);
 
-  // const { labels, timeline, timeRange } = processResponses(filteredResponses);
-  // console.debug("createTimelineFor", labels, timeline, timeRange);
-  //const datasets = createDatasets(timeline, timeRange);
-  // return { labels, datasets };
   return parseDataForLineChart(result);
 }
 
@@ -259,10 +172,10 @@ export function parseDataForLineChart(
   const parsedData: ChartDataset<"line">[] = [];
 
   values.forEach((value) => {
-    const aggregatedData = data
+    const aggregatedData: Record<number, number> = data
       .filter((item) => item.value === value)
-      .reduce((acc: Record<string, number>, item) => {
-        const dateKey = new Date(item.time).toLocaleDateString();
+      .reduce((acc: Record<number, number>, item) => {
+        const dateKey = item.time.getTime();
         if (!acc[dateKey]) {
           acc[dateKey] = 0;
         }
@@ -271,7 +184,7 @@ export function parseDataForLineChart(
       }, {});
 
     const lineData = Object.entries(aggregatedData).map(([date, count]) => ({
-      x: new Date(date).getTime(),
+      x: parseInt(date),
       y: count,
     }));
 
@@ -284,6 +197,8 @@ export function parseDataForLineChart(
       });
     }
   });
+
+  console.debug(JSON.stringify(parsedData, null, 2));
 
   return {
     datasets: parsedData,

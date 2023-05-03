@@ -10,6 +10,14 @@ export const chartOptions: ChartOptions<"line"> = {
         unit: "day",
       },
     },
+    y: {
+      beginAtZero: true,
+      ticks: {
+        callback: function (value) {
+          return Number.isInteger(value) ? value : undefined;
+        },
+      },
+    },
   },
   plugins: {
     filler: {
