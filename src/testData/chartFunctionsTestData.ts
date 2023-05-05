@@ -181,3 +181,32 @@ export const chartDataSet: ChartDataset<"line">[] = [
 export const chartData1: ChartData<"line"> = {
   datasets: chartDataSet,
 };
+
+export const authResponse = {
+  id: 1,
+  result: "rApXJtkTOK_ovHUyH2J3ZkZrghgMfqJK",
+  error: null,
+};
+
+export const surveyListResponse = [
+  {
+    id: 2,
+    result: [
+      {
+        sid: 123456,
+        surveyls_title: "Test 1",
+        startdate: null,
+        expires: null,
+        active: "Y",
+      },
+      {
+        sid: 123457,
+        surveyls_title: "Test Survey 2",
+        startdate: null,
+        expires: null,
+        active: "N",
+      },
+    ],
+    error: null,
+  },
+];

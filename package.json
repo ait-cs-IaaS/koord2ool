@@ -15,6 +15,7 @@
   "dependencies": {
     "@mdi/font": "^7.1.96",
     "@vueform/slider": "^2.1.7",
+    "axios": "^1.4.0",
     "chart.js": "^4.2.1",
     "chartjs-adapter-moment": "^1.0.1",
     "pinia": "^2.0.33",

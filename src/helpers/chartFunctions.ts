@@ -198,8 +198,6 @@ export function parseDataForLineChart(
     }
   });
 
-  console.debug(JSON.stringify(parsedData, null, 2));
-
   return {
     datasets: parsedData,
   };

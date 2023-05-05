@@ -1,10 +1,11 @@
-import SurveyModel from "../types/survey.model";
+import { SurveyModel } from "../types/survey.model";
 import { ResponseModel } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
-import QuestionPropertyModel from "../types/question_property.model";
+import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel, ParticipantError } from "../types/participant.model";
 import router from "../router";
 import { koordStore } from "../store";
+import axios from "axios";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -35,6 +36,9 @@ export class LimesurveyApi {
     username: string,
     password: string
   ): Promise<string | undefined> {
+    if (username === "" || password === "") {
+      throw new Error("LimeSurvey API username or password not configured");
+    }
     const session = await this.call<Auth>(
       "get_session_key",
       false,
@@ -200,28 +204,34 @@ export class LimesurveyApi {
       params = [this.session, ...params];
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const response = await fetch(this.endpoint!, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const response = await axios.post(
+      this.endpoint,
+      {
         method: rpcMethod,
         params,
         id: this.nextId++,
-      }),
-    });
-    if (!response.ok) {
+      },
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status !== 200) {
       const error = new Error(`Calling ${rpcMethod} failed`);
       store.error = error;
       throw error;
     }
-    const { result, error } = await response.json();
+
+    const { result, error } = response.data;
+
     if (error) {
       store.error = new Error(error);
       throw new Error(error);
     }
+
     this.checkResult(result);
     return result;
   }
