@@ -5,7 +5,10 @@ import axios from "axios";
 import {
   authResponse,
   surveyListResponse,
+  questionListResponse,
+  expiredSessionResponse,
 } from "../testData/chartFunctionsTestData";
+import router from "../router";
 
 vi.mock("axios");
 
@@ -58,19 +61,40 @@ describe("testLimesurveyAuthenticate", () => {
 });
 
 describe("testLimesurveyAPI", () => {
+  let api: LimesurveyApi;
   beforeEach(() => {
     setActivePinia(createPinia());
+    api = new LimesurveyApi(
+      "http://localhost:8080/index.php/admin/remotecontrol"
+    );
+    api.setSession("1234", "user");
+  });
+  it("Should redirect to login if session key is expired", async () => {
+    const pushSpy = vi.spyOn(router, "push");
+
+    mockAxios.post.mockResolvedValue({
+      data: expiredSessionResponse,
+      status: 200,
+    });
+    const surveys = await api.listSurveys();
+    expect(surveys).toEqual({ status: "Invalid session key" });
+    expect(pushSpy).toHaveBeenCalledWith({ name: "login" });
+  });
+
+  it("Return Survey List", async () => {
     mockAxios.post.mockResolvedValue({
       data: surveyListResponse,
       status: 200,
     });
+    const surveys = await api.listSurveys();
+    expect(surveys).toEqual(surveyListResponse.result);
   });
-  it("Return Survey List", async () => {
-    const api = new LimesurveyApi(
-      "http://localhost:8080/index.php/admin/remotecontrol"
-    );
-    await expect(api.listSurveys()).resolves.toEqual(
-      "rApXJtkTOK_ovHUyH2J3ZkZrghgMfqJK"
-    );
+  it("Return Question List", async () => {
+    mockAxios.post.mockResolvedValue({
+      data: questionListResponse,
+      status: 200,
+    });
+    const questions = await api.getQuestions(123456);
+    expect(questions).toEqual(questionListResponse.result);
   });
 });

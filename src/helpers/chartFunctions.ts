@@ -6,6 +6,7 @@ import {
   responseCount,
   FilteredResponse,
 } from "../types/response.model";
+import { QuestionModel } from "../types/question.model";
 
 function getBorderColor(key: string): string {
   return chartColors[
@@ -153,29 +154,49 @@ export function addCurrentStateForEachToken(
   return newResponses.sort((a, b) => a.time.getTime() - b.time.getTime());
 }
 
-export function createTimelineFor(
+export function getQuestionText(
   questionKey: string,
-  responses: ResponseModel[]
-): ChartData<"line"> {
-  const filteredResponses = filterResponses(questionKey, responses);
-  const enrichedResponses = addExpiredEntries(filteredResponses);
-  const result = addCurrentStateForEachToken(enrichedResponses);
+  questions: Record<string, QuestionModel>
+): string {
+  const key = questionKey.split("[");
+  const question = questions[key[0]];
+  if (question === undefined) return "";
+  if (key.length === 1) return question.question;
+  const subquestion = key[1].split("]")[0];
+  if (question.subquestions !== undefined && subquestion !== undefined) {
+    if (question.subquestions[subquestion] !== undefined) {
+      return question.subquestions[subquestion];
+    }
+  }
+  return question.question;
+}
 
-  return parseDataForLineChart(result);
+export function getQuestionType(
+  questionKey: string,
+  questions: Record<string, QuestionModel>
+): string {
+  const key = questionKey.split("[");
+  const question = questions[key[0]];
+  if (question === undefined) return "";
+  return question.question_theme_name || "";
 }
 
 export function parseDataForLineChart(
-  data: FilteredResponse[]
+  data: FilteredResponse[],
+  question_type = ""
 ): ChartData<"line"> {
-  const values = new Set(data.map((item) => item.value));
-
   const parsedData: ChartDataset<"line">[] = [];
 
+  const values = new Set(data.map((item) => item.value));
   values.forEach((value) => {
     const aggregatedData: Record<number, number> = data
       .filter((item) => item.value === value)
       .reduce((acc: Record<number, number>, item) => {
         const dateKey = item.time.getTime();
+        if (question_type === "numerical") {
+          acc[dateKey] = parseInt(item.value);
+          return acc;
+        }
         if (!acc[dateKey]) {
           acc[dateKey] = 0;
         }
@@ -201,4 +222,15 @@ export function parseDataForLineChart(
   return {
     datasets: parsedData,
   };
+}
+
+export function createTimelineFor(
+  questionKey: string,
+  responses: ResponseModel[]
+): ChartData<"line"> {
+  const filteredResponses = filterResponses(questionKey, responses);
+  const enrichedResponses = addExpiredEntries(filteredResponses);
+  const result = addCurrentStateForEachToken(enrichedResponses);
+
+  return parseDataForLineChart(result);
 }

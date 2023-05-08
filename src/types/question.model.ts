@@ -27,20 +27,3 @@ export interface QuestionModel {
    */
   [key: string]: unknown;
 }
-
-export function getQuestionText(
-  questionKey: string,
-  questions: Record<string, QuestionModel>
-): string {
-  const key = questionKey.split("[");
-  const question = questions[key[0]];
-  if (question === undefined) return "";
-  if (key.length === 1) return question.question;
-  const subquestion = key[1].split("]")[0];
-  if (question.subquestions !== undefined && subquestion !== undefined) {
-    if (question.subquestions[subquestion] !== undefined) {
-      return question.subquestions[subquestion];
-    }
-  }
-  return question.question;
-}

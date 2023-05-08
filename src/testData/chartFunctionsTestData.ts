@@ -188,25 +188,107 @@ export const authResponse = {
   error: null,
 };
 
-export const surveyListResponse = [
-  {
-    id: 2,
-    result: [
-      {
-        sid: 123456,
-        surveyls_title: "Test 1",
-        startdate: null,
-        expires: null,
-        active: "Y",
-      },
-      {
-        sid: 123457,
-        surveyls_title: "Test Survey 2",
-        startdate: null,
-        expires: null,
-        active: "N",
-      },
-    ],
-    error: null,
+export const expiredSessionResponse = {
+  id: 2,
+  result: {
+    status: "Invalid session key",
   },
-];
+  error: null,
+};
+
+export const surveyListResponse = {
+  id: 2,
+  result: [
+    {
+      sid: 123456,
+      surveyls_title: "Test 1",
+      startdate: null,
+      expires: null,
+      active: "Y",
+    },
+    {
+      sid: 123457,
+      surveyls_title: "Test Survey 2",
+      startdate: null,
+      expires: null,
+      active: "N",
+    },
+  ],
+  error: null,
+};
+
+export const questionListResponse = {
+  id: 3,
+  result: [
+    {
+      id: 2,
+      question: "Arbeitest du heute im Homeoffice?",
+      help: "",
+      language: "en",
+      qid: 2,
+      parent_qid: 0,
+      sid: 123456,
+      type: "Y",
+      title: "G01Q01HO",
+      preg: null,
+      other: "N",
+      mandatory: "N",
+      encrypted: "N",
+      question_order: 1,
+      scale_id: 0,
+      same_default: 0,
+      question_theme_name: "yesno",
+      modulename: "",
+      same_script: 0,
+      gid: 1,
+      relevance: "1",
+    },
+    {
+      id: 3,
+      question: "Wie warm ist es gerade draußen (°C)?",
+      help: "",
+      language: "en",
+      qid: 5,
+      parent_qid: 0,
+      sid: 944175,
+      type: "N",
+      title: "G01Q04TEMP",
+      preg: "",
+      other: "N",
+      mandatory: "N",
+      encrypted: "N",
+      question_order: 4,
+      scale_id: 0,
+      same_default: 0,
+      question_theme_name: "numerical",
+      modulename: "",
+      same_script: 0,
+      gid: 1,
+      relevance: "1",
+    },
+    {
+      id: 4,
+      question: "Kommentar?",
+      help: "",
+      language: "en",
+      qid: 6,
+      parent_qid: 0,
+      sid: 944175,
+      type: "S",
+      title: "G01Q05FREE",
+      preg: "",
+      other: "N",
+      mandatory: "N",
+      encrypted: "N",
+      question_order: 5,
+      scale_id: 0,
+      same_default: 0,
+      question_theme_name: "shortfreetext",
+      modulename: "",
+      same_script: 0,
+      gid: 1,
+      relevance: "1",
+    },
+  ],
+  error: null,
+};

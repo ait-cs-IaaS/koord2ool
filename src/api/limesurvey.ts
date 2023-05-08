@@ -167,6 +167,11 @@ export class LimesurveyApi {
     return true;
   }
 
+  setSession(session: string, username: string): void {
+    this.session = session;
+    this.username = username;
+  }
+
   private requireAuth(): void {
     if (typeof this.session === "undefined") {
       if (this.restoreSession()) {
@@ -204,20 +209,25 @@ export class LimesurveyApi {
       params = [this.session, ...params];
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const response = await axios.post(
-      this.endpoint,
-      {
-        method: rpcMethod,
-        params,
-        id: this.nextId++,
-      },
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+    const response = await axios
+      .post(
+        this.endpoint,
+        {
+          method: rpcMethod,
+          params,
+          id: this.nextId++,
         },
-      }
-    );
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .catch((error) => {
+        store.error = new Error(error);
+        throw new Error(error);
+      });
 
     if (response.status !== 200) {
       const error = new Error(`Calling ${rpcMethod} failed`);

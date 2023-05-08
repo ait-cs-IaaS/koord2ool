@@ -171,6 +171,8 @@ export const koordStore = defineStore("koord", {
         payload.password
       );
 
+      console.debug("Session: ", session);
+
       const okay = session !== undefined;
 
       if (okay) {

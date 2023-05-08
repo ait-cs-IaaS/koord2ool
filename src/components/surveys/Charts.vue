@@ -6,22 +6,12 @@
     </v-row>
     <v-row class="pt-3">
       <v-col v-for="questionKey of questionKeys" :key="questionKey" cols="12">
-        <!-- <pre>
-          {{ questionKey }}
-          {{ JSON.stringify(responses, undefined, 2) }}
-          {{
-            JSON.stringify(
-              filterResponses(questionKey, responses),
-              undefined,
-              2
-            )
-          }}
-        </pre> -->
         <chart-card
           :id="questionKey"
           :question="questionText(questionKey)"
-          :counters="countResponsesFor(questionKey, lastResponses)"
-          :chartjsdata="createTimelineFor(questionKey, responses)"
+          :counters="counters(questionKey, lastResponses)"
+          :chartjsdata="chartjsdata(questionKey, responses)"
+          :question-type="questionType(questionKey)"
         />
       </v-col>
     </v-row>
@@ -31,15 +21,15 @@
 <script lang="ts">
 import { ResponseModel } from "../../types/response.model";
 import { ParticipantModel } from "../../types/participant.model";
-import { QuestionModel, getQuestionText } from "../../types/question.model";
+import { QuestionModel } from "../../types/question.model";
 import ChartCard from "./ChartCard.vue";
 import DisplayOptions from "./DisplayOptions.vue";
 import {
   createTimelineFor,
   countResponsesFor,
-  addCurrentStateForEachToken,
-  addExpiredEntries,
   filterResponses,
+  getQuestionText,
+  getQuestionType,
 } from "../../helpers/chartFunctions";
 import { defineComponent, computed } from "vue";
 import { koordStore } from "../../store";
@@ -108,6 +98,18 @@ export default defineComponent({
       return getQuestionText(questionKey, props.questions);
     }
 
+    function questionType(questionKey: string): string {
+      return getQuestionType(questionKey, props.questions);
+    }
+
+    function counters(questionKey: string, lastResponses: ResponseModel[]) {
+      return countResponsesFor(questionKey, lastResponses);
+    }
+
+    function chartjsdata(questionKey: string, responses: ResponseModel[]) {
+      return createTimelineFor(questionKey, responses);
+    }
+
     onMounted(() => {
       //console.log("filteredResponses", filteredResponses.value);
     });
@@ -117,6 +119,9 @@ export default defineComponent({
       settings,
       getExpireDate,
       lastResponses,
+      counters,
+      chartjsdata,
+      questionType,
       filterResponses,
       questionText,
       countResponsesFor,

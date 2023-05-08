@@ -1,6 +1,6 @@
 import { ChartOptions } from "chart.js";
 
-export const chartOptions: ChartOptions<"line"> = {
+export const lineChartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: true,
   scales: {
@@ -24,6 +24,7 @@ export const chartOptions: ChartOptions<"line"> = {
       propagate: true,
     },
     legend: {
+      display: true,
       position: "top",
       align: "center",
       maxWidth: 200,
