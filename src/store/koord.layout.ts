@@ -1,9 +1,10 @@
-import SurveyModel from "./survey.model";
-import { ResponseModel } from "./response.model";
-import { ParticipantModel } from "./participant.model";
-import { SettingsModel } from "./settings.model";
+import { SurveyModel } from "../types/survey.model";
+import { ResponseModel } from "../types/response.model";
+import { ParticipantModel } from "../types/participant.model";
+import { SettingsModel } from "../types/settings.model";
+import { LimesurveyApi } from "../api/limesurvey";
 
-export default interface KoordLayout {
+export interface KoordLayout {
   /**
    * The LimeSurvey API facade, if authenticated.
    */
@@ -29,15 +30,11 @@ export default interface KoordLayout {
    */
   error?: Error;
 
-  /**
-   * A flag indicating whether the application is currently syncing or not.
-   * @deprecated
-   */
-  syncing: boolean;
-
   selectedSurveyID?: number;
 
   responseRange: number[];
 
   settings: SettingsModel;
+
+  api: LimesurveyApi;
 }

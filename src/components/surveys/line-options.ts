@@ -1,6 +1,6 @@
 import { ChartOptions } from "chart.js";
 
-export const chartOptions: ChartOptions<"line"> = {
+export const lineChartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: true,
   scales: {
@@ -10,15 +10,28 @@ export const chartOptions: ChartOptions<"line"> = {
         unit: "day",
       },
     },
+    y: {
+      beginAtZero: true,
+      ticks: {
+        callback: function (value) {
+          return Number.isInteger(value) ? value : undefined;
+        },
+      },
+    },
   },
   plugins: {
     filler: {
       propagate: true,
     },
     legend: {
+      display: true,
       position: "top",
       align: "center",
       maxWidth: 200,
+    },
+    tooltip: {
+      mode: "index",
+      intersect: false,
     },
   },
 };

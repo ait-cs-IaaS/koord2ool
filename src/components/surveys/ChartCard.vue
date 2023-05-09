@@ -2,7 +2,7 @@
   <v-card>
     <v-container fluid>
       <v-row class="chartrow">
-        <v-col cols="12" lg="4" class="title-col">
+        <v-col cols="12" lg="4">
           <v-card-title>
             <span class="question-id">{{ id }} – </span>
             <span class="question-title">{{ question }}</span>
@@ -23,8 +23,11 @@
           </div>
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
-          <div class="py-4">
-            <line-chart :chartjs-data="chartjsdata" />
+          <div v-if="questionType !== 'freetext'" class="py-4">
+            <line-chart :chartjs-data="chartjsdata" :show-legend="showLegend" />
+          </div>
+          <div v-else class="py-4">
+            <p class="text-center">No chart available for this question type</p>
           </div>
         </v-col>
       </v-row>
@@ -36,7 +39,7 @@
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import { ChartData } from "chart.js";
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
   name: "ChartCard",
@@ -55,6 +58,16 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       default: () => ({} as ChartData<"line">),
     },
+    questionType: { type: String, default: "" },
+  },
+  setup(props) {
+    const showLegend = ref(
+      !(
+        props.questionType === "shortfreetext" ||
+        props.chartjsdata.datasets.length > 8
+      )
+    );
+    return { showLegend };
   },
 });
 </script>

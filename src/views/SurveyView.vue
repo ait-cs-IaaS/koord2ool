@@ -65,12 +65,12 @@
 </template>
 
 <script lang="ts">
-import SurveyModel from "../store/survey.model";
-import { QuestionModel } from "../store/question.model";
+import { SurveyModel } from "../types/survey.model";
+import { QuestionModel } from "../types/question.model";
 import SurveyComponent from "../components/surveys/Survey.vue";
 import TimeSlider from "../components/TimeSlider.vue";
-import { ResponseModel } from "../store/response.model";
-import { ParticipantModel } from "../store/participant.model";
+import { ResponseModel } from "../types/response.model";
+import { ParticipantModel } from "../types/participant.model";
 
 import { defineComponent } from "vue";
 import { koordStore } from "../store";

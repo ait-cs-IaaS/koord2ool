@@ -24,8 +24,8 @@
 </template>
 
 <script lang="ts">
-import { ResponseModel } from "../../store/response.model";
-import { ParticipantModel } from "../../store/participant.model";
+import { ResponseModel } from "../../types/response.model";
+import { ParticipantModel } from "../../types/participant.model";
 import DisplayOptions from "./DisplayOptions.vue";
 import { koordStore } from "../../store";
 import { defineComponent } from "vue";

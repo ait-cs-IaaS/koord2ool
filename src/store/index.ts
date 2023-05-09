@@ -1,19 +1,17 @@
-import { LimesurveyApi } from "../plugins";
-import KoordLayout from "./koord.layout";
-import SurveyModel from "./survey.model";
+import { LimesurveyApi } from "../api/limesurvey";
+import { KoordLayout } from "./koord.layout";
+import { SurveyModel } from "../types/survey.model";
+import { ResponseModel } from "../types/response.model";
 import {
-  ResponseModel,
   hasSubmitDateMatch,
   minResponseDate,
   maxResponseDate,
-} from "./response.model";
-import { QuestionModel } from "./question.model";
-import QuestionPropertyModel from "./question_property.model";
-import { ParticipantModel } from "./participant.model";
+} from "../helpers/response";
+import { QuestionModel } from "../types/question.model";
+import { QuestionPropertyModel } from "../types/question_property.model";
+import { ParticipantModel } from "../types/participant.model";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import { createPinia, defineStore, type Pinia } from "pinia";
-
-export const api = new LimesurveyApi();
 
 /** Pinia Store */
 const pinia: Pinia = createPinia();
@@ -33,11 +31,10 @@ export const koordStore = defineStore("koord", {
       onlyActive: true,
       useLogicalTime: false,
       expirationTime: 7,
-      expirationTimeline: false,
     },
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
-    syncing: false,
+    api: new LimesurveyApi(),
   }),
   getters: {
     getSurveys: (state) =>
@@ -91,6 +88,27 @@ export const koordStore = defineStore("koord", {
         }
         return state.participants[sid];
       },
+    getQuestions:
+      (state) =>
+      (sid: number): QuestionModel[] => {
+        if (typeof state.surveys[sid] === "undefined") {
+          return [] as QuestionModel[];
+        }
+        const questions = state.surveys[sid].questions;
+        if (questions === undefined) {
+          return [] as QuestionModel[];
+        }
+        return Object.values(questions);
+      },
+    getQuestionType: () => (sid: number, qid: number) => {
+      const store = koordStore();
+      const questions = store.getQuestions(sid);
+      const question = questions[qid];
+      if (question === undefined) {
+        return "";
+      }
+      return question.question_theme_name;
+    },
     getSurvey: (state) => (sid: number) => {
       if (typeof state.surveys[sid] === "undefined") {
         return {} as SurveyModel;
@@ -148,10 +166,12 @@ export const koordStore = defineStore("koord", {
       username: string;
       password: string;
     }): Promise<boolean> {
-      const session = await api.authenticate(
+      const session = await this.api.authenticate(
         payload.username,
         payload.password
       );
+
+      console.debug("Session: ", session);
 
       const okay = session !== undefined;
 
@@ -167,13 +187,13 @@ export const koordStore = defineStore("koord", {
 
     logout() {
       this.limesurvey = undefined;
-      api.username = undefined;
-      api.session = undefined;
+      this.api.username = undefined;
+      this.api.session = undefined;
     },
 
     setApi(apiSession: { session: string; username: string }) {
-      api.username = apiSession.username;
-      api.session = apiSession.session;
+      this.api.username = apiSession.username;
+      this.api.session = apiSession.session;
       this.limesurvey = apiSession;
     },
 
@@ -190,7 +210,7 @@ export const koordStore = defineStore("koord", {
 
     async refreshSurveys(): Promise<SurveyModel[]> {
       if (this.isAuthenticated) {
-        const surveys = await api.listSurveys();
+        const surveys = await this.api.listSurveys();
         this.setSurveyList(surveys);
         return surveys;
       }
@@ -215,7 +235,7 @@ export const koordStore = defineStore("koord", {
 
     async refreshQuestions(sid: number): Promise<QuestionModel[]> {
       if (this.limesurvey) {
-        const questions = await api.getQuestions(sid);
+        const questions = await this.api.getQuestions(sid);
         this.updateQuestions({ sid, questions });
         return questions;
       }
@@ -224,14 +244,14 @@ export const koordStore = defineStore("koord", {
 
     async refreshQuestionProperties(qid: number): Promise<void> {
       if (this.limesurvey) {
-        const question_properties = await api.getQuestionProperties(qid);
+        const question_properties = await this.api.getQuestionProperties(qid);
         this.updateQuestionProperties({ question_properties });
       }
     },
 
     async refreshResponses(sid: number): Promise<ResponseModel[]> {
       if (this.limesurvey) {
-        const responses = await api.getResponses(sid);
+        const responses = await this.api.getResponses(sid);
         if (typeof responses !== "undefined") {
           this.responses[sid] = responses;
           return responses;
@@ -242,7 +262,7 @@ export const koordStore = defineStore("koord", {
 
     async refreshParticipants(sid: number): Promise<ParticipantModel[]> {
       if (this.isAuthenticated) {
-        const participants = await api.getParticipants(sid);
+        const participants = await this.api.getParticipants(sid);
         this.participants[sid] = participants;
         return participants;
       }

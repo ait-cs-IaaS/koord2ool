@@ -1,5 +1,10 @@
 <template>
-  <line-chart :data="chartjsData" :style="chartStyle" :options="chartOptions" />
+  <line-chart
+    v-if="renderChart"
+    :data="chartjsData"
+    :style="chartStyle"
+    :options="chartOptions"
+  />
 </template>
 
 <script lang="ts">
@@ -18,9 +23,11 @@ import {
   Filler,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
-import { chartOptions } from "./line-options";
-import { defineComponent } from "vue";
+import { lineChartOptions } from "./line-options";
+import { defineComponent, ref } from "vue";
 import "chartjs-adapter-moment";
+import { onMounted } from "vue";
+import { nextTick } from "vue";
 
 ChartJS.register(
   CategoryScale,
@@ -45,14 +52,30 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       required: true,
     },
+    showLegend: {
+      type: Boolean,
+      default: false,
+    },
   },
-  data() {
-    return {
-      chartOptions: chartOptions,
-      chartStyle: {
-        width: "100%",
-      },
+  setup(props) {
+    const chartOptions = JSON.parse(JSON.stringify(lineChartOptions));
+    const renderChart = ref(false);
+
+    if (props.showLegend) {
+      chartOptions.plugins.legend.display = true;
+    } else {
+      chartOptions.plugins.legend.display = false;
+    }
+    const chartStyle = {
+      width: "100%",
     };
+
+    onMounted(async () => {
+      await nextTick();
+      renderChart.value = true;
+    });
+
+    return { chartOptions, chartStyle, renderChart };
   },
 });
 </script>

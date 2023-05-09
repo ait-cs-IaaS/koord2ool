@@ -9,8 +9,9 @@
         <chart-card
           :id="questionKey"
           :question="questionText(questionKey)"
-          :counters="countResponsesFor(questionKey, lastResponses)"
-          :chartjsdata="createTimelineFor(questionKey, responses)"
+          :counters="counters(questionKey, lastResponses)"
+          :chartjsdata="chartjsdata(questionKey, responses)"
+          :question-type="questionType(questionKey)"
         />
       </v-col>
     </v-row>
@@ -18,18 +19,22 @@
 </template>
 
 <script lang="ts">
-import { ResponseModel } from "../../store/response.model";
-import { ParticipantModel } from "../../store/participant.model";
-import { QuestionModel, getQuestionText } from "../../store/question.model";
+import { ResponseModel } from "../../types/response.model";
+import { ParticipantModel } from "../../types/participant.model";
+import { QuestionModel } from "../../types/question.model";
 import ChartCard from "./ChartCard.vue";
 import DisplayOptions from "./DisplayOptions.vue";
 import {
   createTimelineFor,
   countResponsesFor,
+  filterResponses,
+  getQuestionText,
+  getQuestionType,
 } from "../../helpers/chartFunctions";
 import { defineComponent, computed } from "vue";
 import { koordStore } from "../../store";
 import { chartOptions } from "./options";
+import { onMounted } from "vue";
 
 export default defineComponent({
   name: "ChartsComponent",
@@ -72,7 +77,6 @@ export default defineComponent({
 
     const settings = computed(() => store.settings);
     const getExpireDate = computed(() => store.getExpireDate);
-
     const lastResponses = computed(() => {
       const lastResponses: Record<string, ResponseModel> = {};
 
@@ -94,11 +98,31 @@ export default defineComponent({
       return getQuestionText(questionKey, props.questions);
     }
 
+    function questionType(questionKey: string): string {
+      return getQuestionType(questionKey, props.questions);
+    }
+
+    function counters(questionKey: string, lastResponses: ResponseModel[]) {
+      return countResponsesFor(questionKey, lastResponses);
+    }
+
+    function chartjsdata(questionKey: string, responses: ResponseModel[]) {
+      return createTimelineFor(questionKey, responses);
+    }
+
+    onMounted(() => {
+      //console.log("filteredResponses", filteredResponses.value);
+    });
+
     return {
       chartOptions,
       settings,
       getExpireDate,
       lastResponses,
+      counters,
+      chartjsdata,
+      questionType,
+      filterResponses,
       questionText,
       countResponsesFor,
       createTimelineFor,

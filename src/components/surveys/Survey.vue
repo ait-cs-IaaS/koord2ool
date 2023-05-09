@@ -72,15 +72,13 @@
 <script lang="ts">
 import Tabular from "./Tabular.vue";
 import Charts from "./Charts.vue";
-import {
-  ResponseModel,
-  getQuestionsFromResponses,
-} from "../../store/response.model";
-import { api } from "../../store";
-import { QuestionModel } from "../..//store/question.model";
-import SurveyModel from "../../store/survey.model";
-import { ParticipantModel } from "../../store/participant.model";
+import { ResponseModel } from "../../types/response.model";
+import { getQuestionsFromResponses } from "../../helpers/response";
+import { QuestionModel } from "../..//types/question.model";
+import { SurveyModel } from "../../types/survey.model";
+import { ParticipantModel } from "../../types/participant.model";
 import { defineComponent } from "vue";
+import { koordStore } from "../../store";
 
 export default defineComponent({
   name: "SurveyComponent",
@@ -164,7 +162,8 @@ export default defineComponent({
       }
     },
     async setSurveyBlob(): Promise<void> {
-      const blob = await api.exportStatistics(this.survey.sid);
+      const store = koordStore();
+      const blob = await store.api.exportStatistics(this.survey.sid);
       this.blobURL = URL.createObjectURL(blob);
     },
   },

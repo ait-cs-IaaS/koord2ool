@@ -1,21 +1,12 @@
 import { ChartData, ChartDataset } from "chart.js";
-import { MinMax } from "./min-max";
 import { chartColors } from "../components/surveys/colors";
 import { koordStore } from "../store";
-import { ResponseModel } from "../store/response.model";
-
-export interface responseCount {
-  name: string;
-  value: number;
-}
-
-interface FilteredResponse {
-  token: string;
-  time: Date;
-  value: string;
-}
-
-const store = koordStore();
+import {
+  ResponseModel,
+  responseCount,
+  FilteredResponse,
+} from "../types/response.model";
+import { QuestionModel } from "../types/question.model";
 
 function getBorderColor(key: string): string {
   return chartColors[
@@ -51,12 +42,13 @@ export function countResponsesFor(
   return responseCounts;
 }
 
-function isResponseExpired(response: ResponseModel): boolean {
-  return new Date(response.submitdate) <= store.getExpireDate;
+function isResponseExpired(response: ResponseModel, expireDate: Date): boolean {
+  return new Date(response.submitdate) <= expireDate;
 }
 
 function getAnswer(questionKey: string, response: ResponseModel): string {
-  if (isResponseExpired(response)) {
+  const store = koordStore();
+  if (isResponseExpired(response, store.getExpireDate)) {
     return "N/A";
   }
   return response[questionKey] || "N/A";
@@ -66,100 +58,170 @@ function responseMapper(
   questionKey: string,
   response: ResponseModel
 ): FilteredResponse {
-  const answer = store.settings.expirationTimeline
-    ? getAnswer(questionKey, response)
-    : response[questionKey] || "N/A";
-
   return {
     token: response.token,
     time: new Date(response.submitdate),
-    value: answer,
+    value: response[questionKey] || "N/A",
   };
 }
 
-function filterResponses(
+function expirationDate(relativeDate: Date): Date {
+  const store = koordStore();
+  return new Date(
+    relativeDate.getTime() + store.settings.expirationTime * 24 * 60 * 60 * 1000
+  );
+}
+
+export function addExpiredEntries(
+  responses: FilteredResponse[]
+): FilteredResponse[] {
+  const newResponses: FilteredResponse[] = [...responses];
+  const currentDate = new Date();
+
+  responses.forEach((response) => {
+    const expiredTime = expirationDate(response.time);
+
+    const hasEntryWithinExpiration = newResponses.some((existingResponse) => {
+      return (
+        existingResponse.token === response.token &&
+        existingResponse.time >= response.time &&
+        existingResponse.time <= expiredTime &&
+        existingResponse !== response
+      );
+    });
+
+    if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
+      const expiredResponse: FilteredResponse = {
+        token: response.token,
+        time: expiredTime,
+        value: "N/A",
+      };
+
+      newResponses.push(expiredResponse);
+    }
+  });
+
+  return newResponses;
+}
+
+export function filterResponses(
   questionKey: string,
   responses: ResponseModel[]
 ): FilteredResponse[] {
   return responses
-    .filter(
-      (response) =>
-        typeof response[questionKey] === "string" &&
-        response[questionKey] !== ""
-    )
     .map((response) => responseMapper(questionKey, response))
     .sort((a, b) => a.time.valueOf() - b.time.valueOf());
 }
 
-function processResponses(responses: FilteredResponse[]) {
-  const labels: (Date | number)[] = [];
-  const timeline = new Map<string, { x: number; y: number }[]>();
-  const lastChoice = new Map<string, string>();
-  const timeRange = new MinMax();
+function getAllTokens(responses: FilteredResponse[]): string[] {
+  const tokens: string[] = [];
 
-  responses.forEach(({ token, time, value }, index) => {
-    const x = store.settings.useLogicalTime ? index : time.valueOf();
-    labels.push(x);
-    timeRange.observe(x);
-
-    const timelineForAnswer = timeline.get(value) || [];
-    const newRecord = {
-      x,
-      y: timelineForAnswer.length
-        ? timelineForAnswer[timelineForAnswer.length - 1].y + 1
-        : 1,
-    };
-    timelineForAnswer.push(newRecord);
-    timeline.set(value, timelineForAnswer);
-
-    const oldAnswer = lastChoice.get(token);
-    if (typeof oldAnswer !== "undefined") {
-      const oldTimelineForAnswer = timeline.get(oldAnswer) || [];
-      const newRecord = {
-        x,
-        y: oldTimelineForAnswer[oldTimelineForAnswer.length - 1].y - 1,
-      };
-      oldTimelineForAnswer.push(newRecord);
-      timeline.set(oldAnswer, oldTimelineForAnswer);
+  responses.forEach((response) => {
+    if (!tokens.includes(response.token)) {
+      tokens.push(response.token);
     }
-    lastChoice.set(token, value);
   });
 
-  return { labels, timeline, timeRange };
+  return tokens;
 }
 
-function createDatasets(
-  timeline: Map<string, { x: number; y: number }[]>,
-  timeRange: MinMax
-): ChartDataset<"line">[] {
-  const { min, max } = timeRange;
-  const datasets: ChartDataset<"line">[] = [];
+export function addCurrentStateForEachToken(
+  responses: FilteredResponse[]
+): FilteredResponse[] {
+  const newResponses: FilteredResponse[] = [...responses];
+  const tokens = getAllTokens(newResponses);
 
-  for (const [key, answerTimeline] of timeline.entries()) {
-    if (!answerTimeline.length) continue;
-    if (typeof min === "number" && answerTimeline[0].x > min) {
-      answerTimeline.unshift({ x: min, y: 0 });
+  responses.forEach((response) => {
+    tokens.forEach((token) => {
+      if (token !== response.token) {
+        const previousEntry = newResponses
+          .filter(
+            (entry) => entry.token === token && entry.time <= response.time
+          )
+          .sort((a, b) => b.time.getTime() - a.time.getTime())[0];
+
+        const currentState: FilteredResponse = {
+          token: token,
+          time: response.time,
+          value: previousEntry ? previousEntry.value : "N/A",
+        };
+
+        newResponses.push(currentState);
+      }
+    });
+  });
+
+  return newResponses.sort((a, b) => a.time.getTime() - b.time.getTime());
+}
+
+export function getQuestionText(
+  questionKey: string,
+  questions: Record<string, QuestionModel>
+): string {
+  const key = questionKey.split("[");
+  const question = questions[key[0]];
+  if (question === undefined) return "";
+  if (key.length === 1) return question.question;
+  const subquestion = key[1].split("]")[0];
+  if (question.subquestions !== undefined && subquestion !== undefined) {
+    if (question.subquestions[subquestion] !== undefined) {
+      return question.subquestions[subquestion];
     }
-    if (
-      typeof max === "number" &&
-      answerTimeline[answerTimeline.length - 1].x < max
-    ) {
-      answerTimeline.push({
-        x: max,
-        y: answerTimeline[answerTimeline.length - 1].y,
+  }
+  return question.question;
+}
+
+export function getQuestionType(
+  questionKey: string,
+  questions: Record<string, QuestionModel>
+): string {
+  const key = questionKey.split("[");
+  const question = questions[key[0]];
+  if (question === undefined) return "";
+  return question.question_theme_name || "";
+}
+
+export function parseDataForLineChart(
+  data: FilteredResponse[],
+  question_type = ""
+): ChartData<"line"> {
+  const parsedData: ChartDataset<"line">[] = [];
+
+  const values = new Set(data.map((item) => item.value));
+  values.forEach((value) => {
+    const aggregatedData: Record<number, number> = data
+      .filter((item) => item.value === value)
+      .reduce((acc: Record<number, number>, item) => {
+        const dateKey = item.time.getTime();
+        if (question_type === "numerical") {
+          acc[dateKey] = parseInt(item.value);
+          return acc;
+        }
+        if (!acc[dateKey]) {
+          acc[dateKey] = 0;
+        }
+        acc[dateKey]++;
+        return acc;
+      }, {});
+
+    const lineData = Object.entries(aggregatedData).map(([date, count]) => ({
+      x: parseInt(date),
+      y: count,
+    }));
+
+    if (lineData.length > 0) {
+      parsedData.push({
+        label: value,
+        data: lineData,
+        fill: false,
+        borderColor: getBorderColor(value),
       });
     }
+  });
 
-    const dataset = {
-      data: answerTimeline,
-      label: key,
-      fill: false,
-      borderColor: getBorderColor(key),
-    };
-    datasets.push(dataset);
-  }
-
-  return datasets;
+  return {
+    datasets: parsedData,
+  };
 }
 
 export function createTimelineFor(
@@ -167,8 +229,8 @@ export function createTimelineFor(
   responses: ResponseModel[]
 ): ChartData<"line"> {
   const filteredResponses = filterResponses(questionKey, responses);
-  const { labels, timeline, timeRange } = processResponses(filteredResponses);
-  const datasets = createDatasets(timeline, timeRange);
+  const enrichedResponses = addExpiredEntries(filteredResponses);
+  const result = addCurrentStateForEachToken(enrichedResponses);
 
-  return { labels, datasets };
+  return parseDataForLineChart(result);
 }
