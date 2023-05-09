@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import SurveyModel from "../types/survey.model";
+import { SurveyModel } from "../types/survey.model";
 import { QuestionModel } from "../types/question.model";
 import SurveyComponent from "../components/surveys/Survey.vue";
 import TimeSlider from "../components/TimeSlider.vue";
