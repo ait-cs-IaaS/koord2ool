@@ -3,6 +3,7 @@ export interface SettingsModel {
   step: number;
   expirationTime: number;
   onlyActive: boolean;
+  displayNA: boolean;
 }
 
 export type SettingsKey = keyof SettingsModel;

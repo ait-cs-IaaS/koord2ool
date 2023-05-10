@@ -20,6 +20,24 @@ const useLogicalTime = {
   ],
 };
 
+const displayNA = {
+  title: "Display N/A",
+  options: [
+    {
+      text: "Show N/A",
+      icon: "mdi-eye",
+      value: true,
+      description: "Show N/A: time-based charts will show N/A values",
+    },
+    {
+      text: "Hide N/A",
+      icon: "mdi-eye-off",
+      value: false,
+      description: "Hide N/A: time-based charts will hide N/A values",
+    },
+  ],
+};
+
 const step = {
   title: "Time step",
   options: [
@@ -94,6 +112,7 @@ export const chartOptions = {
   useLogicalTime,
   step,
   expirationTime,
+  displayNA,
 } as Record<SettingsKey, SettingsOption>;
 export const tableOptions = { onlyActive } as Record<
   SettingsKey,

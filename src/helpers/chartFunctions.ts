@@ -186,8 +186,14 @@ export function parseDataForLineChart(
   question_type = ""
 ): ChartData<"line"> {
   const parsedData: ChartDataset<"line">[] = [];
+  const store = koordStore();
 
-  const values = new Set(data.map((item) => item.value));
+  const values = new Set(
+    data
+      .filter((item) => store.settings.displayNA || item.value !== "N/A")
+      .map((item) => item.value)
+  );
+
   values.forEach((value) => {
     const aggregatedData: Record<number, number> = data
       .filter((item) => item.value === value)
