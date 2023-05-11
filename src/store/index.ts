@@ -25,6 +25,7 @@ export const koordStore = defineStore("koord", {
     limesurvey: undefined,
     participants: {},
     responses: {},
+    questions: {},
     surveys: {},
     settings: {
       step: 6,
@@ -91,17 +92,10 @@ export const koordStore = defineStore("koord", {
       },
     getQuestions:
       (state) =>
-      (sid: number): QuestionModel[] => {
-        if (typeof state.surveys[sid] === "undefined") {
-          return [] as QuestionModel[];
-        }
-        const questions = state.surveys[sid].questions;
-        if (questions === undefined) {
-          return [] as QuestionModel[];
-        }
-        return Object.values(questions);
+      (sid: number): Record<string, QuestionModel> => {
+        return state.questions[sid] || {};
       },
-    getQuestionType: () => (sid: number, qid: number) => {
+    getQuestionType: () => (sid: number, qid: string) => {
       const store = koordStore();
       const questions = store.getQuestions(sid);
       const question = questions[qid];
@@ -161,6 +155,18 @@ export const koordStore = defineStore("koord", {
           state.settings.expirationTime * 24 * 60 * 60 * 1000
       );
     },
+    responsesInTimeline:
+      (state) =>
+      (sid: number | undefined = state.selectedSurveyID): ResponseModel[] => {
+        if (sid === undefined) {
+          return [];
+        }
+        const store = koordStore();
+        return store.getResponses(sid).filter((response) => {
+          const thisTime = new Date(response.submitdate);
+          return store.fromDate <= thisTime && thisTime <= store.untilDate;
+        });
+      },
   },
   actions: {
     async authenticate(payload: {
@@ -212,32 +218,16 @@ export const koordStore = defineStore("koord", {
     async refreshSurveys(): Promise<SurveyModel[]> {
       if (this.isAuthenticated) {
         const surveys = await this.api.listSurveys();
-        this.setSurveyList(surveys);
+        this.updateSurveyList(surveys);
         return surveys;
       }
       return [];
     },
 
-    setSurveyList(surveys: SurveyModel[] = []) {
-      const newSurveys: Record<number, SurveyModel> = {};
-      for (const survey of surveys) {
-        newSurveys[survey.sid] = {
-          ...survey,
-          ...(typeof this.surveys[survey.sid] !== "undefined"
-            ? {
-                details: this.surveys[survey.sid].details,
-                questions: this.surveys[survey.sid].questions,
-              }
-            : {}),
-        };
-      }
-      this.surveys = newSurveys;
-    },
-
     async refreshQuestions(sid: number): Promise<QuestionModel[]> {
       if (this.limesurvey) {
         const questions = await this.api.getQuestions(sid);
-        this.updateQuestions({ sid, questions });
+        this.updateQuestions(sid, questions);
         return questions;
       }
       return [];
@@ -270,6 +260,22 @@ export const koordStore = defineStore("koord", {
       return [];
     },
 
+    updateSurveyList(surveys: SurveyModel[] = []) {
+      const newSurveys: Record<number, SurveyModel> = {};
+      for (const survey of surveys) {
+        newSurveys[survey.sid] = {
+          ...survey,
+          ...(typeof this.surveys[survey.sid] !== "undefined"
+            ? {
+                details: this.surveys[survey.sid].details,
+                questions: this.surveys[survey.sid].questions,
+              }
+            : {}),
+        };
+      }
+      this.surveys = newSurveys;
+    },
+
     updateQuestionProperties(payload: {
       question_properties: QuestionPropertyModel;
     }) {
@@ -300,19 +306,20 @@ export const koordStore = defineStore("koord", {
       question.subquestions = result;
     },
 
-    updateQuestions(payload: { sid: number; questions: QuestionModel[] }) {
-      if (typeof this.surveys[payload.sid] !== "undefined") {
+    updateQuestions(sid: number, questions: QuestionModel[]) {
+      if (typeof this.surveys[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
-        for (const question of payload.questions) {
+        for (const question of questions) {
           if (question.question_theme_name === "multipleshorttext") {
             this.refreshQuestionProperties(question.qid);
           }
           asRecord[question.title] = question;
         }
-        this.surveys[payload.sid].questions = asRecord;
+        this.questions[sid] = asRecord;
+        this.surveys[sid].questions = asRecord;
       } else {
         console.warn(
-          `Survey ${payload.sid} not found in the store; can't update questions.`
+          `Survey ${sid} not found in the store; can't update questions.`
         );
       }
     },

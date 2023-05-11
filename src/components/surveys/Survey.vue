@@ -29,6 +29,7 @@
             :questions="questions"
             :participants="participants"
             :show-options="showOptions"
+            :survey-id="survey.sid"
             :from="from"
             :until="until"
           ></charts>

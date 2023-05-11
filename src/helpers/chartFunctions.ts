@@ -199,10 +199,6 @@ export function parseDataForLineChart(
       .filter((item) => item.value === value)
       .reduce((acc: Record<number, number>, item) => {
         const dateKey = item.time.getTime();
-        if (question_type === "numerical") {
-          acc[dateKey] = parseInt(item.value);
-          return acc;
-        }
         if (!acc[dateKey]) {
           acc[dateKey] = 0;
         }
@@ -219,7 +215,11 @@ export function parseDataForLineChart(
       parsedData.push({
         label: value,
         data: lineData,
-        fill: false,
+        fill: {
+          target: "origin",
+          above: getBorderColor(value),
+          below: getBorderColor(value),
+        },
         borderColor: getBorderColor(value),
       });
     }
@@ -232,11 +232,16 @@ export function parseDataForLineChart(
 
 export function createTimelineFor(
   questionKey: string,
-  responses: ResponseModel[]
+  surveyId: number
 ): ChartData<"line"> {
-  const filteredResponses = filterResponses(questionKey, responses);
+  const store = koordStore();
+  const filteredResponses = filterResponses(
+    questionKey,
+    store.responsesInTimeline(surveyId)
+  );
+  const question_type = store.getQuestionType(surveyId, questionKey);
   const enrichedResponses = addExpiredEntries(filteredResponses);
   const result = addCurrentStateForEachToken(enrichedResponses);
 
-  return parseDataForLineChart(result);
+  return parseDataForLineChart(result, question_type);
 }

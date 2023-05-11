@@ -11,6 +11,7 @@ export const lineChartOptions: ChartOptions<"line"> = {
       },
     },
     y: {
+      stacked: true,
       beginAtZero: true,
       ticks: {
         callback: function (value) {

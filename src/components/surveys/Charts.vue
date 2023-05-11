@@ -10,7 +10,7 @@
           :id="questionKey"
           :question="questionText(questionKey)"
           :counters="counters(questionKey, lastResponses)"
-          :chartjsdata="chartjsdata(questionKey, responses)"
+          :chartjsdata="chartjsdata(questionKey)"
           :question-type="questionType(questionKey)"
         />
       </v-col>
@@ -71,6 +71,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    surveyId: {
+      type: Number,
+      default: 0,
+    },
   },
   setup(props) {
     const store = koordStore();
@@ -106,8 +110,8 @@ export default defineComponent({
       return countResponsesFor(questionKey, lastResponses);
     }
 
-    function chartjsdata(questionKey: string, responses: ResponseModel[]) {
-      return createTimelineFor(questionKey, responses);
+    function chartjsdata(questionKey: string) {
+      return createTimelineFor(questionKey, props.surveyId);
     }
 
     onMounted(() => {

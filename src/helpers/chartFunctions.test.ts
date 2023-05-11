@@ -12,8 +12,11 @@ import {
   filteredResponses1,
   filteredResponsesWithExpired,
   responsesEnhancedAndFilterd,
+  surveyList1,
+  questionList1,
   chartData1,
 } from "../testData/chartFunctionsTestData";
+import { koordStore } from "../store";
 
 describe("testFilteredResponses", () => {
   it("should return an empty array if no responses are provided", () => {
@@ -66,11 +69,19 @@ describe("testParseDataForLineChart", () => {
 });
 
 describe("testCreateTimelineFor", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    const store = koordStore();
+    store.updateSurveyList(surveyList1);
+    store.updateQuestions(surveyList1[0].sid, questionList1);
+    store.settings.expirationTime = 7;
+    store.responses[123456] = responses1;
+  });
   it("should return an empty array if no responses are provided", () => {
-    expect(createTimelineFor("test", [])).toEqual({ datasets: [] });
+    expect(createTimelineFor("test", 999999)).toEqual({ datasets: [] });
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(createTimelineFor("G01Q01HO", responses1)).toEqual(chartData1);
+    expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartData1);
   });
 });
