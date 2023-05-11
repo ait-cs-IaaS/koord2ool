@@ -58,11 +58,11 @@ describe("testAddCurrentStateForEachToken", () => {
 
 describe("testParseDataForLineChart", () => {
   it("should return an empty array if no responses are provided", () => {
-    expect(parseDataForLineChart([])).toEqual({ datasets: [] });
+    expect(parseDataForLineChart([], "yesno")).toEqual({ datasets: [] });
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(parseDataForLineChart(responsesEnhancedAndFilterd)).toEqual(
+    expect(parseDataForLineChart(responsesEnhancedAndFilterd, "yesno")).toEqual(
       chartData1
     );
   });

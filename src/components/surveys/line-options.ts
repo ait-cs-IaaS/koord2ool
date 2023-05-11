@@ -15,7 +15,7 @@ export const lineChartOptions: ChartOptions<"line"> = {
       beginAtZero: true,
       ticks: {
         callback: function (value) {
-          return Number.isInteger(value) ? value : undefined;
+          return Number.isInteger(value) ? value : 0;
         },
       },
     },
@@ -34,5 +34,10 @@ export const lineChartOptions: ChartOptions<"line"> = {
       mode: "index",
       intersect: false,
     },
+  },
+  interaction: {
+    mode: "nearest",
+    axis: "x",
+    intersect: false,
   },
 };

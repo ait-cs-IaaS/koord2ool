@@ -72,6 +72,12 @@ function expirationDate(relativeDate: Date): Date {
   );
 }
 
+function subtractSecond(date: Date): Date {
+  date.setSeconds(date.getSeconds() - 1);
+
+  return date;
+}
+
 export function addExpiredEntries(
   responses: FilteredResponse[]
 ): FilteredResponse[] {
@@ -188,11 +194,12 @@ export function parseDataForLineChart(
   const parsedData: ChartDataset<"line">[] = [];
   const store = koordStore();
 
-  const values = new Set(
-    data
-      .filter((item) => store.settings.displayNA || item.value !== "N/A")
-      .map((item) => item.value)
+  const filteredData = data.filter((item) => item.value !== "N/A");
+  const naData = data.filter(
+    (item) => store.settings.displayNA && item.value === "N/A"
   );
+  const combinedData = [...filteredData, ...naData];
+  const values = new Set(combinedData.map((item) => item.value));
 
   values.forEach((value) => {
     const aggregatedData: Record<number, number> = data
@@ -215,12 +222,8 @@ export function parseDataForLineChart(
       parsedData.push({
         label: value,
         data: lineData,
-        fill: {
-          target: "origin",
-          above: getBorderColor(value),
-          below: getBorderColor(value),
-        },
-        borderColor: getBorderColor(value),
+        fill: question_type === "yesno" ? "origin" : false,
+        backgroundColor: getBorderColor(value),
       });
     }
   });
