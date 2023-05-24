@@ -226,20 +226,6 @@ export function parseDataForLineChart(
   };
 }
 
-function findKeyByValue(
-  object: Record<number, string>,
-  value: string
-): number | undefined {
-  for (const prop in object) {
-    if (Object.hasOwn(object, prop)) {
-      if (object[prop] === value) {
-        return parseInt(prop);
-      }
-    }
-  }
-  return 0;
-}
-
 export function parseDataForFreeTextChart(
   data: FilteredResponse[]
 ): ChartData<"line"> {
@@ -258,7 +244,7 @@ export function parseDataForFreeTextChart(
     const point = {
       tooltip: item.value,
       x: item.time.getTime(),
-      y: findKeyByValue(store.tokenMap, item.token) || 0,
+      y: store.tokenMap[item.token] || 0,
     };
     parsedData[item.token].data.push(point);
   });
@@ -280,6 +266,7 @@ export function createTimelineFor(
   );
 
   const tokens = getAllTokens(filteredResponses);
+  store.updateTokenMap(surveyId);
 
   if (question_type === "yesno") {
     const enrichedResponses = addExpiredEntries(filteredResponses);

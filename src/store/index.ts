@@ -327,7 +327,7 @@ export const koordStore = defineStore("koord", {
       }
     },
     updateTokenMap(sid: number) {
-      const mapResult: Record<number, string> = {};
+      if (!this.responses[sid]) return;
       const tokens: string[] = [];
       this.responses[sid].forEach((response) => {
         const token =
@@ -339,9 +339,8 @@ export const koordStore = defineStore("koord", {
         }
       });
       tokens.forEach((token, index) => {
-        mapResult[index] = token;
+        this.tokenMap[token] = index;
       });
-      this.tokenMap = mapResult;
     },
   },
   persist: {

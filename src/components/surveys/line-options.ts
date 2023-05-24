@@ -47,6 +47,17 @@ export const areaChartOptions: ChartOptions<"line"> = {
   },
 };
 
+function findKeyByValue(object: Record<string, number>, value: number): string {
+  for (const prop in object) {
+    if (Object.hasOwn(object, prop)) {
+      if (object[prop] === value) {
+        return prop;
+      }
+    }
+  }
+  return "";
+}
+
 export const lineChartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: true,
@@ -62,7 +73,7 @@ export const lineChartOptions: ChartOptions<"line"> = {
       max: Object.keys(store.tokenMap).length - 1,
       ticks: {
         callback: function (value, index) {
-          return store.tokenMap[index];
+          return findKeyByValue(store.tokenMap, index) || 0;
         },
       },
     },
