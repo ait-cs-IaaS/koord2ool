@@ -37,6 +37,7 @@ export const koordStore = defineStore("koord", {
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
     api: new LimesurveyApi(),
+    tokenMap: {},
   }),
   getters: {
     getSurveys: (state) =>
@@ -210,7 +211,9 @@ export const koordStore = defineStore("koord", {
         await Promise.all([
           this.refreshQuestions(surveyId),
           this.refreshResponses(surveyId),
-          this.refreshParticipants(surveyId),
+          this.refreshParticipants(surveyId).then(() => {
+            this.updateTokenMap(surveyId);
+          }),
         ]);
       }
     },
@@ -322,6 +325,23 @@ export const koordStore = defineStore("koord", {
           `Survey ${sid} not found in the store; can't update questions.`
         );
       }
+    },
+    updateTokenMap(sid: number) {
+      const mapResult: Record<number, string> = {};
+      const tokens: string[] = [];
+      this.responses[sid].forEach((response) => {
+        const token =
+          this.participants[sid].find(
+            (participant) => participant.id === response.token
+          )?.token ?? response.token;
+        if (!tokens.includes(token)) {
+          tokens.push(token);
+        }
+      });
+      tokens.forEach((token, index) => {
+        mapResult[index] = token;
+      });
+      this.tokenMap = mapResult;
     },
   },
   persist: {

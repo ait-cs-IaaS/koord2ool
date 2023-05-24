@@ -23,8 +23,8 @@ import {
   Filler,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
-import { lineChartOptions } from "./line-options";
-import { defineComponent, ref } from "vue";
+import { lineChartOptions, areaChartOptions } from "./line-options";
+import { defineComponent, ref, computed } from "vue";
 import "chartjs-adapter-moment";
 import { onMounted } from "vue";
 import { nextTick } from "vue";
@@ -52,20 +52,17 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       required: true,
     },
-    showLegend: {
-      type: Boolean,
-      default: false,
-    },
+    questionType: { type: String, default: "" },
   },
   setup(props) {
-    const chartOptions = JSON.parse(JSON.stringify(lineChartOptions));
+    const chartOptions = computed(() => {
+      if (props.questionType === "yesno") {
+        return areaChartOptions;
+      }
+      return lineChartOptions;
+    });
     const renderChart = ref(false);
 
-    if (props.showLegend) {
-      chartOptions.plugins.legend.display = true;
-    } else {
-      chartOptions.plugins.legend.display = false;
-    }
     const chartStyle = {
       width: "100%",
     };
@@ -75,7 +72,7 @@ export default defineComponent({
       renderChart.value = true;
     });
 
-    return { chartOptions, chartStyle, renderChart };
+    return { chartStyle, renderChart, chartOptions };
   },
 });
 </script>

@@ -46,23 +46,26 @@ describe("testAddExpiredEntries", () => {
 
 describe("testAddCurrentStateForEachToken", () => {
   it("should return an empty array if no responses are provided", () => {
-    expect(addCurrentStateForEachToken([])).toEqual([]);
+    expect(addCurrentStateForEachToken([], [])).toEqual([]);
   });
 
   it("should return an array of FilteredResponses with all answers from each token at each input element", () => {
-    expect(addCurrentStateForEachToken(filteredResponsesWithExpired)).toEqual(
-      responsesEnhancedAndFilterd
-    );
+    expect(
+      addCurrentStateForEachToken(filteredResponsesWithExpired, [
+        "testuser1",
+        "testuser2",
+      ])
+    ).toEqual(responsesEnhancedAndFilterd);
   });
 });
 
 describe("testParseDataForLineChart", () => {
   it("should return an empty array if no responses are provided", () => {
-    expect(parseDataForLineChart([], "yesno")).toEqual({ datasets: [] });
+    expect(parseDataForLineChart([])).toEqual({ datasets: [] });
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(parseDataForLineChart(responsesEnhancedAndFilterd, "yesno")).toEqual(
+    expect(parseDataForLineChart(responsesEnhancedAndFilterd)).toEqual(
       chartData1
     );
   });

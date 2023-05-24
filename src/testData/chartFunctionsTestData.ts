@@ -57,6 +57,44 @@ export const filteredResponses1: FilteredResponse[] = [
   },
 ];
 
+export const filteredResponses2: FilteredResponse[] = [
+  {
+    token: "testuser1",
+    time: new Date("2023-01-1T10:00:00.000Z"),
+    value: "Erster Kommentar",
+  },
+  {
+    token: "testuser2",
+    time: new Date("2023-01-2T10:00:00.000Z"),
+    value: "Freitext Test 1234",
+  },
+  {
+    token: "testuser1",
+    time: new Date("2023-01-2T15:00:00.000Z"),
+    value: "Lorem Ipsum oder sowas",
+  },
+  {
+    token: "testuser3",
+    time: new Date("2023-01-4T10:00:00.000Z"),
+    value: "TestDaten Text Text Text",
+  },
+  {
+    token: "testuser1",
+    time: new Date("2023-01-7T10:00:00.000Z"),
+    value: "Text Text Text TestDaten",
+  },
+  {
+    token: "testuser2",
+    time: new Date("2023-01-7T15:00:00.000Z"),
+    value: "Vorletzter Eintrag",
+  },
+  {
+    token: "testuser3",
+    time: new Date("2023-01-7T18:00:00.000Z"),
+    value: "Letzter TestDaten Kommentar",
+  },
+];
+
 export const filteredResponsesWithExpired: FilteredResponse[] = [
   ...filteredResponses1,
   {
@@ -124,7 +162,7 @@ export const responsesEnhancedAndFilterd: FilteredResponse[] = [
   },
 ];
 
-export const chartDataSet: ChartDataset<"line">[] = [
+export const chartDataSetYesNo: ChartDataset<"line">[] = [
   {
     label: "No",
     data: [
@@ -141,7 +179,7 @@ export const chartDataSet: ChartDataset<"line">[] = [
         y: 1,
       },
     ],
-    fill: "origin",
+    fill: "stack",
     backgroundColor: "#313131",
   },
   {
@@ -156,7 +194,7 @@ export const chartDataSet: ChartDataset<"line">[] = [
         y: 1,
       },
     ],
-    fill: "origin",
+    fill: "stack",
     backgroundColor: "#AC004B",
   },
   {
@@ -175,13 +213,19 @@ export const chartDataSet: ChartDataset<"line">[] = [
         y: 2,
       },
     ],
-    fill: "origin",
+    fill: "stack",
     backgroundColor: "#7468E8",
   },
 ];
 
+export const chartDataSetFreeText: ChartDataset<"line">[] = [];
+
 export const chartData1: ChartData<"line"> = {
-  datasets: chartDataSet,
+  datasets: chartDataSetYesNo,
+};
+
+export const chartData2: ChartData<"line"> = {
+  datasets: chartDataSetFreeText,
 };
 
 export const authResponse = {

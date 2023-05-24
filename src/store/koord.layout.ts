@@ -42,5 +42,7 @@ export interface KoordLayout {
 
   settings: SettingsModel;
 
+  tokenMap: Record<number, string>;
+
   api: LimesurveyApi;
 }

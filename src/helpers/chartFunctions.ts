@@ -72,12 +72,6 @@ function expirationDate(relativeDate: Date): Date {
   );
 }
 
-function subtractSecond(date: Date): Date {
-  date.setSeconds(date.getSeconds() - 1);
-
-  return date;
-}
-
 export function addExpiredEntries(
   responses: FilteredResponse[]
 ): FilteredResponse[] {
@@ -132,10 +126,10 @@ function getAllTokens(responses: FilteredResponse[]): string[] {
 }
 
 export function addCurrentStateForEachToken(
-  responses: FilteredResponse[]
+  responses: FilteredResponse[],
+  tokens: string[]
 ): FilteredResponse[] {
   const newResponses: FilteredResponse[] = [...responses];
-  const tokens = getAllTokens(newResponses);
 
   responses.forEach((response) => {
     tokens.forEach((token) => {
@@ -188,8 +182,7 @@ export function getQuestionType(
 }
 
 export function parseDataForLineChart(
-  data: FilteredResponse[],
-  question_type = ""
+  data: FilteredResponse[]
 ): ChartData<"line"> {
   const parsedData: ChartDataset<"line">[] = [];
   const store = koordStore();
@@ -222,7 +215,7 @@ export function parseDataForLineChart(
       parsedData.push({
         label: value,
         data: lineData,
-        fill: question_type === "yesno" ? "origin" : false,
+        fill: "stack",
         backgroundColor: getBorderColor(value),
       });
     }
@@ -233,18 +226,66 @@ export function parseDataForLineChart(
   };
 }
 
+function findKeyByValue(
+  object: Record<number, string>,
+  value: string
+): number | undefined {
+  for (const prop in object) {
+    if (Object.hasOwn(object, prop)) {
+      if (object[prop] === value) {
+        return parseInt(prop);
+      }
+    }
+  }
+  return 0;
+}
+
+export function parseDataForFreeTextChart(
+  data: FilteredResponse[]
+): ChartData<"line"> {
+  const parsedData: Record<string, ChartDataset<"line">> = {};
+  const store = koordStore();
+
+  data.forEach((item) => {
+    if (!parsedData[item.token]) {
+      parsedData[item.token] = {
+        label: item.token,
+        data: [],
+        fill: false,
+        borderColor: getBorderColor(item.token),
+      };
+    }
+    const point = {
+      tooltip: item.value,
+      x: item.time.getTime(),
+      y: findKeyByValue(store.tokenMap, item.token) || 0,
+    };
+    parsedData[item.token].data.push(point);
+  });
+
+  return {
+    datasets: Object.values(parsedData),
+  };
+}
+
 export function createTimelineFor(
   questionKey: string,
   surveyId: number
 ): ChartData<"line"> {
   const store = koordStore();
+  const question_type = store.getQuestionType(surveyId, questionKey);
   const filteredResponses = filterResponses(
     questionKey,
     store.responsesInTimeline(surveyId)
   );
-  const question_type = store.getQuestionType(surveyId, questionKey);
-  const enrichedResponses = addExpiredEntries(filteredResponses);
-  const result = addCurrentStateForEachToken(enrichedResponses);
 
-  return parseDataForLineChart(result, question_type);
+  const tokens = getAllTokens(filteredResponses);
+
+  if (question_type === "yesno") {
+    const enrichedResponses = addExpiredEntries(filteredResponses);
+    const result = addCurrentStateForEachToken(enrichedResponses, tokens);
+    return parseDataForLineChart(result);
+  }
+
+  return parseDataForFreeTextChart(filteredResponses);
 }
