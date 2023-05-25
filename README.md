@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-
 docker-compose up -d
 ```
 
-![image](https://user-images.githubusercontent.com/6696618/215826266-70e2a176-5367-42d7-8127-a82a7d85df9b.png)
+![Screenshot from 2023-05-24 13-19-04](https://github.com/ait-cs-IaaS/koord2ool/assets/6696618/da947fb3-5e57-40f5-98c8-4b514f822daa)
 
 ## Deployment
 
