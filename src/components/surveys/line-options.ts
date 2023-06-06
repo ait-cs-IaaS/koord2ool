@@ -4,7 +4,7 @@ const store = koordStore();
 
 export const areaChartOptions: ChartOptions<"line"> = {
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
   scales: {
     x: {
       type: "time",
@@ -49,10 +49,8 @@ export const areaChartOptions: ChartOptions<"line"> = {
 
 function findKeyByValue(object: Record<string, number>, value: number): string {
   for (const prop in object) {
-    if (Object.hasOwn(object, prop)) {
-      if (object[prop] === value) {
-        return prop;
-      }
+    if (Object.hasOwn(object, prop) && object[prop] === value) {
+      return prop;
     }
   }
   return "";
@@ -60,7 +58,7 @@ function findKeyByValue(object: Record<string, number>, value: number): string {
 
 export const lineChartOptions: ChartOptions<"line"> = {
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
   scales: {
     x: {
       type: "time",
@@ -70,7 +68,10 @@ export const lineChartOptions: ChartOptions<"line"> = {
     },
     y: {
       min: 0,
-      max: Object.keys(store.tokenMap).length - 1,
+      max:
+        Object.keys(store.tokenMap).length > 0
+          ? Object.keys(store.tokenMap).length - 1
+          : undefined,
       ticks: {
         callback: function (value, index) {
           return findKeyByValue(store.tokenMap, index) || 0;
@@ -85,8 +86,7 @@ export const lineChartOptions: ChartOptions<"line"> = {
     tooltip: {
       callbacks: {
         label: function (context: TooltipItem<"line">) {
-          const tooltip = (context.raw as any)?.tooltip || "NO DATA";
-          return tooltip;
+          return (context.raw as any)?.tooltip || "NO DATA";
         },
       },
     },

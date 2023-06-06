@@ -284,7 +284,7 @@ export const koordStore = defineStore("koord", {
     }) {
       const sid: number = +payload.question_properties.sid;
       const title: string = payload.question_properties.title;
-      const questions = this.surveys[sid].questions;
+      const { questions } = this.surveys[sid];
       if (questions === undefined) {
         console.debug("No questions for survey: ", sid);
         return;
@@ -300,7 +300,7 @@ export const koordStore = defineStore("koord", {
       ) {
         return;
       }
-      const subquestions = payload.question_properties.subquestions;
+      const { subquestions } = payload.question_properties;
       const result = Object.keys(subquestions).reduce((acc, key) => {
         const titleX = subquestions[key].title;
         const questionX = subquestions[key].question;
@@ -327,7 +327,9 @@ export const koordStore = defineStore("koord", {
       }
     },
     updateTokenMap(sid: number) {
-      if (!this.responses[sid]) return;
+      if (!this.responses[sid]) {
+        return;
+      }
       const tokens: string[] = [];
       this.responses[sid].forEach((response) => {
         const token =
