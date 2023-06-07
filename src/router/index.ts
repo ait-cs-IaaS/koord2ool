@@ -2,7 +2,7 @@ import { createWebHistory, createRouter } from "vue-router";
 import requiresAuthGuard from "./requires-auth.guard";
 
 export default createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/",

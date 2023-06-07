@@ -5,7 +5,8 @@ server {
     root   /usr/share/nginx/html;
     index  index.html;
 
-    location / {
+    location ${BASE_URI} {
+        alias /usr/share/nginx/html;
         try_files $uri $uri/ /index.html;
     }
 }

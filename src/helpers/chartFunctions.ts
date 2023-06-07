@@ -160,13 +160,19 @@ export function getQuestionText(
 ): string {
   const key = questionKey.split("[");
   const question = questions[key[0]];
-  if (question === undefined) return "";
-  if (key.length === 1) return question.question;
+  if (question === undefined) {
+    return "";
+  }
+  if (key.length === 1) {
+    return question.question;
+  }
   const subquestion = key[1].split("]")[0];
-  if (question.subquestions !== undefined && subquestion !== undefined) {
-    if (question.subquestions[subquestion] !== undefined) {
-      return question.subquestions[subquestion];
-    }
+  if (
+    question.subquestions !== undefined &&
+    subquestion !== undefined &&
+    question.subquestions[subquestion] !== undefined
+  ) {
+    return question.subquestions[subquestion];
   }
   return question.question;
 }
@@ -177,7 +183,9 @@ export function getQuestionType(
 ): string {
   const key = questionKey.split("[");
   const question = questions[key[0]];
-  if (question === undefined) return "";
+  if (question === undefined) {
+    return "";
+  }
   return question.question_theme_name || "";
 }
 

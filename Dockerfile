@@ -10,6 +10,8 @@ RUN npm ci &&\
 
 FROM nginx:stable-alpine
 WORKDIR /usr
-COPY nginx_static.conf /etc/nginx/conf.d/default.conf
+ARG BASE_URI=/
+COPY nginx_static.conf.template /etc/nginx/conf.d/default.conf.template
+RUN envsubst '${BASE_URI}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 COPY api_endpoint_envsubst_entrypoint.sh /docker-entrypoint.d/50-api_endpoint_envsubst.sh
 COPY --from=builder /usr/src/koordtool/dist /usr/share/nginx/html
