@@ -27,6 +27,19 @@ For a production deployment a seperate LimeSurvey instance and the [compose.yml]
 There is a [Dockerfile](Dockerfile) that can be built and deployed, which is automatically packaged as a Container Image via a CI/CD pipeline, specifically a [GitHub Action](.github/workflows/cicd.yaml).
 The resulting artifact is then published to the GitHub Container Registry: `docker pull ghcr.io/ait-cs-iaas/koord2ool:latest`
 
+### Build via Docker
+
+There are two [Build arguments](https://docs.docker.com/build/guide/build-args/) that can be set while building the Docker Image.
+* `LIMESURVEY_RPC_API`
+To set the default Limesurvey Backend URI, which can be overriden during container startup
+* `BASE_URI`
+To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy)
+
+**Example**
+```
+docker build --build-arg BASE_URI=/koord2ool -t koord2ool .
+```
+
 ### Build From Source
 
 Koord2ool can also be built from source, following steps are necesarry.
