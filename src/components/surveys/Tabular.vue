@@ -14,7 +14,7 @@
         >
           <template #item.token="{ item }">
             <span>
-              {{ getParticipant(item.raw.token) }}
+              {{ getParticipant(item.token) }}
             </span>
           </template>
         </v-data-table>

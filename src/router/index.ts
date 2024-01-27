@@ -16,6 +16,12 @@ export default createRouter({
       props: true,
     },
     {
+      path: "/test",
+      name: "test",
+      component: () => import("../testData/TestView.vue"),
+      props: true,
+    },
+    {
       path: "/logout",
       name: "logout",
       component: () => import("../views/LogoutView.vue"),

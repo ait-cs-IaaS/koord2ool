@@ -219,11 +219,13 @@ export function parseDataForLineChart(
       y: count,
     }));
 
+    console.debug(lineData);
+
     if (lineData.length > 0) {
       parsedData.push({
         label: value,
         data: lineData,
-        fill: "stack",
+        fill: "shape",
         backgroundColor: getBorderColor(value),
       });
     }

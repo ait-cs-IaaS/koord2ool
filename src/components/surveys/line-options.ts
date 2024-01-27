@@ -13,11 +13,11 @@ export const areaChartOptions: ChartOptions<"line"> = {
       },
     },
     y: {
-      stacked: true,
-      beginAtZero: true,
+      stacked: false,
+      beginAtZero: false,
       ticks: {
         callback: function (value) {
-          return Number.isInteger(value) ? value : 0;
+          return value;
         },
       },
     },

@@ -333,7 +333,7 @@ export const koordStore = defineStore("koord", {
       const tokens: string[] = [];
       this.responses[sid].forEach((response) => {
         const token =
-          this.participants[sid].find(
+          this.participants[sid]?.find(
             (participant) => participant.id === response.token
           )?.token ?? response.token;
         if (!tokens.includes(token)) {
