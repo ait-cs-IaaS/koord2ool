@@ -1,4 +1,8 @@
-import { ResponseModel, FilteredResponse } from "../types/response.model";
+import {
+  ResponseModel,
+  FilteredResponse,
+  HyperResponse,
+} from "../types/response.model";
 import { ChartData, ChartDataset } from "chart.js";
 import { SurveyModel } from "../types/survey.model";
 import { QuestionModel } from "../types/question.model";
@@ -57,44 +61,6 @@ export const filteredResponses1: FilteredResponse[] = [
   },
 ];
 
-export const filteredResponses2: FilteredResponse[] = [
-  {
-    token: "testuser1",
-    time: new Date("2023-01-1T10:00:00.000Z"),
-    value: "Erster Kommentar",
-  },
-  {
-    token: "testuser2",
-    time: new Date("2023-01-2T10:00:00.000Z"),
-    value: "Freitext Test 1234",
-  },
-  {
-    token: "testuser1",
-    time: new Date("2023-01-2T15:00:00.000Z"),
-    value: "Lorem Ipsum oder sowas",
-  },
-  {
-    token: "testuser3",
-    time: new Date("2023-01-4T10:00:00.000Z"),
-    value: "TestDaten Text Text Text",
-  },
-  {
-    token: "testuser1",
-    time: new Date("2023-01-7T10:00:00.000Z"),
-    value: "Text Text Text TestDaten",
-  },
-  {
-    token: "testuser2",
-    time: new Date("2023-01-7T15:00:00.000Z"),
-    value: "Vorletzter Eintrag",
-  },
-  {
-    token: "testuser3",
-    time: new Date("2023-01-7T18:00:00.000Z"),
-    value: "Letzter TestDaten Kommentar",
-  },
-];
-
 export const filteredResponsesWithExpired: FilteredResponse[] = [
   ...filteredResponses1,
   {
@@ -109,56 +75,46 @@ export const filteredResponsesWithExpired: FilteredResponse[] = [
   },
 ];
 
-export const responsesEnhancedAndFilterd: FilteredResponse[] = [
+export const responsesEnhancedAndFilterd: HyperResponse[] = [
   {
     time: new Date("2023-02-21T08:17:23.000Z"),
-    token: "testuser2",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-21T08:17:23.000Z"),
-    token: "testuser1",
-    value: "N/A",
+    values: new Map([
+      ["No", ["testuser2"]],
+      ["Yes", []],
+      ["N/A", ["testuser1"]],
+    ]),
   },
   {
     time: new Date("2023-02-22T10:57:52.000Z"),
-    token: "testuser1",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-22T10:57:52.000Z"),
-    token: "testuser2",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-22T12:16:10.000Z"),
-    token: "testuser2",
-    value: "Yes",
+    values: new Map([
+      ["No", ["testuser2", "testuser1"]],
+      ["Yes", []],
+      ["N/A", []],
+    ]),
   },
   {
     time: new Date("2023-02-22T12:16:10.000Z"),
-    token: "testuser1",
-    value: "No",
+    values: new Map([
+      ["No", ["testuser1"]],
+      ["Yes", ["testuser2"]],
+      ["N/A", []],
+    ]),
   },
   {
     time: new Date("2023-03-01T10:57:52.000Z"),
-    token: "testuser1",
-    value: "N/A",
-  },
-  {
-    time: new Date("2023-03-01T10:57:52.000Z"),
-    token: "testuser2",
-    value: "Yes",
-  },
-  {
-    time: new Date("2023-03-01T12:16:10.000Z"),
-    token: "testuser2",
-    value: "N/A",
+    values: new Map([
+      ["No", []],
+      ["Yes", ["testuser2"]],
+      ["N/A", ["testuser1"]],
+    ]),
   },
   {
     time: new Date("2023-03-01T12:16:10.000Z"),
-    token: "testuser1",
-    value: "N/A",
+    values: new Map([
+      ["No", []],
+      ["Yes", []],
+      ["N/A", ["testuser1", "testuser2"]],
+    ]),
   },
 ];
 
@@ -167,7 +123,7 @@ export const chartDataSetYesNo: ChartDataset<"line">[] = [
     label: "No",
     data: [
       {
-        x: 1676967442999, // 2023-02-21 09:17:23
+        x: 1676967443000, // 2023-02-21 09:17:23
         y: 0,
       },
       {
@@ -205,6 +161,23 @@ export const chartDataSetYesNo: ChartDataset<"line">[] = [
   {
     label: "Yes",
     data: [
+      {
+        x: 1676967443000, // 2023-02-21 09:17:23
+        y: 0,
+      },
+      {
+        x: 1676967443000, // 2023-02-21 09:17:23
+        y: 0,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 11:57:52
+        y: 0,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 11:57:52
+        y: 0,
+      },
+
       {
         x: 1677068170000, // 2023-02-22 13:16:10
         y: 1,
@@ -248,6 +221,44 @@ export const chartDataSetYesNo: ChartDataset<"line">[] = [
     ],
     fill: "shape",
     backgroundColor: "#7468E8",
+  },
+];
+
+export const filteredResponses2: FilteredResponse[] = [
+  {
+    token: "testuser1",
+    time: new Date("2023-01-1T10:00:00.000Z"),
+    value: "Erster Kommentar",
+  },
+  {
+    token: "testuser2",
+    time: new Date("2023-01-2T10:00:00.000Z"),
+    value: "Freitext Test 1234",
+  },
+  {
+    token: "testuser1",
+    time: new Date("2023-01-2T15:00:00.000Z"),
+    value: "Lorem Ipsum oder sowas",
+  },
+  {
+    token: "testuser3",
+    time: new Date("2023-01-4T10:00:00.000Z"),
+    value: "TestDaten Text Text Text",
+  },
+  {
+    token: "testuser1",
+    time: new Date("2023-01-7T10:00:00.000Z"),
+    value: "Text Text Text TestDaten",
+  },
+  {
+    token: "testuser2",
+    time: new Date("2023-01-7T15:00:00.000Z"),
+    value: "Vorletzter Eintrag",
+  },
+  {
+    token: "testuser3",
+    time: new Date("2023-01-7T18:00:00.000Z"),
+    value: "Letzter TestDaten Kommentar",
   },
 ];
 

@@ -1,10 +1,11 @@
-import { ChartData, ChartDataset } from "chart.js";
+import { ChartData, ChartDataset, Point } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
 import { koordStore } from "../store";
 import {
   ResponseModel,
   responseCount,
   FilteredResponse,
+  HyperResponse,
 } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 
@@ -128,30 +129,45 @@ function getAllTokens(responses: FilteredResponse[]): string[] {
 export function addCurrentStateForEachToken(
   responses: FilteredResponse[],
   tokens: string[]
-): FilteredResponse[] {
-  const newResponses: FilteredResponse[] = [...responses];
+): HyperResponse[] {
+  const responseList = valuesFromResponses(responses);
 
-  responses.forEach((response) => {
-    tokens.forEach((token) => {
-      if (token !== response.token) {
-        const previousEntry = newResponses
-          .filter(
-            (entry) => entry.token === token && entry.time <= response.time
-          )
-          .sort((a, b) => b.time.getTime() - a.time.getTime())[0];
+  return responses.reduce((acc: HyperResponse[], item: FilteredResponse) => {
+    const hyper: HyperResponse =
+      acc.length > 0
+        ? {
+            values: new Map(
+              JSON.parse(JSON.stringify(Array.from(acc[acc.length - 1].values)))
+            ),
+            time: item.time,
+          }
+        : {
+            time: item.time,
+            values: new Map<string, string[]>(
+              responseList.map((value) => {
+                if (value === "N/A") {
+                  return [value, [...tokens]];
+                }
+                return [value, []];
+              })
+            ),
+          };
 
-        const currentState: FilteredResponse = {
-          token: token,
-          time: response.time,
-          value: previousEntry ? previousEntry.value : "N/A",
-        };
-
-        newResponses.push(currentState);
+    responseList.forEach((resp) => {
+      if (resp === item.value) {
+        hyper.values.get(resp)?.push(item.token);
+      } else {
+        hyper.values.set(
+          resp,
+          hyper.values.get(resp)!.filter((token) => token !== item.token)
+        );
       }
     });
-  });
 
-  return newResponses.sort((a, b) => a.time.getTime() - b.time.getTime());
+    acc.push(hyper);
+
+    return acc;
+  }, new Array<HyperResponse>());
 }
 
 export function getQuestionText(
@@ -189,47 +205,106 @@ export function getQuestionType(
   return question.question_theme_name || "";
 }
 
-export function parseDataForLineChart(
-  data: FilteredResponse[]
-): ChartData<"line"> {
-  const parsedData: ChartDataset<"line">[] = [];
+export function valuesFromResponses(data: FilteredResponse[]): Array<string> {
   const store = koordStore();
 
-  const filteredData = data.filter((item) => item.value !== "N/A");
-  const naData = data.filter(
-    (item) => store.settings.displayNA && item.value === "N/A"
+  const combinedData = data.filter(
+    (item) =>
+      item.value !== "N/A" || (store.settings.displayNA && item.value === "N/A")
   );
-  const combinedData = [...filteredData, ...naData];
-  const values = new Set(combinedData.map((item) => item.value));
 
-  values.forEach((value) => {
-    const aggregatedData: Record<number, number> = data
-      .filter((item) => item.value === value)
-      .reduce((acc: Record<number, number>, item) => {
-        const dateKey = item.time.getTime();
-        if (!acc[dateKey]) {
-          acc[dateKey] = 0;
-        }
-        acc[dateKey]++;
-        return acc;
-      }, {});
+  return Array.from(new Set(combinedData.map((item) => item.value)));
+}
 
-    const lineData = Object.entries(aggregatedData).map(([date, count]) => ({
-      x: parseInt(date),
-      y: count,
-    }));
+export function parseDataForLineChart(
+  hypers: HyperResponse[]
+): ChartData<"line"> {
+  const parsedData: ChartDataset<"line">[] = [];
 
-    console.debug(lineData);
+  const responseList = Array.from(hypers[0].values.keys());
 
-    if (lineData.length > 0) {
-      parsedData.push({
-        label: value,
-        data: lineData,
-        fill: "shape",
-        backgroundColor: getBorderColor(value),
-      });
-    }
+  const store = koordStore();
+  const finalTime = store.untilDate.getTime();
+
+  responseList.forEach((value) => {
+    parsedData.push({
+      label: value,
+      data: [],
+      fill: "shape",
+      backgroundColor: getBorderColor(value),
+    });
   });
+
+  hypers.forEach((hyper, hyperIndex) => {
+    const untilTime = hyper.time.getTime();
+
+    let offset = 0;
+    responseList.forEach((value, i) => {
+      const lastY = (parsedData[i]?.data.at(-1) as Point)?.y || offset;
+      const currentY = hyper.values.get(value)!.length;
+
+      const direction =
+        currentY - hypers[hyperIndex - 1]?.values.get(value)!.length;
+
+      const dataPoints = [
+        { x: untilTime, y: lastY },
+        { x: untilTime, y: currentY + offset },
+      ];
+      offset += currentY;
+
+      parsedData[i]?.data.push(...dataPoints);
+    });
+  });
+
+  responseList.forEach((value, i) => {
+    parsedData[i]?.data.push({
+      x: finalTime,
+      y: 0,
+    });
+  });
+
+  // const store = koordStore();
+
+  // const values = valuesFromResponses(data);
+
+  // let lastY = 0;
+  // const untilTime = store.untilDate.getTime();
+
+  // values.forEach((value) => {
+  //   const aggregatedData: Record<number, number> = data
+  //     .filter((item) => item.value === value)
+  //     .reduce((acc: Record<number, number>, item) => {
+  //       const dateKey = item.time.getTime();
+  //       if (!acc[dateKey]) {
+  //         acc[dateKey] = 0;
+  //       }
+  //       acc[dateKey]++;
+  //       return acc;
+  //     }, {});
+
+  //   const lineData = Object.entries(aggregatedData).flatMap(([date, count]) => {
+  //     const dataPoints = [
+  //       { x: parseInt(date), y: lastY },
+  //       { x: parseInt(date), y: count },
+  //     ];
+
+  //     lastY = Math.max(0, count);
+
+  //     return dataPoints;
+  //   });
+
+  //   lineData.push({ x: untilTime, y: lastY });
+  //   lineData.push({ x: untilTime, y: 0 });
+
+  //   if (lineData.length > 0) {
+  //     parsedData.push({
+  //       label: value,
+  //       data: lineData,
+  //       fill: "shape",
+  //       backgroundColor: getBorderColor(value),
+  //     });
+  //   }
+  // });
 
   return {
     datasets: parsedData,
@@ -281,6 +356,7 @@ export function createTimelineFor(
   if (question_type === "yesno") {
     const enrichedResponses = addExpiredEntries(filteredResponses);
     const result = addCurrentStateForEachToken(enrichedResponses, tokens);
+    console.debug(result);
     return parseDataForLineChart(result);
   }
 

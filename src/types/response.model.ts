@@ -45,3 +45,8 @@ export interface FilteredResponse {
   time: Date;
   value: string;
 }
+
+export interface HyperResponse {
+  time: Date;
+  values: Map<string, Array<string>>;
+}

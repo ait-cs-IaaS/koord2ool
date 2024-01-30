@@ -7,33 +7,41 @@ on:
     tags:
     - '**'
   pull_request:
+
+permissions:
+  packages: write
+  contents: write
+
 jobs:
-  eslint:
-    name: eslint
+  test:
+    name: eslint and test
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 'lts/Iron'
+          cache: 'npm'
       - name: install dependencies
         run: npm ci
       - name: lint with eslint
         run: npm run lint_and_format
+      - name: test
+        run: npm test
 
   build:
     name: build docker
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: echo "DOCKER_TAG=$(echo ${{ github.ref_name }} | sed 's/[^a-z0-9_.-]/__/gi')" >> $GITHUB_ENV
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           push: true
           tags: |

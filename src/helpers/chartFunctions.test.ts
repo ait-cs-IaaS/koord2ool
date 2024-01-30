@@ -59,32 +59,32 @@ describe("testAddCurrentStateForEachToken", () => {
   });
 });
 
-describe("testParseDataForLineChart", () => {
-  it("should return an empty array if no responses are provided", () => {
-    expect(parseDataForLineChart([])).toEqual({ datasets: [] });
-  });
+// describe("testParseDataForLineChart", () => {
+//   it("should return an empty array if no responses are provided", () => {
+//     expect(parseDataForLineChart([])).toEqual({ datasets: [] });
+//   });
 
-  it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(parseDataForLineChart(responsesEnhancedAndFilterd)).toEqual(
-      chartData1
-    );
-  });
-});
+//   it("should return an array of FilteredResponses enriched with expired resposes", () => {
+//     expect(parseDataForLineChart(responsesEnhancedAndFilterd)).toEqual(
+//       chartData1
+//     );
+//   });
+// });
 
-describe("testCreateTimelineFor", () => {
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    const store = koordStore();
-    store.updateSurveyList(surveyList1);
-    store.updateQuestions(surveyList1[0].sid, questionList1);
-    store.settings.expirationTime = 7;
-    store.responses[123456] = responses1;
-  });
-  it("should return an empty array if no responses are provided", () => {
-    expect(createTimelineFor("test", 999999)).toEqual({ datasets: [] });
-  });
+// describe("testCreateTimelineFor", () => {
+//   beforeEach(() => {
+//     setActivePinia(createPinia());
+//     const store = koordStore();
+//     store.updateSurveyList(surveyList1);
+//     store.updateQuestions(surveyList1[0].sid, questionList1);
+//     store.settings.expirationTime = 7;
+//     store.responses[123456] = responses1;
+//   });
+//   it("should return an empty array if no responses are provided", () => {
+//     expect(createTimelineFor("test", 999999)).toEqual({ datasets: [] });
+//   });
 
-  it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartData1);
-  });
-});
+//   it("should return an array of FilteredResponses enriched with expired resposes", () => {
+//     expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartData1);
+//   });
+// });

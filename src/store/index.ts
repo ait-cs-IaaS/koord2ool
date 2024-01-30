@@ -344,6 +344,12 @@ export const koordStore = defineStore("koord", {
         this.tokenMap[token] = index;
       });
     },
+    reset() {
+      this.participants = {};
+      this.responses = {};
+      this.questions = {};
+      this.surveys = {};
+    },
   },
   persist: {
     paths: ["limesurvey", "settings"],
