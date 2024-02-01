@@ -8,6 +8,11 @@ import {
 } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 
+export type ChartDataEntry = {
+  name: string;
+  data: [number, number][];
+};
+
 function getBorderColor(key: string): string {
   return chartColors[
     key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
@@ -15,13 +20,35 @@ function getBorderColor(key: string): string {
   ];
 }
 
+function valuesFromResponses(data: FilteredResponse[]): Array<string> {
+  const store = koordStore();
+
+  const uniqueValues = new Set(data.map((item) => item.value));
+
+  const filteredValues = Array.from(uniqueValues).filter(
+    (value) => value !== "N/A"
+  );
+
+  if (uniqueValues.has("N/A") && store.settings.displayNA) {
+    filteredValues.push("N/A");
+  }
+
+  return filteredValues;
+}
+
 export function countResponsesFor(
   questionKey: string,
-  lastResponses: ResponseModel[]
+  responses: ResponseModel[]
 ): responseCount[] {
   const responseCounts: responseCount[] = [];
+
+  const filteredResponses = filterResponses(questionKey, responses);
+  const lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
+
+  console.debug("lastResponses", lastResponses);
+
   lastResponses.forEach((response) => {
-    const answer = getAnswer(questionKey, response);
+    const answer = response.value;
 
     const existingIndex = responseCounts.findIndex(
       (item) => item.name === answer
@@ -34,24 +61,7 @@ export function countResponsesFor(
     }
   });
 
-  responseCounts.sort((a, b) => {
-    if (a.name.length === b.name.length) return 0;
-    return a.name.length - b.name.length;
-  });
-
   return responseCounts;
-}
-
-function isResponseExpired(response: ResponseModel, expireDate: Date): boolean {
-  return new Date(response.submitdate) <= expireDate;
-}
-
-function getAnswer(questionKey: string, response: ResponseModel): string {
-  const store = koordStore();
-  if (isResponseExpired(response, store.getExpireDate)) {
-    return "N/A";
-  }
-  return response[questionKey] || "N/A";
 }
 
 function responseMapper(
@@ -75,33 +85,53 @@ function expirationDate(relativeDate: Date): Date {
 export function addExpiredEntries(
   responses: FilteredResponse[]
 ): FilteredResponse[] {
-  const newResponses: FilteredResponse[] = [...responses];
+  const store = koordStore();
   const currentDate = new Date();
 
-  responses.forEach((response) => {
-    const expiredTime = expirationDate(response.time);
+  return responses.reduce(
+    (acc, response) => {
+      const expiredTime = expirationDate(response.time);
 
-    const hasEntryWithinExpiration = newResponses.some((existingResponse) => {
-      return (
-        existingResponse.token === response.token &&
-        existingResponse.time >= response.time &&
-        existingResponse.time <= expiredTime &&
-        existingResponse !== response
+      const hasEntryWithinExpiration = acc.some(
+        (existingResponse) =>
+          existingResponse.token === response.token &&
+          existingResponse.time >= response.time &&
+          existingResponse.time <= expiredTime &&
+          existingResponse !== response
       );
-    });
 
-    if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
-      const expiredResponse: FilteredResponse = {
-        token: response.token,
-        time: expiredTime,
-        value: "N/A",
-      };
+      if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
+        if (store.settings.useLogicalTime && expiredTime > store.untilDate) {
+          return acc;
+        }
+        const expiredResponse: FilteredResponse = {
+          token: response.token,
+          time: expiredTime,
+          value: "N/A",
+        };
 
-      newResponses.push(expiredResponse);
+        acc.push(expiredResponse);
+      }
+
+      return acc;
+    },
+    [...responses]
+  );
+}
+
+export function getLastResponses(
+  responses: FilteredResponse[]
+): FilteredResponse[] {
+  const lastResponses: Record<string, FilteredResponse> = {};
+
+  responses.forEach((response) => {
+    const { token } = response;
+    if (!lastResponses[token] || response.time > lastResponses[token].time) {
+      lastResponses[token] = response;
     }
   });
 
-  return newResponses;
+  return Object.values(lastResponses);
 }
 
 export function filterResponses(
@@ -111,47 +141,6 @@ export function filterResponses(
   return responses
     .map((response) => responseMapper(questionKey, response))
     .sort((a, b) => a.time.valueOf() - b.time.valueOf());
-}
-
-function getAllTokens(responses: FilteredResponse[]): string[] {
-  const tokens: string[] = [];
-
-  responses.forEach((response) => {
-    if (!tokens.includes(response.token)) {
-      tokens.push(response.token);
-    }
-  });
-
-  return tokens;
-}
-
-export function addCurrentStateForEachToken(
-  responses: FilteredResponse[],
-  tokens: string[]
-): FilteredResponse[] {
-  const newResponses: FilteredResponse[] = [...responses];
-
-  responses.forEach((response) => {
-    tokens.forEach((token) => {
-      if (token !== response.token) {
-        const previousEntry = newResponses
-          .filter(
-            (entry) => entry.token === token && entry.time <= response.time
-          )
-          .sort((a, b) => b.time.getTime() - a.time.getTime())[0];
-
-        const currentState: FilteredResponse = {
-          token: token,
-          time: response.time,
-          value: previousEntry ? previousEntry.value : "N/A",
-        };
-
-        newResponses.push(currentState);
-      }
-    });
-  });
-
-  return newResponses.sort((a, b) => a.time.getTime() - b.time.getTime());
 }
 
 export function getQuestionText(
@@ -189,50 +178,71 @@ export function getQuestionType(
   return question.question_theme_name || "";
 }
 
-export function parseDataForLineChart(
-  data: FilteredResponse[]
-): ChartData<"line"> {
-  const parsedData: ChartDataset<"line">[] = [];
-  const store = koordStore();
+export function parseDataForAreaChart(responses: FilteredResponse[]) {
+  const uniqueValues = valuesFromResponses(responses);
+  // Track the last response of each user
 
-  const filteredData = data.filter((item) => item.value !== "N/A");
-  const naData = data.filter(
-    (item) => store.settings.displayNA && item.value === "N/A"
+  // Initialize with "N/A" to account for users who have not responded yet
+  const userLastResponse: { [token: string]: string } = responses
+    .map((r) => ({
+      [r.token]: "N/A",
+    }))
+    .reduce((acc, curr) => ({ ...acc, ...curr }), {});
+
+  // Determine the total number of unique users
+  const totalUsers = new Set(responses.map((r) => r.token)).size;
+
+  // Initialize counters for each response type
+  const counters: Record<string, number> = uniqueValues.reduce((acc, value) => {
+    acc[value] = value === "N/A" ? totalUsers : 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Initialize chart data
+  const chartData: ChartDataEntry[] = uniqueValues.map((value) => ({
+    name: value,
+    data: [],
+  }));
+
+  // Sort responses by time
+  const sortedResponses = [...responses].sort(
+    (a, b) => a.time.getTime() - b.time.getTime()
   );
-  const combinedData = [...filteredData, ...naData];
-  const values = new Set(combinedData.map((item) => item.value));
 
-  values.forEach((value) => {
-    const aggregatedData: Record<number, number> = data
-      .filter((item) => item.value === value)
-      .reduce((acc: Record<number, number>, item) => {
-        const dateKey = item.time.getTime();
-        if (!acc[dateKey]) {
-          acc[dateKey] = 0;
-        }
-        acc[dateKey]++;
-        return acc;
-      }, {});
+  sortedResponses.forEach((response) => {
+    const time = response.time.getTime();
 
-    const lineData = Object.entries(aggregatedData).map(([date, count]) => ({
-      x: parseInt(date),
-      y: count,
-    }));
-
-    console.debug(lineData);
-
-    if (lineData.length > 0) {
-      parsedData.push({
-        label: value,
-        data: lineData,
-        fill: "shape",
-        backgroundColor: getBorderColor(value),
-      });
+    // Decrease the count for user's last response
+    if (userLastResponse[response.token]) {
+      counters[userLastResponse[response.token]]--;
     }
+
+    // Update the response counters
+    counters[response.value]++;
+    userLastResponse[response.token] = response.value;
+
+    // Update chart data
+    uniqueValues.forEach((value) => {
+      const entry = chartData.find((entry) => entry.name === value);
+      entry?.data.push([time, counters[value]]);
+    });
   });
 
+  return chartData;
+}
+
+export function transformChartData(
+  chartData: ChartDataEntry[]
+): ChartData<"line"> {
+  const chartdataset = chartData.map((item) => ({
+    label: item.name,
+    data: item.data.map(([x, y]) => ({ x, y })),
+    fill: "origin",
+    backgroundColor: getBorderColor(item.name),
+    stepped: true,
+  }));
   return {
-    datasets: parsedData,
+    datasets: chartdataset,
   };
 }
 
@@ -275,13 +285,11 @@ export function createTimelineFor(
     store.responsesInTimeline(surveyId)
   );
 
-  const tokens = getAllTokens(filteredResponses);
   store.updateTokenMap(surveyId);
 
   if (question_type === "yesno") {
     const enrichedResponses = addExpiredEntries(filteredResponses);
-    const result = addCurrentStateForEachToken(enrichedResponses, tokens);
-    return parseDataForLineChart(result);
+    return transformChartData(parseDataForAreaChart(enrichedResponses));
   }
 
   return parseDataForFreeTextChart(filteredResponses);

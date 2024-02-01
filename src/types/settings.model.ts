@@ -4,6 +4,7 @@ export interface SettingsModel {
   expirationTime: number;
   onlyActive: boolean;
   displayNA: boolean;
+  useAPEX: boolean;
 }
 
 export type SettingsKey = keyof SettingsModel;

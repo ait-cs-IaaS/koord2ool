@@ -3,21 +3,37 @@
     <v-row class="py-4" style="max-height: 1200px">
       <v-col cols="12">
         <h2>REFERENCE</h2>
-        <line-chart
-          :data="chartDataX"
-          style="max-height: 600px"
-          :options="areaChartOptions"
+      </v-col>
+      <v-col cols="6">
+        <h3>Percentage</h3>
+        <apexchart
+          width="800"
+          type="area"
+          :options="optionsPercent"
+          :series="seriesPercent"
+        />
+      </v-col>
+      <v-col cols="6">
+        <h3>Fixed Value</h3>
+        <apexchart
+          class="mt-5"
+          width="800"
+          type="area"
+          :options="options"
+          :series="series"
         />
       </v-col>
     </v-row>
 
     <v-row class="py-4" style="max-height: 1200px">
       <v-col cols="12">
-        <h2>TEST</h2>
-        <line-chart
-          :data="chartDataX"
-          style="max-height: 600px"
-          :options="areaChartOptions"
+        <h2>TESTDATA</h2>
+        <apexchart
+          class="mt-5"
+          width="800"
+          type="area"
+          :options="options"
+          :series="testData"
         />
       </v-col>
     </v-row>
@@ -26,7 +42,6 @@
 
 <script lang="ts">
 import { defineComponent, onBeforeUnmount } from "vue";
-import { Line as LineChart } from "vue-chartjs";
 import { chartData1 as series, chartDataX } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import {
@@ -34,44 +49,22 @@ import {
   questionList1,
   responses1,
 } from "../testData/chartFunctionsTestData";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-  TimeSeriesScale,
-  Filler,
-} from "chart.js";
 import { koordStore } from "../store";
 import { storeToRefs } from "pinia";
-import { areaChartOptionsCJ as areaChartOptions } from "../components/surveys/line-options";
-
-import "chartjs-adapter-moment";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  TimeScale,
-  TimeSeriesScale,
-  Filler,
-  Title,
-  Tooltip,
-  Legend
-);
+import { areaChartOptions as options } from "../components/surveys/line-options";
 
 export default defineComponent({
-  name: "PidraKin",
-  components: {
-    LineChart,
-  },
+  name: "TestApexView",
   setup() {
+    const optionsPercent = JSON.parse(JSON.stringify(options));
+
+    optionsPercent.chart.stackType = "100%";
+
+    const seriesPercent = series.map((serie) => ({
+      ...serie,
+      data: serie.data.map(([timestamp, value]) => [timestamp, value * 50]),
+    }));
+
     const store = koordStore();
     const { responseRange } = storeToRefs(store);
     store.updateSurveyList(surveyList1);
@@ -88,8 +81,10 @@ export default defineComponent({
     return {
       testData,
       series,
+      seriesPercent,
+      options,
+      optionsPercent,
       chartDataX,
-      areaChartOptions,
     };
   },
 });

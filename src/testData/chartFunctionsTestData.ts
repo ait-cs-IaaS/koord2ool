@@ -57,6 +57,142 @@ export const filteredResponses1: FilteredResponse[] = [
   },
 ];
 
+export const filteredResponsesWithExpired: FilteredResponse[] = [
+  ...filteredResponses1,
+  {
+    time: new Date("2023-03-01T10:57:52.000Z"),
+    token: "testuser1",
+    value: "N/A",
+  },
+  {
+    time: new Date("2023-03-01T12:16:10.000Z"),
+    token: "testuser2",
+    value: "N/A",
+  },
+];
+
+export const chartData1 = [
+  {
+    name: "No",
+    data: [
+      [1676967443000, 1], // Tue 21 February 2023 08:17:23.000 UTC
+      [1677063472000, 2], // Wed 22 February 2023 10:57:52.000 UTC
+      [1677068170000, 1], // Wed 22 February 2023 12:16:10.000 UTC
+      [1677668272000, 0], // Wed 1 March 2023 10:57:52.000 UTC
+      [1677672970000, 0], // Wed 1 March 2023 12:16:20.000 UTC
+    ],
+  },
+  {
+    name: "Yes",
+    data: [
+      [1676967443000, 0],
+      [1677063472000, 0],
+      [1677068170000, 1],
+      [1677668272000, 1],
+      [1677672970000, 0],
+    ],
+  },
+  {
+    name: "N/A",
+    data: [
+      [1676967443000, 1],
+      [1677063472000, 0],
+      [1677068170000, 0],
+      [1677668272000, 1],
+      [1677672970000, 2],
+    ],
+  },
+];
+
+export const chartDataSetX = [
+  {
+    label: "No",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 1,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 2,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 1,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 0,
+      },
+    ],
+    fill: "origin",
+    backgroundColor: "#8F1616",
+    stepped: true,
+  },
+  {
+    label: "Yes",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 0,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 1,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 1,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 0,
+      },
+    ],
+    fill: "origin",
+    backgroundColor: "#3CB371",
+    stepped: true,
+  },
+  {
+    label: "N/A",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 1,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 0,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 1,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 2,
+      },
+    ],
+    fill: "origin",
+    backgroundColor: "#A4A4A4",
+    stepped: true,
+  },
+];
+
+export const chartDataSetFreeText: ChartDataset<"line">[] = [];
+
 export const filteredResponses2: FilteredResponse[] = [
   {
     token: "testuser1",
@@ -95,166 +231,8 @@ export const filteredResponses2: FilteredResponse[] = [
   },
 ];
 
-export const filteredResponsesWithExpired: FilteredResponse[] = [
-  ...filteredResponses1,
-  {
-    time: new Date("2023-03-01T10:57:52.000Z"),
-    token: "testuser1",
-    value: "N/A",
-  },
-  {
-    time: new Date("2023-03-01T12:16:10.000Z"),
-    token: "testuser2",
-    value: "N/A",
-  },
-];
-
-export const responsesEnhancedAndFilterd: FilteredResponse[] = [
-  {
-    time: new Date("2023-02-21T08:17:23.000Z"),
-    token: "testuser2",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-21T08:17:23.000Z"),
-    token: "testuser1",
-    value: "N/A",
-  },
-  {
-    time: new Date("2023-02-22T10:57:52.000Z"),
-    token: "testuser1",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-22T10:57:52.000Z"),
-    token: "testuser2",
-    value: "No",
-  },
-  {
-    time: new Date("2023-02-22T12:16:10.000Z"),
-    token: "testuser2",
-    value: "Yes",
-  },
-  {
-    time: new Date("2023-02-22T12:16:10.000Z"),
-    token: "testuser1",
-    value: "No",
-  },
-  {
-    time: new Date("2023-03-01T10:57:52.000Z"),
-    token: "testuser1",
-    value: "N/A",
-  },
-  {
-    time: new Date("2023-03-01T10:57:52.000Z"),
-    token: "testuser2",
-    value: "Yes",
-  },
-  {
-    time: new Date("2023-03-01T12:16:10.000Z"),
-    token: "testuser2",
-    value: "N/A",
-  },
-  {
-    time: new Date("2023-03-01T12:16:10.000Z"),
-    token: "testuser1",
-    value: "N/A",
-  },
-];
-
-export const chartDataSetYesNo: ChartDataset<"line">[] = [
-  {
-    label: "No",
-    data: [
-      {
-        x: 1676967442999, // 2023-02-21 09:17:23
-        y: 0,
-      },
-      {
-        x: 1676967443000, // 2023-02-21 09:17:23
-        y: 1,
-      },
-      {
-        x: 1677063472000, // 2023-02-22 11:57:52
-        y: 1,
-      },
-      {
-        x: 1677063472000, // 2023-02-22 11:57:52
-        y: 2,
-      },
-      {
-        x: 1677068170000, // 2023-02-22 13:16:10
-        y: 2,
-      },
-      {
-        x: 1677068170000, // 2023-02-22 13:16:10
-        y: 1,
-      },
-      {
-        x: 1677668272000, // 2023-03-01 11:57:52
-        y: 1,
-      },
-      {
-        x: 1677668272000, // 2023-03-01 11:57:52
-        y: 0,
-      },
-    ],
-    fill: "shape",
-    backgroundColor: "#313131",
-  },
-  {
-    label: "Yes",
-    data: [
-      {
-        x: 1677068170000, // 2023-02-22 13:16:10
-        y: 1,
-      },
-      {
-        x: 1677068170000, // 2023-02-22 13:16:10
-        y: 2,
-      },
-      {
-        x: 1677668272000, // 2023-03-01 11:57:52
-        y: 2,
-      },
-
-      {
-        x: 1677668272000, // 2023-03-01 11:57:52
-        y: 1,
-      },
-    ],
-    fill: "shape",
-    backgroundColor: "#AC004B",
-  },
-  {
-    label: "N/A",
-    data: [
-      {
-        x: 1676967443000, // 2023-02-21 09:17:23
-        y: 1,
-      },
-      {
-        x: 1676967443000, // 2023-02-21 09:17:23
-        y: 2,
-      },
-      {
-        x: 1677063472000, // 2023-02-22 11:57:52
-        y: 2,
-      },
-      {
-        x: 1677063472000, // 2023-02-22 11:57:52
-        y: 1,
-      },
-    ],
-    fill: "shape",
-    backgroundColor: "#7468E8",
-  },
-];
-
-export const chartDataSetFreeText: ChartDataset<"line">[] = [];
-
-export const chartData1: ChartData<"line"> = {
-  datasets: chartDataSetYesNo,
+export const chartDataX: ChartData<"line"> = {
+  datasets: chartDataSetX,
 };
 
 export const chartData2: ChartData<"line"> = {

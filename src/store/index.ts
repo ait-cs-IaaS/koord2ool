@@ -33,6 +33,7 @@ export const koordStore = defineStore("koord", {
       useLogicalTime: false,
       expirationTime: 7,
       displayNA: true,
+      useAPEX: false,
     },
     responseRange: [0, new Date().getTime()],
     selectedSurveyID: undefined,
@@ -343,6 +344,12 @@ export const koordStore = defineStore("koord", {
       tokens.forEach((token, index) => {
         this.tokenMap[token] = index;
       });
+    },
+    reset() {
+      this.participants = {};
+      this.responses = {};
+      this.questions = {};
+      this.surveys = {};
     },
   },
   persist: {

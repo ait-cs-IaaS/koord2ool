@@ -9,7 +9,7 @@
         <chart-card
           :id="questionKey"
           :question="questionText(questionKey)"
-          :counters="counters(questionKey, lastResponses)"
+          :counters="counters(questionKey)"
           :chartjsdata="chartjsdata(questionKey)"
           :question-type="questionType(questionKey)"
         />
@@ -31,8 +31,7 @@ import {
   getQuestionText,
   getQuestionType,
 } from "../../helpers/chartFunctions";
-import { defineComponent, computed } from "vue";
-import { koordStore } from "../../store";
+import { defineComponent } from "vue";
 import { chartOptions } from "./options";
 import { onMounted } from "vue";
 
@@ -77,27 +76,6 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const store = koordStore();
-
-    const settings = computed(() => store.settings);
-    const getExpireDate = computed(() => store.getExpireDate);
-    const lastResponses = computed(() => {
-      const lastResponses: Record<string, ResponseModel> = {};
-
-      props.responses.forEach((response) => {
-        const token = response.token;
-        if (
-          !lastResponses[token] ||
-          new Date(response.submitdate) >
-            new Date(lastResponses[token].submitdate)
-        ) {
-          lastResponses[token] = response;
-        }
-      });
-
-      return Object.values(lastResponses);
-    });
-
     function questionText(questionKey: string): string {
       return getQuestionText(questionKey, props.questions);
     }
@@ -106,8 +84,8 @@ export default defineComponent({
       return getQuestionType(questionKey, props.questions);
     }
 
-    function counters(questionKey: string, lastResponses: ResponseModel[]) {
-      return countResponsesFor(questionKey, lastResponses);
+    function counters(questionKey: string) {
+      return countResponsesFor(questionKey, props.responses);
     }
 
     function chartjsdata(questionKey: string) {
@@ -120,9 +98,6 @@ export default defineComponent({
 
     return {
       chartOptions,
-      settings,
-      getExpireDate,
-      lastResponses,
       counters,
       chartjsdata,
       questionType,

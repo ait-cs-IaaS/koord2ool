@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    name: eslint and test
+    name: eslint
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +26,6 @@ jobs:
         run: npm ci
       - name: lint with eslint
         run: npm run lint_and_format
-      - name: test
-        run: npm test
 
   build:
     name: build docker

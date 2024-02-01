@@ -2,8 +2,7 @@ import { expect, describe, it, beforeEach } from "vitest";
 import {
   filterResponses,
   addExpiredEntries,
-  addCurrentStateForEachToken,
-  parseDataForLineChart,
+  parseDataForAreaChart,
   createTimelineFor,
 } from "./chartFunctions";
 import { setActivePinia, createPinia } from "pinia";
@@ -11,10 +10,10 @@ import {
   responses1,
   filteredResponses1,
   filteredResponsesWithExpired,
-  responsesEnhancedAndFilterd,
   surveyList1,
   questionList1,
   chartData1,
+  chartDataX,
 } from "../testData/chartFunctionsTestData";
 import { koordStore } from "../store";
 
@@ -44,28 +43,13 @@ describe("testAddExpiredEntries", () => {
   });
 });
 
-describe("testAddCurrentStateForEachToken", () => {
+describe("testParseDataForAreaChart", () => {
   it("should return an empty array if no responses are provided", () => {
-    expect(addCurrentStateForEachToken([], [])).toEqual([]);
-  });
-
-  it("should return an array of FilteredResponses with all answers from each token at each input element", () => {
-    expect(
-      addCurrentStateForEachToken(filteredResponsesWithExpired, [
-        "testuser1",
-        "testuser2",
-      ])
-    ).toEqual(responsesEnhancedAndFilterd);
-  });
-});
-
-describe("testParseDataForLineChart", () => {
-  it("should return an empty array if no responses are provided", () => {
-    expect(parseDataForLineChart([])).toEqual({ datasets: [] });
+    expect(parseDataForAreaChart([])).toEqual([]);
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(parseDataForLineChart(responsesEnhancedAndFilterd)).toEqual(
+    expect(parseDataForAreaChart(filteredResponsesWithExpired)).toEqual(
       chartData1
     );
   });
@@ -85,6 +69,6 @@ describe("testCreateTimelineFor", () => {
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartData1);
+    expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartDataX);
   });
 });

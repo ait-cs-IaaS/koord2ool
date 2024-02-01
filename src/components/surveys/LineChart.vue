@@ -23,7 +23,7 @@ import {
   Filler,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
-import { lineChartOptions, areaChartOptions } from "./line-options";
+import { lineChartOptions, areaChartOptionsCJ } from "./line-options";
 import { defineComponent, ref, computed } from "vue";
 import "chartjs-adapter-moment";
 import { onMounted } from "vue";
@@ -57,7 +57,7 @@ export default defineComponent({
   setup(props) {
     const chartOptions = computed(() => {
       if (props.questionType === "yesno") {
-        return areaChartOptions;
+        return areaChartOptionsCJ;
       }
       return lineChartOptions;
     });
