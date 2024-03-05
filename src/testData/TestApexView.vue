@@ -51,7 +51,7 @@ import {
 } from "../testData/chartFunctionsTestData";
 import { koordStore } from "../store";
 import { storeToRefs } from "pinia";
-import { areaChartOptions as options } from "../components/surveys/line-options";
+import { areaChartOptions as options } from "../components/surveys/line-options-apex";
 
 export default defineComponent({
   name: "TestApexView",

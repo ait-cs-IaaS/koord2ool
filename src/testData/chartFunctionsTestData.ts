@@ -191,6 +191,90 @@ export const chartDataSetX = [
   },
 ];
 
+export const chartDataSetYesNo: ChartDataset<"line">[] = [
+  {
+    label: "No",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 1,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 2,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 1,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 0,
+      },
+    ],
+    fill: true,
+    backgroundColor: "#313131",
+  },
+  {
+    label: "Yes",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 0,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 1,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 1,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 0,
+      },
+    ],
+    fill: true,
+    backgroundColor: "#AC004B",
+  },
+  {
+    label: "N/A",
+    data: [
+      {
+        x: 1676967443000, // 2023-02-21 08:17:23
+        y: 1,
+      },
+      {
+        x: 1677063472000, // 2023-02-22 10:57:52
+        y: 0,
+      },
+      {
+        x: 1677068170000, // 2023-02-22 12:16:10
+        y: 0,
+      },
+      {
+        x: 1677668272000, // 2023-03-01 10:57:52
+        y: 1,
+      },
+      {
+        x: 1677672970000, // 2023-03-01 12:16:20
+        y: 2,
+      },
+    ],
+    fill: true,
+    backgroundColor: "#7468E8",
+  },
+];
+
 export const chartDataSetFreeText: ChartDataset<"line">[] = [];
 
 export const filteredResponses2: FilteredResponse[] = [
@@ -233,6 +317,10 @@ export const filteredResponses2: FilteredResponse[] = [
 
 export const chartDataX: ChartData<"line"> = {
   datasets: chartDataSetX,
+};
+
+export const chartDataOld: ChartData<"line"> = {
+  datasets: chartDataSetYesNo,
 };
 
 export const chartData2: ChartData<"line"> = {

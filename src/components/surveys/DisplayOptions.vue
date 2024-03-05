@@ -51,6 +51,17 @@
               </div>
             </v-btn-toggle>
           </v-col>
+          <v-col cols="2">
+            <v-text-field
+              v-model="settings.line_tension"
+              label="Line Tension"
+              type="number"
+              step="0.1"
+              outlined
+              dense
+              class="mt-4"
+            />
+          </v-col>
         </v-row>
         <slot name="additional-options" />
       </v-expansion-panel-text>

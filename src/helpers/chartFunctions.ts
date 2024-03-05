@@ -101,7 +101,7 @@ export function addExpiredEntries(
       );
 
       if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
-        if (store.settings.useLogicalTime && expiredTime > store.untilDate) {
+        if (expiredTime > store.untilDate) {
           return acc;
         }
         const expiredResponse: FilteredResponse = {
@@ -234,12 +234,14 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
 export function transformChartData(
   chartData: ChartDataEntry[]
 ): ChartData<"line"> {
+  const store = koordStore();
+
   const chartdataset = chartData.map((item) => ({
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
-    fill: "origin",
+    fill: true,
+    tension: store.settings.line_tension,
     backgroundColor: getBorderColor(item.name),
-    stepped: true,
   }));
   return {
     datasets: chartdataset,
@@ -287,7 +289,7 @@ export function createTimelineFor(
 
   store.updateTokenMap(surveyId);
 
-  if (question_type === "yesno") {
+  if (question_type === "yesno" || question_type === "list_dropdown") {
     const enrichedResponses = addExpiredEntries(filteredResponses);
     return transformChartData(parseDataForAreaChart(enrichedResponses));
   }

@@ -1,6 +1,7 @@
 export interface SettingsModel {
   useLogicalTime: boolean;
   step: number;
+  line_tension: number;
   expirationTime: number;
   onlyActive: boolean;
   displayNA: boolean;

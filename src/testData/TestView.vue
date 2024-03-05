@@ -1,10 +1,20 @@
 <template>
   <v-container>
     <v-row class="py-4" style="max-height: 1200px">
+      <v-col cols="12" class="mb-5">
+        <Slider
+          v-model="responseRange"
+          :min="new Date('2023-01-01').getTime()"
+          :max="new Date('2023-12-31').getTime()"
+          :step="24 * 60 * 60 * 1000"
+          :format="tooltipFormater"
+          @change="reCalcTestData"
+        />
+      </v-col>
       <v-col cols="12">
         <h2>REFERENCE</h2>
         <line-chart
-          :data="chartDataX"
+          :data="testData"
           style="max-height: 600px"
           :options="areaChartOptions"
         />
@@ -25,8 +35,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUnmount } from "vue";
+import { defineComponent, onBeforeUnmount, ref } from "vue";
 import { Line as LineChart } from "vue-chartjs";
+import Slider from "@vueform/slider";
 import { chartData1 as series, chartDataX } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import {
@@ -49,7 +60,8 @@ import {
 } from "chart.js";
 import { koordStore } from "../store";
 import { storeToRefs } from "pinia";
-import { areaChartOptionsCJ as areaChartOptions } from "../components/surveys/line-options";
+import { areaChartOptions } from "../components/surveys/line-options";
+import { tooltipFormater } from "../helpers/slider";
 
 import "chartjs-adapter-moment";
 
@@ -70,6 +82,7 @@ export default defineComponent({
   name: "PidraKin",
   components: {
     LineChart,
+    Slider,
   },
   setup() {
     const store = koordStore();
@@ -77,9 +90,12 @@ export default defineComponent({
     store.updateSurveyList(surveyList1);
     store.updateQuestions(surveyList1[0].sid, questionList1);
     store.settings.expirationTime = 7;
-    responseRange.value = [0, new Date("2023-03-01 11:57:52").getTime()];
     store.responses[123456] = responses1;
-    const testData = createTimelineFor("G01Q01HO", 123456);
+    const testData = ref(createTimelineFor("G01Q01HO", 123456));
+
+    function reCalcTestData() {
+      testData.value = createTimelineFor("G01Q01HO", 123456);
+    }
 
     onBeforeUnmount(() => {
       store.reset();
@@ -87,10 +103,15 @@ export default defineComponent({
 
     return {
       testData,
+      responseRange,
       series,
       chartDataX,
       areaChartOptions,
+      tooltipFormater,
+      reCalcTestData,
     };
   },
 });
 </script>
+
+<style src="@vueform/slider/themes/default.css"></style>

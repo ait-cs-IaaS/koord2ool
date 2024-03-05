@@ -13,6 +13,7 @@ import Slider from "@vueform/slider";
 import { mapWritableState, mapState } from "pinia";
 import { defineComponent } from "vue";
 import { koordStore } from "../store";
+import { tooltipFormater } from "../helpers/slider";
 
 export default defineComponent({
   name: "TimeSlider",
@@ -46,15 +47,7 @@ export default defineComponent({
   },
   methods: {
     tooltipFormater(value: number): string {
-      const options: Intl.DateTimeFormatOptions = {
-        year: "numeric",
-        month: "numeric",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      };
-      return new Date(value).toLocaleDateString("de-AT", options);
+      return tooltipFormater(value);
     },
     getMidnight(date: Date): Date {
       return new Date(
