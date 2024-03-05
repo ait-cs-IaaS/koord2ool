@@ -234,13 +234,12 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
 export function transformChartData(
   chartData: ChartDataEntry[]
 ): ChartData<"line"> {
-  const store = koordStore();
-
   const chartdataset = chartData.map((item) => ({
+    cubicInterpolationMode: "monotone",
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
     fill: true,
-    tension: store.settings.line_tension,
+    pointRadius: 1,
     backgroundColor: getBorderColor(item.name),
   }));
   return {

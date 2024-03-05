@@ -29,7 +29,6 @@ export const koordStore = defineStore("koord", {
     surveys: {},
     settings: {
       step: 6,
-      line_tension: 0.1,
       onlyActive: true,
       useLogicalTime: false,
       expirationTime: 7,
