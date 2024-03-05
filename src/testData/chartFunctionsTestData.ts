@@ -131,7 +131,7 @@ export const chartDataSetX = [
     ],
     fill: true,
     backgroundColor: "#8F1616",
-    cubicInterpolationMode: "monotone",
+    cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
   {
@@ -160,7 +160,7 @@ export const chartDataSetX = [
     ],
     fill: true,
     backgroundColor: "#3CB371",
-    cubicInterpolationMode: "monotone",
+    cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
   {
@@ -189,7 +189,7 @@ export const chartDataSetX = [
     ],
     fill: true,
     backgroundColor: "#A4A4A4",
-    cubicInterpolationMode: "monotone",
+    cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
 ];

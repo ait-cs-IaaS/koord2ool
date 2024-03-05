@@ -235,7 +235,7 @@ export function transformChartData(
   chartData: ChartDataEntry[]
 ): ChartData<"line"> {
   const chartdataset = chartData.map((item) => ({
-    cubicInterpolationMode: "monotone",
+    cubicInterpolationMode: "monotone" as const,
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
     fill: true,
