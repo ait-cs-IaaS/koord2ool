@@ -29,6 +29,7 @@ jobs:
 
   build:
     name: build docker
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
