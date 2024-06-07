@@ -18,7 +18,7 @@ export class LimesurveyApi {
   private nextId = 1;
 
   constructor(
-    private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API
+    private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API,
   ) {
     console.debug(`LimeSurvey API endpoint: ${endpoint}`);
     if (typeof endpoint === "undefined") {
@@ -26,7 +26,7 @@ export class LimesurveyApi {
     }
     if (!/\/admin\/remotecontrol$/.test(endpoint)) {
       console.warn(
-        `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
+        `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`,
       );
       throw new Error("LimeSurvey API endpoint not configured");
     }
@@ -34,7 +34,7 @@ export class LimesurveyApi {
 
   async authenticate(
     username: string,
-    password: string
+    password: string,
   ): Promise<string | undefined> {
     if (username === "" || password === "") {
       throw new Error("LimeSurvey API username or password not configured");
@@ -43,7 +43,7 @@ export class LimesurveyApi {
       "get_session_key",
       false,
       username,
-      password
+      password,
     );
     if (session && typeof session === "string") {
       this.session = session;
@@ -89,7 +89,7 @@ export class LimesurveyApi {
 
   async getResponses(
     sid: number,
-    headingType = "code"
+    headingType = "code",
   ): Promise<ResponseModel[]> {
     const data = await this.call(
       "export_responses",
@@ -99,7 +99,7 @@ export class LimesurveyApi {
       "en",
       "complete",
       headingType,
-      "long"
+      "long",
     );
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
@@ -132,7 +132,7 @@ export class LimesurveyApi {
   }
 
   isParticipantsError(
-    o: ParticipantModel[] | ParticipantError
+    o: ParticipantModel[] | ParticipantError,
   ): o is ParticipantError {
     return "status" in o;
   }
@@ -141,7 +141,7 @@ export class LimesurveyApi {
     const participants = await this.call<ParticipantModel[] | ParticipantError>(
       "list_participants",
       true,
-      sid
+      sid,
     );
     if (this.isParticipantsError(participants)) {
       return [];
@@ -222,7 +222,7 @@ export class LimesurveyApi {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .catch((error) => {
         store.error = new Error(error);

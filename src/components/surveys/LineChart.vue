@@ -39,7 +39,7 @@ ChartJS.register(
   Filler,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 export default defineComponent({

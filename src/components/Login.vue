@@ -1,8 +1,9 @@
 <template>
-  <v-form fluid @submit.prevent>
+  <v-form fluid @submit.prevent="login(username, password)">
     <v-col>
       <v-text-field
         v-model="username"
+        autocomplete="username"
         label="User"
         :disabled="disabled"
         :rules="[acceptUser]"
@@ -12,6 +13,7 @@
     <v-col>
       <v-text-field
         v-model="password"
+        autocomplete="current-password"
         label="Password"
         type="password"
         :disabled="disabled"
@@ -24,7 +26,6 @@
         type="submit"
         color="primary"
         :disabled="disabled || !canAuthenticate"
-        @click="login(username, password)"
       >
         Log in
       </v-btn>
@@ -81,7 +82,7 @@ export default defineComponent({
     ...mapActions(koordStore, ["authenticate"]),
     getCredentials(
       login?: unknown,
-      password?: unknown
+      password?: unknown,
     ): { password: string; username: string } {
       const useLogin =
         !login || typeof login !== "string" ? this.username : login;

@@ -2,7 +2,12 @@
   <div class="mt-10">
     <div class="d-flex justify-space-between">
       <span class="ml-3">Choose a survey</span>
-      <v-btn class="mr-3" color="green" @click="refreshSurveys">Refresh</v-btn>
+      <v-btn
+        class="mr-3"
+        color="green"
+        text="Refresh"
+        @click="refreshSurveys"
+      />
     </div>
     <v-list dense fill-height fluid class="list-group">
       <v-list-item
@@ -18,39 +23,27 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { mapState, mapActions } from "pinia";
+import { defineComponent, onBeforeMount } from "vue";
+import { storeToRefs } from "pinia";
 import { koordStore } from "../store";
-
-type SurveyLink = {
-  key: string | number;
-  label: string;
-  to: string;
-};
 
 export default defineComponent({
   name: "SurveyList",
-  props: { username: { type: String, required: true } },
+  setup() {
+    const store = koordStore();
 
-  computed: {
-    ...mapState(koordStore, ["surveys", "getSurveys"]),
-    surveyLinks(): SurveyLink[] {
-      const surveyIds: number[] = [...this.getSurveys];
-      return surveyIds.sort().map((surveyId) => {
-        const title = this.surveys[surveyId].surveyls_title;
-        return {
-          key: surveyId,
-          label: `${surveyId} - ${title}`,
-          to: `/survey/${surveyId}`,
-        };
-      });
-    },
-  },
-  async mounted() {
-    await this.refreshSurveys();
-  },
-  methods: {
-    ...mapActions(koordStore, ["refreshSurveys"]),
+    const { surveyLinks } = storeToRefs(store);
+
+    const { refreshSurveys } = store;
+
+    onBeforeMount(async () => {
+      await refreshSurveys();
+    });
+
+    return {
+      surveyLinks,
+      refreshSurveys,
+    };
   },
 });
 </script>

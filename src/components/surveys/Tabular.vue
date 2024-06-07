@@ -84,7 +84,7 @@ export default defineComponent({
             return response === lastResponse;
           }
           return true;
-        }
+        },
       );
     },
     showKeys(): string[] {
@@ -110,18 +110,17 @@ export default defineComponent({
           });
           return acc;
         },
-        {}
+        {},
       );
       return Object.values(headers).filter((header: Header) =>
-        this.showKeys.includes(header.key)
+        this.showKeys.includes(header.key),
       );
     },
   },
   methods: {
     getParticipant(token: string): string {
-      console.debug("getParticipant", token);
       const participant = this.participants.find(
-        (participant: ParticipantModel) => participant.token === token
+        (participant: ParticipantModel) => participant.token === token,
       );
       return participant
         ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`

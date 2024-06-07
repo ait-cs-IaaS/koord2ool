@@ -104,7 +104,7 @@ export const chartData1 = [
   },
 ];
 
-export const chartDataSetX = [
+export const chartDataSet = [
   {
     label: "No",
     data: [
@@ -235,7 +235,7 @@ export const filteredResponses2: FilteredResponse[] = [
 ];
 
 export const chartDataX: ChartData<"line"> = {
-  datasets: chartDataSetX,
+  datasets: chartDataSet,
 };
 
 export const chartData2: ChartData<"line"> = {

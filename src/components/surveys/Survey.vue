@@ -13,12 +13,6 @@
         title="Tabular"
         value="tabular"
       />
-      <v-tab
-        color="red"
-        prepend-icon="mdi-file-pdf-box"
-        title="PDF Statistics"
-        value="stats"
-      />
     </v-tabs>
     <v-card-text>
       <v-window v-model="tab">
@@ -42,28 +36,6 @@
             :participants="participants"
             :show-options="showOptions"
           />
-        </v-window-item>
-
-        <v-window-item value="stats">
-          <v-row class="justify-start">
-            <v-col cols="12">
-              <h4>
-                Below you can Download a PDF export from
-                <a
-                  href="https://manual.limesurvey.org/Statistics"
-                  target="_blank"
-                >
-                  LimeSurvey Staistic Endpoint
-                </a>
-                The content of this PDF can only be changed via LimeSurvey.
-              </h4>
-            </v-col>
-            <v-col class="mt-5 mb-5" cols="12">
-              <v-btn :href="blobURL" :download="pdfFileName" target="_blank">
-                PDF Statistics
-              </v-btn>
-            </v-col>
-          </v-row>
         </v-window-item>
       </v-window>
     </v-card-text>
@@ -94,7 +66,7 @@ export default defineComponent({
     },
     questions: {
       type: Object as () => Record<string, QuestionModel>,
-      default: () => ({} as Record<string, QuestionModel>),
+      default: () => ({}) as Record<string, QuestionModel>,
     },
     responses: {
       type: Array<ResponseModel>,
@@ -127,16 +99,13 @@ export default defineComponent({
     };
   },
   computed: {
-    pdfFileName(): string {
-      return `statistics_${this.survey.sid}.pdf`;
-    },
     questionKeys(): string[] {
       return Array.from(
         new Set<string>(
           this.responses
             .map((response) => Object.keys(getQuestionsFromResponses(response)))
-            .flat()
-        )
+            .flat(),
+        ),
       ).sort();
     },
     questionTexts(): Record<string, string> {

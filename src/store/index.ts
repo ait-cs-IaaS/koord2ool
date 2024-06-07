@@ -1,5 +1,4 @@
 import { LimesurveyApi } from "../api/limesurvey";
-import { KoordLayout } from "./koord.layout";
 import { SurveyModel } from "../types/survey.model";
 import { ResponseModel } from "../types/response.model";
 import {
@@ -12,6 +11,8 @@ import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel } from "../types/participant.model";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import { createPinia, defineStore, type Pinia } from "pinia";
+import { ref, computed } from "vue";
+import { SettingsModel } from "../types/settings.model";
 
 /** Pinia Store */
 const pinia: Pinia = createPinia();
@@ -19,165 +20,189 @@ pinia.use(piniaPluginPersistedstate);
 
 export default pinia;
 
-export const koordStore = defineStore("koord", {
-  state: (): KoordLayout => ({
-    error: undefined,
-    limesurvey: undefined,
-    participants: {},
-    responses: {},
-    questions: {},
-    surveys: {},
-    settings: {
+export const koordStore = defineStore(
+  "koord",
+  () => {
+    const error = ref<Error | undefined>(undefined);
+    const tokenMap = ref<Record<string, number>>({});
+    const participants = ref<Record<number, ParticipantModel[]>>({});
+    const responses = ref<Record<number, ResponseModel[]>>({});
+    const questions = ref<Record<number, Record<string, QuestionModel>>>({});
+    const surveys = ref<Record<number, SurveyModel>>({});
+    const settings = ref<SettingsModel>({
       step: 6,
       onlyActive: true,
       useLogicalTime: false,
       expirationTime: 7,
       displayNA: true,
-      useAPEX: false,
-    },
-    responseRange: [0, new Date().getTime()],
-    selectedSurveyID: undefined,
-    api: new LimesurveyApi(),
-    tokenMap: {},
-  }),
-  getters: {
-    getSurveys: (state) =>
-      Object.values(state.surveys).map((survey) => survey.sid),
+    });
+    const responseRange = ref<number[]>([0, new Date().getTime()]);
+    const selectedSurveyID = ref<number | undefined>(undefined);
+    const limesurvey = ref<Record<string, string> | undefined>(undefined);
+    const api = new LimesurveyApi();
 
-    hasError: (state) => typeof state.error !== "undefined",
-
-    isAuthenticated: (state) =>
-      typeof state.limesurvey !== "undefined" &&
-      typeof state.limesurvey.username !== "undefined",
-
-    username: (state) =>
-      typeof state.limesurvey !== "undefined"
-        ? state.limesurvey.username
+    const getSurveys = computed(() =>
+      Object.values(surveys.value).map((survey) => survey.sid),
+    );
+    const hasError = computed(() => typeof error.value !== "undefined");
+    const isAuthenticated = computed(
+      () =>
+        typeof limesurvey.value !== "undefined" &&
+        typeof limesurvey.value.username !== "undefined",
+    );
+    const username = computed(() =>
+      typeof limesurvey.value !== "undefined"
+        ? limesurvey.value.username
         : "User",
-
-    instance: (state) => {
+    );
+    const instance = computed(() => {
       const endpoint = import.meta.env.VITE_APP_LIMESURVEY_API;
       if (!/\/admin\/remotecontrol$/.test(endpoint)) {
-        state.error = new Error(
-          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`
+        error.value = new Error(
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`,
         );
         return "";
       }
       if (endpoint === undefined) {
-        state.error = new Error(
-          "LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable."
+        error.value = new Error(
+          "LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable.",
         );
         return "";
       }
       const domain = new URL(endpoint);
       if (domain.hostname === undefined) {
-        state.error = new Error(
-          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`
+        error.value = new Error(
+          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`,
         );
         return "";
       }
       return `${domain.protocol}//${domain.hostname}`;
-    },
-    getResponses: (state) => (sid: number) => {
-      if (typeof state.responses[sid] === "undefined") {
+    });
+
+    const getResponses = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
         return [] as ResponseModel[];
       }
-      return state.responses[sid];
-    },
-    getParticipants:
-      (state) =>
-      (sid: number): ParticipantModel[] => {
-        if (typeof state.participants[sid] === "undefined") {
-          return [] as ParticipantModel[];
-        }
-        return state.participants[sid];
-      },
-    getQuestions:
-      (state) =>
-      (sid: number): Record<string, QuestionModel> => {
-        return state.questions[sid] || {};
-      },
-    getQuestionType: () => (sid: number, qid: string) => {
-      const store = koordStore();
-      const questions = store.getQuestions(sid);
+      if (typeof responses.value[selectedSurveyID.value] === "undefined") {
+        return [] as ResponseModel[];
+      }
+      return responses.value[selectedSurveyID.value];
+    });
+
+    const getParticipants = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return [] as ParticipantModel[];
+      }
+      if (typeof participants.value[selectedSurveyID.value] === "undefined") {
+        return [] as ParticipantModel[];
+      }
+      return participants.value[selectedSurveyID.value];
+    });
+
+    const getQuestions = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return {} as Record<string, QuestionModel>;
+      }
+      return questions.value[selectedSurveyID.value] || {};
+    });
+
+    const getSurvey = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return {} as SurveyModel;
+      }
+      return surveys.value[selectedSurveyID.value];
+    });
+
+    const getSettings = computed(() => settings.value);
+    const surveyLinks = computed(() => {
+      const surveyIds: number[] = Object.keys(surveys.value).map(Number);
+      return surveyIds.sort().map((surveyId) => {
+        const title = surveys.value[surveyId].surveyls_title;
+        return {
+          key: surveyId,
+          label: `${surveyId} - ${title}`,
+          to: `/survey/${surveyId}`,
+        };
+      });
+    });
+
+    const submitDateMatch = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return false;
+      }
+      if (typeof responses.value[selectedSurveyID.value] === "undefined") {
+        return false;
+      }
+      return hasSubmitDateMatch(responses.value[selectedSurveyID.value]);
+    });
+
+    const getMinResponseDate = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return new Date(0);
+      }
+      if (typeof responses.value[selectedSurveyID.value] === "undefined") {
+        return new Date(0);
+      }
+      return minResponseDate(responses.value[selectedSurveyID.value]);
+    });
+
+    const getMaxResponseDate = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return new Date();
+      }
+      if (typeof responses.value[selectedSurveyID.value] === "undefined") {
+        return new Date();
+      }
+      return maxResponseDate(responses.value[selectedSurveyID.value]);
+    });
+
+    const fromDate = computed(() => {
+      if (responseRange.value[0] === undefined) {
+        return getMinResponseDate.value;
+      }
+      return new Date(responseRange.value[0]);
+    });
+
+    const untilDate = computed(() => {
+      if (responseRange.value[1] === undefined) {
+        return getMaxResponseDate.value;
+      }
+      return new Date(responseRange.value[1]);
+    });
+
+    const getExpireDate = computed(() => {
+      return new Date(
+        new Date().getTime() -
+          settings.value.expirationTime * 24 * 60 * 60 * 1000,
+      );
+    });
+
+    const responsesInTimeline = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return [] as ResponseModel[];
+      }
+      return getResponses.value.filter((response) => {
+        const thisTime = new Date(response.submitdate);
+        return fromDate.value <= thisTime && thisTime <= untilDate.value;
+      });
+    });
+
+    function getQuestionType(qid: string) {
+      const questions = getQuestions.value;
       const question = questions[qid];
       if (question === undefined) {
         return "";
       }
       return question.question_theme_name;
-    },
-    getSurvey: (state) => (sid: number) => {
-      if (typeof state.surveys[sid] === "undefined") {
-        return {} as SurveyModel;
-      }
-      return state.surveys[sid];
-    },
-    hasSubmitDateMatch:
-      (state) =>
-      (sid: number | undefined = state.selectedSurveyID) => {
-        if (sid === undefined) {
-          return false;
-        }
-        if (state.responses[sid] === undefined) {
-          return false;
-        }
-        return hasSubmitDateMatch(state.responses[sid]);
-      },
-    getMinResponseDate:
-      (state) =>
-      (sid: number | undefined = state.selectedSurveyID): Date => {
-        if (sid === undefined || state.responses[sid] === undefined) {
-          return new Date(0);
-        }
-        return minResponseDate(state.responses[sid]);
-      },
-    getMaxResponseDate:
-      (state) =>
-      (sid: number | undefined = state.selectedSurveyID): Date => {
-        if (sid === undefined || state.responses[sid] === undefined) {
-          return new Date();
-        }
-        return maxResponseDate(state.responses[sid]);
-      },
-    fromDate(state): Date {
-      if (state.responseRange[0] === undefined) {
-        return this.getMinResponseDate();
-      }
-      return new Date(state.responseRange[0]);
-    },
-    untilDate(state): Date {
-      if (state.responseRange[1] === undefined) {
-        return this.getMaxResponseDate();
-      }
-      return new Date(state.responseRange[1]);
-    },
-    getExpireDate(state): Date {
-      return new Date(
-        new Date().getTime() -
-          state.settings.expirationTime * 24 * 60 * 60 * 1000
-      );
-    },
-    responsesInTimeline:
-      (state) =>
-      (sid: number | undefined = state.selectedSurveyID): ResponseModel[] => {
-        if (sid === undefined) {
-          return [];
-        }
-        const store = koordStore();
-        return store.getResponses(sid).filter((response) => {
-          const thisTime = new Date(response.submitdate);
-          return store.fromDate <= thisTime && thisTime <= store.untilDate;
-        });
-      },
-  },
-  actions: {
-    async authenticate(payload: {
+    }
+
+    async function authenticate(payload: {
       username: string;
       password: string;
     }): Promise<boolean> {
-      const session = await this.api.authenticate(
+      const session = await api.authenticate(
         payload.username,
-        payload.password
+        payload.password,
       );
 
       console.debug("Session: ", session);
@@ -185,107 +210,100 @@ export const koordStore = defineStore("koord", {
       const okay = session !== undefined;
 
       if (okay) {
-        this.setApi({ session, username: payload.username });
-        await this.refreshSurveys();
+        setApi({ session, username: payload.username });
+        await refreshSurveys();
       } else {
-        this.error = new Error("Failed to authenticate");
+        error.value = new Error("Failed to authenticate");
       }
 
       return okay;
-    },
+    }
 
-    logout() {
-      this.limesurvey = undefined;
-      this.api.username = undefined;
-      this.api.session = undefined;
-    },
+    function logout() {
+      limesurvey.value = undefined;
+      api.username = undefined;
+      api.session = undefined;
+    }
 
-    setApi(apiSession: { session: string; username: string }) {
-      this.api.username = apiSession.username;
-      this.api.session = apiSession.session;
-      this.limesurvey = apiSession;
-    },
+    function setApi(apiSession: { session: string; username: string }) {
+      api.username = apiSession.username;
+      api.session = apiSession.session;
+      limesurvey.value = apiSession;
+    }
 
-    async refreshSurvey(surveyId: number): Promise<void> {
-      if (this.isAuthenticated) {
-        this.selectedSurveyID = surveyId;
+    async function refreshSurvey(surveyId: number): Promise<void> {
+      if (isAuthenticated.value) {
+        selectedSurveyID.value = surveyId;
+        responseRange.value = [0, new Date().getTime()];
         await Promise.all([
-          this.refreshQuestions(surveyId),
-          this.refreshResponses(surveyId),
-          this.refreshParticipants(surveyId).then(() => {
-            this.updateTokenMap(surveyId);
+          refreshQuestions(surveyId),
+          refreshResponses(surveyId),
+          refreshParticipants(surveyId).then(() => {
+            updateTokenMap(surveyId);
           }),
         ]);
       }
-    },
+    }
 
-    async refreshSurveys(): Promise<SurveyModel[]> {
-      if (this.isAuthenticated) {
-        const surveys = await this.api.listSurveys();
-        this.updateSurveyList(surveys);
+    async function refreshSurveys(): Promise<SurveyModel[]> {
+      if (isAuthenticated.value) {
+        const surveys = await api.listSurveys();
+        updateSurveyList(surveys);
         return surveys;
       }
       return [];
-    },
+    }
 
-    async refreshQuestions(sid: number): Promise<QuestionModel[]> {
-      if (this.limesurvey) {
-        const questions = await this.api.getQuestions(sid);
-        this.updateQuestions(sid, questions);
+    async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
+      if (limesurvey.value) {
+        const questions = await api.getQuestions(sid);
+        updateQuestions(sid, questions);
         return questions;
       }
       return [];
-    },
+    }
 
-    async refreshQuestionProperties(qid: number): Promise<void> {
-      if (this.limesurvey) {
-        const question_properties = await this.api.getQuestionProperties(qid);
-        this.updateQuestionProperties({ question_properties });
+    async function refreshQuestionProperties(qid: number): Promise<void> {
+      if (limesurvey.value) {
+        const question_properties = await api.getQuestionProperties(qid);
+        updateQuestionProperties({ question_properties });
       }
-    },
+    }
 
-    async refreshResponses(sid: number): Promise<ResponseModel[]> {
-      if (this.limesurvey) {
-        const responses = await this.api.getResponses(sid);
-        if (typeof responses !== "undefined") {
-          this.responses[sid] = responses;
-          return responses;
-        }
+    async function refreshResponses(sid: number): Promise<void> {
+      if (limesurvey.value) {
+        responses.value[sid] = await api.getResponses(sid);
       }
-      return [];
-    },
+    }
 
-    async refreshParticipants(sid: number): Promise<ParticipantModel[]> {
-      if (this.isAuthenticated) {
-        const participants = await this.api.getParticipants(sid);
-        this.participants[sid] = participants;
-        return participants;
+    async function refreshParticipants(sid: number): Promise<void> {
+      if (isAuthenticated.value) {
+        participants.value[sid] = await api.getParticipants(sid);
       }
-      return [];
-    },
+    }
 
-    updateSurveyList(surveys: SurveyModel[] = []) {
+    function updateSurveyList(rawSurveys: SurveyModel[] = []) {
       const newSurveys: Record<number, SurveyModel> = {};
-      for (const survey of surveys) {
+      for (const survey of rawSurveys) {
         newSurveys[survey.sid] = {
           ...survey,
-          ...(typeof this.surveys[survey.sid] !== "undefined"
+          ...(typeof surveys.value[survey.sid] !== "undefined"
             ? {
-                details: this.surveys[survey.sid].details,
-                questions: this.surveys[survey.sid].questions,
+                details: surveys.value[survey.sid].details,
+                questions: surveys.value[survey.sid].questions,
               }
             : {}),
         };
       }
-      this.surveys = newSurveys;
-    },
+      surveys.value = newSurveys;
+    }
 
-    updateQuestionProperties(payload: {
+    function updateQuestionProperties(payload: {
       question_properties: QuestionPropertyModel;
     }) {
       const sid: number = +payload.question_properties.sid;
       const title: string = payload.question_properties.title;
-      const { questions } = this.surveys[sid];
+      const { questions } = surveys.value[sid];
       if (questions === undefined) {
         console.debug("No questions for survey: ", sid);
         return;
@@ -308,51 +326,102 @@ export const koordStore = defineStore("koord", {
         return { ...acc, [titleX]: questionX };
       }, {});
       question.subquestions = result;
-    },
+    }
 
-    updateQuestions(sid: number, questions: QuestionModel[]) {
-      if (typeof this.surveys[sid] !== "undefined") {
+    function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
+      if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
-        for (const question of questions) {
+        for (const question of rawQuestions) {
           if (question.question_theme_name === "multipleshorttext") {
-            this.refreshQuestionProperties(question.qid);
+            refreshQuestionProperties(question.qid);
           }
           asRecord[question.title] = question;
         }
-        this.questions[sid] = asRecord;
-        this.surveys[sid].questions = asRecord;
+        questions.value[sid] = asRecord;
+        surveys.value[sid].questions = asRecord;
       } else {
         console.warn(
-          `Survey ${sid} not found in the store; can't update questions.`
+          `Survey ${sid} not found in the store; can't update questions.`,
         );
       }
-    },
-    updateTokenMap(sid: number) {
-      if (!this.responses[sid]) {
+    }
+
+    function updateTokenMap(sid: number) {
+      if (!responses.value[sid]) {
         return;
       }
       const tokens: string[] = [];
-      this.responses[sid].forEach((response) => {
+      responses.value[sid].forEach((response) => {
         const token =
-          this.participants[sid]?.find(
-            (participant) => participant.id === response.token
+          participants.value[sid]?.find(
+            (participant) => participant.id === response.token,
           )?.token ?? response.token;
         if (!tokens.includes(token)) {
           tokens.push(token);
         }
       });
       tokens.forEach((token, index) => {
-        this.tokenMap[token] = index;
+        tokenMap.value[token] = index;
       });
-    },
-    reset() {
-      this.participants = {};
-      this.responses = {};
-      this.questions = {};
-      this.surveys = {};
+    }
+
+    function reset() {
+      participants.value = {};
+      responses.value = {};
+      questions.value = {};
+      surveys.value = {};
+    }
+
+    return {
+      error,
+      tokenMap,
+      participants,
+      responses,
+      questions,
+      surveys,
+      settings,
+      responseRange,
+      selectedSurveyID,
+      limesurvey,
+      api,
+      getSurveys,
+      hasError,
+      isAuthenticated,
+      username,
+      instance,
+      getResponses,
+      getParticipants,
+      getQuestions,
+      getSurvey,
+      getSettings,
+      surveyLinks,
+      submitDateMatch,
+      getMinResponseDate,
+      getMaxResponseDate,
+      fromDate,
+      untilDate,
+      getExpireDate,
+      responsesInTimeline,
+      getQuestionType,
+      authenticate,
+      logout,
+      setApi,
+      refreshSurvey,
+      refreshSurveys,
+      refreshQuestions,
+      refreshQuestionProperties,
+      refreshResponses,
+      refreshParticipants,
+      updateSurveyList,
+      updateQuestionProperties,
+      updateQuestions,
+      updateTokenMap,
+      reset,
+    };
+  },
+  {
+    persist: {
+      paths: ["limesurvey", "settings"],
     },
   },
-  persist: {
-    paths: ["limesurvey", "settings"],
-  },
-});
+);

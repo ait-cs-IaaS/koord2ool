@@ -37,7 +37,7 @@ export default defineComponent({
 
     maxValue(): number {
       return Math.round(
-        this.getMidnightTomrrow(this.getMaxResponseDate()).getTime()
+        this.getMidnightTomrrow(this.getMaxResponseDate()).getTime(),
       );
     },
 
@@ -51,12 +51,12 @@ export default defineComponent({
     },
     getMidnight(date: Date): Date {
       return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
       );
     },
     getMidnightTomrrow(date: Date): Date {
       return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1),
       );
     },
   },

@@ -65,16 +65,13 @@
 </template>
 
 <script lang="ts">
-import { SurveyModel } from "../types/survey.model";
-import { QuestionModel } from "../types/question.model";
 import SurveyComponent from "../components/surveys/Survey.vue";
 import TimeSlider from "../components/TimeSlider.vue";
-import { ResponseModel } from "../types/response.model";
-import { ParticipantModel } from "../types/participant.model";
 
-import { defineComponent } from "vue";
+import { defineComponent, ref, onMounted, watch } from "vue";
 import { koordStore } from "../store";
-import { mapState, mapActions } from "pinia";
+import { storeToRefs } from "pinia";
+import { useRoute } from "vue-router";
 
 export default defineComponent({
   name: "SurveyView",
@@ -84,89 +81,75 @@ export default defineComponent({
     TimeSlider,
   },
 
-  computed: {
-    ...mapState(koordStore, [
-      "getParticipants",
-      "getResponses",
-      "getSurvey",
-      "hasSubmitDateMatch",
-      "settings",
-      "fromDate",
-      "untilDate",
-    ]),
-    maxResponseDate(): Date {
-      return this.getMaxResponseDate()(this.surveyId);
-    },
-    minResponseDate(): Date {
-      return this.getMinResponseDate()(this.surveyId);
-    },
-    questionCount(): number {
-      return Object.keys(this.questions).length;
-    },
+  setup() {
+    const store = koordStore();
 
-    questions(): Record<string, QuestionModel> {
-      const survey = this.survey;
-      if (
-        typeof survey !== "undefined" &&
-        typeof survey.questions !== "undefined"
-      ) {
-        return survey.questions;
-      }
-      console.warn("No questions found for survey", this.surveyId);
-      return {};
-    },
+    const {
+      getParticipants,
+      getResponses,
+      getSurvey,
+      hasSubmitDateMatch,
+      settings,
+      fromDate,
+      untilDate,
+    } = storeToRefs(store);
 
-    hasResponses(): boolean {
-      return this.responses.length > 0;
-    },
+    const route = useRoute();
 
-    participants(): ParticipantModel[] {
-      return this.getParticipants(this.surveyId);
-    },
+    const surveyId = ref(Number(route.params.surveyId));
 
-    responses(): ResponseModel[] {
-      return this.getResponses(this.surveyId);
-    },
+    const questionCount = ref(Object.keys(store.questions).length);
 
-    responsesInTimeline(): ResponseModel[] {
-      return this.responses.filter((response) => {
+    const responses = ref(store.getResponses(surveyId.value));
+    const participants = ref(store.getParticipants(surveyId.value));
+    const survey = ref(store.getSurvey(surveyId.value));
+
+    const hasResponses = ref(responses.value.length > 0);
+
+    const surveyActive = ref(
+      typeof survey.value !== "undefined" && survey.value.active === "Y",
+    );
+
+    const responsesInTimeline = ref(
+      responses.value.filter((response) => {
         const thisTime = new Date(response.submitdate);
-        return this.fromDate <= thisTime && thisTime <= this.untilDate;
-      });
-    },
+        return fromDate.value <= thisTime && thisTime <= untilDate.value;
+      }),
+    );
 
-    submitDates(): string[] {
-      return this.responses.map((response) => response.submitdate);
-    },
+    console.debug(
+      `Survey with ID: ${surveyId.value} is active: ${surveyActive.value}`,
+    );
 
-    survey(): SurveyModel {
-      return this.getSurvey(this.surveyId);
-    },
+    onMounted(async () => {
+      await store.refreshSurvey(surveyId.value);
+    });
 
-    surveyActive(): boolean {
-      return typeof this.survey !== "undefined" && this.survey.active === "Y";
-    },
-
-    surveyId(): number {
-      const { surveyId } = this.$route.params;
-      return Number(surveyId);
-    },
-  },
-  watch: {
-    surveyId: {
-      immediate: true,
-      async handler(newVal: number): Promise<void> {
-        await this.refreshSurvey(newVal);
+    watch(
+      () => surveyId.value,
+      async (newVal: number) => {
+        await store.refreshSurvey(newVal);
       },
-    },
-  },
+    );
 
-  async mounted(): Promise<void> {
-    await this.refreshSurvey(this.surveyId);
-  },
-  methods: {
-    ...mapActions(koordStore, ["refreshSurvey"]),
-    ...mapState(koordStore, ["getMaxResponseDate", "getMinResponseDate"]),
+    return {
+      getParticipants,
+      getResponses,
+      getSurvey,
+      hasSubmitDateMatch,
+      settings,
+      fromDate,
+      untilDate,
+      surveyId,
+      questionCount,
+      hasResponses,
+      responses,
+      participants,
+      survey,
+      responsesInTimeline,
+      questions: survey.value.questions,
+      refreshSurvey: store.refreshSurvey,
+    };
   },
 });
 </script>

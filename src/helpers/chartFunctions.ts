@@ -20,13 +20,20 @@ function getBorderColor(key: string): string {
   ];
 }
 
+function filterNA(data: FilteredResponse[]): FilteredResponse[] {
+  const store = koordStore();
+  return data.filter(
+    (item) => item.value !== "N/A" || store.settings.displayNA,
+  );
+}
+
 function valuesFromResponses(data: FilteredResponse[]): Array<string> {
   const store = koordStore();
 
   const uniqueValues = new Set(data.map((item) => item.value));
 
   const filteredValues = Array.from(uniqueValues).filter(
-    (value) => value !== "N/A"
+    (value) => value !== "N/A",
   );
 
   if (uniqueValues.has("N/A") && store.settings.displayNA) {
@@ -38,20 +45,21 @@ function valuesFromResponses(data: FilteredResponse[]): Array<string> {
 
 export function countResponsesFor(
   questionKey: string,
-  responses: ResponseModel[]
+  responses: ResponseModel[],
 ): responseCount[] {
   const responseCounts: responseCount[] = [];
 
   const filteredResponses = filterResponses(questionKey, responses);
-  const lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
+  let lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
 
+  lastResponses = filterNA(lastResponses);
   console.debug("lastResponses", lastResponses);
 
   lastResponses.forEach((response) => {
     const answer = response.value;
 
     const existingIndex = responseCounts.findIndex(
-      (item) => item.name === answer
+      (item) => item.name === answer,
     );
 
     if (existingIndex !== -1) {
@@ -66,7 +74,7 @@ export function countResponsesFor(
 
 function responseMapper(
   questionKey: string,
-  response: ResponseModel
+  response: ResponseModel,
 ): FilteredResponse {
   return {
     token: response.token,
@@ -78,12 +86,13 @@ function responseMapper(
 function expirationDate(relativeDate: Date): Date {
   const store = koordStore();
   return new Date(
-    relativeDate.getTime() + store.settings.expirationTime * 24 * 60 * 60 * 1000
+    relativeDate.getTime() +
+      store.settings.expirationTime * 24 * 60 * 60 * 1000,
   );
 }
 
 export function addExpiredEntries(
-  responses: FilteredResponse[]
+  responses: FilteredResponse[],
 ): FilteredResponse[] {
   const store = koordStore();
   const currentDate = new Date();
@@ -97,7 +106,7 @@ export function addExpiredEntries(
           existingResponse.token === response.token &&
           existingResponse.time >= response.time &&
           existingResponse.time <= expiredTime &&
-          existingResponse !== response
+          existingResponse !== response,
       );
 
       if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
@@ -115,12 +124,12 @@ export function addExpiredEntries(
 
       return acc;
     },
-    [...responses]
+    [...responses],
   );
 }
 
 export function getLastResponses(
-  responses: FilteredResponse[]
+  responses: FilteredResponse[],
 ): FilteredResponse[] {
   const lastResponses: Record<string, FilteredResponse> = {};
 
@@ -136,7 +145,7 @@ export function getLastResponses(
 
 export function filterResponses(
   questionKey: string,
-  responses: ResponseModel[]
+  responses: ResponseModel[],
 ): FilteredResponse[] {
   return responses
     .map((response) => responseMapper(questionKey, response))
@@ -145,7 +154,7 @@ export function filterResponses(
 
 export function getQuestionText(
   questionKey: string,
-  questions: Record<string, QuestionModel>
+  questions: Record<string, QuestionModel>,
 ): string {
   const key = questionKey.split("[");
   const question = questions[key[0]];
@@ -168,7 +177,7 @@ export function getQuestionText(
 
 export function getQuestionType(
   questionKey: string,
-  questions: Record<string, QuestionModel>
+  questions: Record<string, QuestionModel>,
 ): string {
   const key = questionKey.split("[");
   const question = questions[key[0]];
@@ -193,10 +202,13 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
   const totalUsers = new Set(responses.map((r) => r.token)).size;
 
   // Initialize counters for each response type
-  const counters: Record<string, number> = uniqueValues.reduce((acc, value) => {
-    acc[value] = value === "N/A" ? totalUsers : 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const counters: Record<string, number> = uniqueValues.reduce(
+    (acc, value) => {
+      acc[value] = value === "N/A" ? totalUsers : 0;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   // Initialize chart data
   const chartData: ChartDataEntry[] = uniqueValues.map((value) => ({
@@ -206,7 +218,7 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
 
   // Sort responses by time
   const sortedResponses = [...responses].sort(
-    (a, b) => a.time.getTime() - b.time.getTime()
+    (a, b) => a.time.getTime() - b.time.getTime(),
   );
 
   sortedResponses.forEach((response) => {
@@ -232,7 +244,7 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
 }
 
 export function transformChartData(
-  chartData: ChartDataEntry[]
+  chartData: ChartDataEntry[],
 ): ChartData<"line"> {
   const chartdataset = chartData.map((item) => ({
     cubicInterpolationMode: "monotone" as const,
@@ -248,7 +260,7 @@ export function transformChartData(
 }
 
 export function parseDataForFreeTextChart(
-  data: FilteredResponse[]
+  data: FilteredResponse[],
 ): ChartData<"line"> {
   const parsedData: Record<string, ChartDataset<"line">> = {};
   const store = koordStore();
@@ -275,15 +287,38 @@ export function parseDataForFreeTextChart(
   };
 }
 
+export function doughnutChartData(
+  responseCounts: responseCount[],
+): ChartData<"doughnut"> {
+  const labels: string[] = [];
+  const datasets: ChartDataset<"doughnut">[] = [];
+  const data: number[] = [];
+  const backgroundColor: string[] = [];
+  responseCounts.forEach(({ name, value }, index) => {
+    labels.push(name);
+    data.push(value);
+    backgroundColor.push(chartColors[index % chartColors.length]);
+  });
+  datasets.push({
+    data,
+    backgroundColor,
+  });
+
+  return {
+    labels,
+    datasets,
+  };
+}
+
 export function createTimelineFor(
   questionKey: string,
-  surveyId: number
+  surveyId: number,
 ): ChartData<"line"> {
   const store = koordStore();
-  const question_type = store.getQuestionType(surveyId, questionKey);
+  const question_type = store.getQuestionType(questionKey);
   const filteredResponses = filterResponses(
     questionKey,
-    store.responsesInTimeline(surveyId)
+    store.responsesInTimeline,
   );
 
   store.updateTokenMap(surveyId);
@@ -294,4 +329,16 @@ export function createTimelineFor(
   }
 
   return parseDataForFreeTextChart(filteredResponses);
+}
+
+export function getParticipant(token: string): string {
+  const store = koordStore();
+
+  // participant where participant.token === token
+  const participant = store.getParticipants.find(
+    (participant) => participant.token === token,
+  );
+  return participant
+    ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
+    : token;
 }

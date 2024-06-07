@@ -27,7 +27,6 @@ import DisplayOptions from "./DisplayOptions.vue";
 import {
   createTimelineFor,
   countResponsesFor,
-  filterResponses,
   getQuestionText,
   getQuestionType,
 } from "../../helpers/chartFunctions";
@@ -44,7 +43,7 @@ export default defineComponent({
   props: {
     questions: {
       type: Object as () => Record<string, QuestionModel>,
-      default: () => ({} as Record<string, QuestionModel>),
+      default: () => ({}) as Record<string, QuestionModel>,
     },
     responses: {
       type: Array<ResponseModel>,
@@ -101,7 +100,6 @@ export default defineComponent({
       counters,
       chartjsdata,
       questionType,
-      filterResponses,
       questionText,
       countResponsesFor,
       createTimelineFor,

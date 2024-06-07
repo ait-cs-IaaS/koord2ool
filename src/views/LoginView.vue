@@ -6,10 +6,10 @@
     <v-row>
       <p>
         Please authenticate using your
-        <span class="font-weight-bold"
-          >LimeSurvey
-          <a v-if="instance != ''" :href="instance">[{{ instance }}]</a></span
-        >
+        <span class="font-weight-bold">
+          LimeSurvey
+          <a v-if="instance != ''" :href="instance">[{{ instance }}]</a>
+        </span>
         log-in credentials.
       </p>
     </v-row>
@@ -34,11 +34,9 @@ import { koordStore } from "../store";
 
 export default defineComponent({
   name: "LoginView",
-
   components: {
     Login,
   },
-
   props: {
     returnTo: {
       type: String,

@@ -59,8 +59,8 @@
 </template>
 
 <script lang="ts">
-import { mapWritableState } from "pinia";
-import { defineComponent } from "vue";
+import { storeToRefs } from "pinia";
+import { defineComponent, ref } from "vue";
 import { koordStore } from "../../store";
 import { SettingsKey, SettingsOption } from "../../types/settings.model";
 
@@ -73,21 +73,22 @@ export default defineComponent({
     },
     options: {
       type: Object as () => Record<SettingsKey, SettingsOption>,
-      default: () => ({} as Record<SettingsKey, SettingsOption>),
+      default: () => ({}) as Record<SettingsKey, SettingsOption>,
     },
   },
-  data() {
+  setup(props) {
+    const display = ref(props.displayOptions);
+    const { settings } = storeToRefs(koordStore());
+
+    function updateResult(key: SettingsKey, result: boolean | number) {
+      (settings.value[key] as boolean | number) = result;
+    }
+
     return {
-      display: this.displayOptions,
+      display,
+      settings,
+      updateResult,
     };
-  },
-  computed: {
-    ...mapWritableState(koordStore, ["settings"]),
-  },
-  methods: {
-    updateResult(key: SettingsKey, result: boolean | number) {
-      (this.settings[key] as boolean | number) = result;
-    },
   },
 });
 </script>

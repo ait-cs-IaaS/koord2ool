@@ -35,7 +35,7 @@
             Limesurvey @ {{ instance }}
           </v-btn>
         </p>
-        <survey-list :username="username" />
+        <survey-list />
       </v-col>
     </v-row>
   </v-container>

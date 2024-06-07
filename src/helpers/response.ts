@@ -14,7 +14,7 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
 ];
 
 export function getQuestionsFromResponses(
-  response: ResponseModel
+  response: ResponseModel,
 ): Record<string, string> {
   const result: Record<string, string> = {};
   Object.entries(response).forEach(([key, value]) => {

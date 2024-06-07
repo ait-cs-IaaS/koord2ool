@@ -7,7 +7,7 @@
     <v-spacer />
     <v-menu>
       <template #activator="{ props }">
-        <v-btn prepend-icon="mdi-chevron-down" v-bind="props">Surveys</v-btn>
+        <v-btn prepend-icon="mdi-chevron-down" v-bind="props" text="Surveys" />
       </template>
 
       <v-list>
@@ -15,75 +15,50 @@
           v-for="{ key, label, to } in surveyLinks"
           :key="key"
           :to="to"
-        >
-          <v-list-item-title>{{ label }}</v-list-item-title>
-        </v-list-item>
+          :title="label"
+        />
       </v-list>
     </v-menu>
 
-    <v-btn v-if="!isAuthenticated" to="/login" prepend-icon="mdi-login"
-      >Login</v-btn
-    >
+    <v-btn
+      v-if="!isAuthenticated"
+      to="/login"
+      prepend-icon="mdi-login"
+      text="Login"
+    />
     <v-btn
       v-if="isAuthenticated"
       class="mr-2"
       to="/settings"
       theme="secondary"
-      title="Settings"
+      text="Settings"
       prepend-icon="mdi-cog"
-      >Settings</v-btn
-    >
+    />
     <v-btn
       v-if="isAuthenticated"
       class="mr-2"
       to="/logout"
-      title="Logout"
+      text="Logout"
       prepend-icon="mdi-logout"
-      >Logout</v-btn
-    >
+    />
   </v-app-bar>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { mapState, mapActions } from "pinia";
+import { storeToRefs } from "pinia";
 import { koordStore } from "../store";
-
-type SurveyLink = {
-  key: number;
-  label: string;
-  to: string;
-};
 
 export default defineComponent({
   name: "NavigationComponent",
-  computed: {
-    ...mapState(koordStore, [
-      "surveys",
-      "username",
-      "isAuthenticated",
-      "getSurveys",
-    ]),
+  setup() {
+    const store = koordStore();
+    const { surveyLinks, isAuthenticated } = storeToRefs(store);
 
-    surveyLinks(): SurveyLink[] {
-      console.debug("getSurveys", this.getSurveys);
-      const surveyIds: number[] = [...this.getSurveys];
-      console.debug("surveyIds", surveyIds);
-      return surveyIds.sort().map((surveyId: number) => {
-        const title: string = this.surveys[surveyId].surveyls_title;
-        return {
-          key: surveyId,
-          label: `${surveyId} - ${title}`,
-          to: `/survey/${surveyId}`,
-        };
-      });
-    },
-  },
-  async mounted() {
-    await this.refreshSurveys();
-  },
-  methods: {
-    ...mapActions(koordStore, ["refreshSurveys"]),
+    return {
+      surveyLinks,
+      isAuthenticated,
+    };
   },
 });
 </script>

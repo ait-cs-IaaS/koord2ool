@@ -18,8 +18,11 @@
           </v-card-text>
         </v-col>
         <v-col cols="12" lg="3" class="doughnut-col">
-          <div class="px-2 py-4">
+          <div v-if="counters.length > 0" class="px-2 py-4">
             <doughnut-chart :counters="counters" />
+          </div>
+          <div v-else class="py-4">
+            <p class="text-center">No data available</p>
           </div>
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
@@ -59,7 +62,7 @@ export default defineComponent({
     },
     chartjsdata: {
       type: Object as () => ChartData<"line">,
-      default: () => ({} as ChartData<"line">),
+      default: () => ({}) as ChartData<"line">,
     },
     questionType: { type: String, default: "" },
   },

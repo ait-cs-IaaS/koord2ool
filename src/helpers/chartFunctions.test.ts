@@ -38,7 +38,7 @@ describe("testAddExpiredEntries", () => {
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
     expect(addExpiredEntries(filteredResponses1)).toEqual(
-      filteredResponsesWithExpired
+      filteredResponsesWithExpired,
     );
   });
 });
@@ -50,7 +50,7 @@ describe("testParseDataForAreaChart", () => {
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
     expect(parseDataForAreaChart(filteredResponsesWithExpired)).toEqual(
-      chartData1
+      chartData1,
     );
   });
 });
