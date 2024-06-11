@@ -12,8 +12,8 @@
     </v-row>
     <v-row class="ml-6 mr-6 mt-6">
       <v-col class="ml-8 mr-8">
-        <time-slider v-if="hasSubmitDateMatch()" />
-        <v-row v-if="!hasSubmitDateMatch()">
+        <time-slider v-if="submitDateMatch" />
+        <v-row v-if="!submitDateMatch">
           <v-col>
             Responses have no responseDate set.
             <a
@@ -33,13 +33,13 @@
           <v-col cols="2">Number of questions</v-col>
           <v-col cols="2">{{ questionCount }}</v-col>
         </v-row>
-        <v-row v-if="survey.startdate !== null">
+        <v-row v-if="survey?.startdate !== null">
           <v-col cols="2">Start</v-col>
-          <v-col cols="2">{{ survey.startdate }}</v-col>
+          <v-col cols="2">{{ survey?.startdate }}</v-col>
         </v-row>
-        <v-row v-if="survey.expires !== null">
+        <v-row v-if="survey?.expires !== null">
           <v-col cols="2">Expires</v-col>
-          <v-col cols="2">{{ survey.expires }}</v-col>
+          <v-col cols="2">{{ survey?.expires }}</v-col>
         </v-row>
       </v-col>
     </v-row>
@@ -47,13 +47,11 @@
       <v-col>
         <survey-component
           v-if="hasResponses"
-          :survey="survey"
           :responses="responsesInTimeline"
           :questions="questions"
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
-          :use-logical-time="!hasSubmitDateMatch()"
         />
         <div v-else>
           <v-btn @click="refreshSurvey(surveyId)">Refresh</v-btn>
@@ -68,10 +66,9 @@
 import SurveyComponent from "../components/surveys/Survey.vue";
 import TimeSlider from "../components/TimeSlider.vue";
 
-import { defineComponent, ref, onMounted, watch } from "vue";
+import { defineComponent, onMounted, watch, computed } from "vue";
 import { koordStore } from "../store";
 import { storeToRefs } from "pinia";
-import { useRoute } from "vue-router";
 
 export default defineComponent({
   name: "SurveyView",
@@ -81,73 +78,64 @@ export default defineComponent({
     TimeSlider,
   },
 
-  setup() {
+  props: {
+    surveyId: {
+      type: Number,
+      required: true,
+    },
+  },
+
+  setup(props) {
     const store = koordStore();
 
     const {
       getParticipants,
+      getQuestions,
       getResponses,
       getSurvey,
-      hasSubmitDateMatch,
+      submitDateMatch,
       settings,
       fromDate,
       untilDate,
+      responsesInTimeline,
+      questionCount,
     } = storeToRefs(store);
 
-    const route = useRoute();
+    const hasResponses = computed(() => getResponses.value.length > 0);
 
-    const surveyId = ref(Number(route.params.surveyId));
-
-    const questionCount = ref(Object.keys(store.questions).length);
-
-    const responses = ref(store.getResponses(surveyId.value));
-    const participants = ref(store.getParticipants(surveyId.value));
-    const survey = ref(store.getSurvey(surveyId.value));
-
-    const hasResponses = ref(responses.value.length > 0);
-
-    const surveyActive = ref(
-      typeof survey.value !== "undefined" && survey.value.active === "Y",
-    );
-
-    const responsesInTimeline = ref(
-      responses.value.filter((response) => {
-        const thisTime = new Date(response.submitdate);
-        return fromDate.value <= thisTime && thisTime <= untilDate.value;
-      }),
-    );
+    const surveyActive = computed(() => {
+      return (
+        typeof getSurvey.value !== "undefined" && getSurvey.value.active === "Y"
+      );
+    });
 
     console.debug(
-      `Survey with ID: ${surveyId.value} is active: ${surveyActive.value}`,
+      `Survey with ID: ${props.surveyId} is active: ${surveyActive.value}`,
     );
 
     onMounted(async () => {
-      await store.refreshSurvey(surveyId.value);
+      await store.refreshSurvey(props.surveyId);
     });
 
     watch(
-      () => surveyId.value,
+      () => props.surveyId,
       async (newVal: number) => {
         await store.refreshSurvey(newVal);
       },
     );
 
     return {
-      getParticipants,
-      getResponses,
-      getSurvey,
-      hasSubmitDateMatch,
+      participants: getParticipants,
+      responses: getResponses,
+      survey: getSurvey,
+      questions: getQuestions,
+      submitDateMatch,
       settings,
       fromDate,
       untilDate,
-      surveyId,
       questionCount,
       hasResponses,
-      responses,
-      participants,
-      survey,
       responsesInTimeline,
-      questions: survey.value.questions,
       refreshSurvey: store.refreshSurvey,
     };
   },

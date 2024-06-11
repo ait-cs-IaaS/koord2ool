@@ -28,9 +28,10 @@
 
 <script lang="ts">
 import Login from "../components/Login.vue";
-import { defineComponent } from "vue";
-import { mapState, mapActions } from "pinia";
+import { defineComponent, onBeforeMount, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { koordStore } from "../store";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "LoginView",
@@ -43,39 +44,40 @@ export default defineComponent({
       default: "/",
     },
   },
+  setup(props) {
+    const authenticating = ref(false);
+    const store = koordStore();
 
-  data() {
-    return {
-      authenticating: false,
-    };
-  },
+    const { isAuthenticated, instance } = storeToRefs(store);
+    const router = useRouter();
 
-  computed: {
-    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
-  },
-
-  mounted(): void {
-    this.$nextTick(() => {
-      if (this.isAuthenticated) {
-        this.$router.push("/");
+    onBeforeMount(() => {
+      if (isAuthenticated.value) {
+        router.push("/");
       }
     });
-  },
-  methods: {
-    ...mapActions(koordStore, ["refreshSurveys"]),
-    setBusy(): void {
-      this.authenticating = true;
-    },
 
-    setFailed(): void {
-      this.authenticating = false;
-    },
+    function setBusy(): void {
+      authenticating.value = true;
+    }
 
-    setSuccess(): void {
-      this.refreshSurveys();
-      const goTo = this.returnTo || "/";
-      this.$router.push(goTo);
-    },
+    function setFailed(): void {
+      authenticating.value = false;
+    }
+
+    function setSuccess(): void {
+      store.refreshSurveys();
+      router.push(props.returnTo);
+    }
+
+    return {
+      authenticating,
+      isAuthenticated,
+      instance,
+      setBusy,
+      setFailed,
+      setSuccess,
+    };
   },
 });
 </script>

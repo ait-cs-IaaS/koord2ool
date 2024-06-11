@@ -23,7 +23,6 @@
             :questions="questions"
             :participants="participants"
             :show-options="showOptions"
-            :survey-id="survey.sid"
             :from="from"
             :until="until"
           ></charts>
@@ -48,10 +47,8 @@ import Charts from "./Charts.vue";
 import { ResponseModel } from "../../types/response.model";
 import { getQuestionsFromResponses } from "../../helpers/response";
 import { QuestionModel } from "../..//types/question.model";
-import { SurveyModel } from "../../types/survey.model";
 import { ParticipantModel } from "../../types/participant.model";
-import { defineComponent } from "vue";
-import { koordStore } from "../../store";
+import { computed, defineComponent, ref } from "vue";
 
 export default defineComponent({
   name: "SurveyComponent",
@@ -60,10 +57,6 @@ export default defineComponent({
     Charts,
   },
   props: {
-    useLogicalTime: {
-      type: Boolean,
-      default: false,
-    },
     questions: {
       type: Object as () => Record<string, QuestionModel>,
       default: () => ({}) as Record<string, QuestionModel>,
@@ -71,10 +64,6 @@ export default defineComponent({
     responses: {
       type: Array<ResponseModel>,
       default: () => [],
-    },
-    survey: {
-      type: Object as () => SurveyModel,
-      required: true,
     },
     participants: {
       type: Array<ParticipantModel>,
@@ -89,53 +78,25 @@ export default defineComponent({
       default: () => new Date(),
     },
   },
-  data() {
-    return {
-      showOptions: false,
-      chartDisplayOptions: false,
-      tableDisplayOptions: false,
-      tab: "",
-      blobURL: "",
-    };
-  },
-  computed: {
-    questionKeys(): string[] {
+  setup(props) {
+    const showOptions = ref(false);
+    const tab = ref("charts");
+
+    const questionKeys = computed(() => {
       return Array.from(
         new Set<string>(
-          this.responses
+          props.responses
             .map((response) => Object.keys(getQuestionsFromResponses(response)))
             .flat(),
         ),
       ).sort();
-    },
-    questionTexts(): Record<string, string> {
-      return getQuestionsFromResponses(this.responses[0]);
-    },
-  },
-  watch: {
-    tab(tab: number) {
-      if (tab === 2) {
-        this.setSurveyBlob();
-      }
-    },
-  },
-  mounted() {
-    this.tab = "charts";
-  },
-  methods: {
-    getQuestionText(key: string): string {
-      return this.questionTexts[key];
-    },
-    onTabChange(tab: number): void {
-      if (tab === 2) {
-        this.setSurveyBlob();
-      }
-    },
-    async setSurveyBlob(): Promise<void> {
-      const store = koordStore();
-      const blob = await store.api.exportStatistics(this.survey.sid);
-      this.blobURL = URL.createObjectURL(blob);
-    },
+    });
+
+    return {
+      tab,
+      questionKeys,
+      showOptions,
+    };
   },
 });
 </script>

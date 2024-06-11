@@ -28,9 +28,9 @@ import { ResponseModel } from "../../types/response.model";
 import { ParticipantModel } from "../../types/participant.model";
 import DisplayOptions from "./DisplayOptions.vue";
 import { koordStore } from "../../store";
-import { defineComponent } from "vue";
-import { mapState } from "pinia";
+import { defineComponent, computed } from "vue";
 import { tableOptions } from "./options";
+import { getParticipant } from "../../helpers/chartFunctions";
 
 interface Header {
   title: string;
@@ -62,17 +62,13 @@ export default defineComponent({
       default: false,
     },
   },
-  data() {
-    return {
-      options: tableOptions,
-    };
-  },
-  computed: {
-    ...mapState(koordStore, ["settings"]),
-    filteredRecords(): ResponseModel[] {
-      return this.responses.filter(
+  setup(props) {
+    const store = koordStore();
+
+    const filteredRecords = computed(() => {
+      return props.responses.filter(
         (response: ResponseModel, index: number, array: ResponseModel[]) => {
-          if (this.settings.onlyActive) {
+          if (store.settings.onlyActive) {
             const token = response.token;
             const lastResponse = array
               .filter((item) => item.token === token)
@@ -86,16 +82,18 @@ export default defineComponent({
           return true;
         },
       );
-    },
-    showKeys(): string[] {
-      const qk = this.qKeys;
+    });
+
+    const showKeys = computed(() => {
+      const qk = props.qKeys;
       qk.unshift("participant");
       qk.unshift("submitdate");
       qk.unshift("token");
       return qk;
-    },
-    headers(): Header[] {
-      const headers = this.responses.reduce(
+    });
+
+    const headers = computed(() => {
+      const headers = props.responses.reduce(
         (acc: Record<string, Header>, response: ResponseModel) => {
           const keys = Object.keys(response);
           keys.forEach((key) => {
@@ -113,19 +111,16 @@ export default defineComponent({
         {},
       );
       return Object.values(headers).filter((header: Header) =>
-        this.showKeys.includes(header.key),
+        showKeys.value.includes(header.key),
       );
-    },
-  },
-  methods: {
-    getParticipant(token: string): string {
-      const participant = this.participants.find(
-        (participant: ParticipantModel) => participant.token === token,
-      );
-      return participant
-        ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
-        : token;
-    },
+    });
+
+    return {
+      filteredRecords,
+      headers,
+      options: tableOptions,
+      getParticipant,
+    };
   },
 });
 </script>

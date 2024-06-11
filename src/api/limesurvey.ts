@@ -106,7 +106,7 @@ export class LimesurveyApi {
       if (Array.isArray(asObj.responses)) {
         const responsesByToken = new Map<number, Array<ResponseModel>>();
         for (const response of asObj.responses) {
-          const token = response.token;
+          const { token } = response;
           const entry = {
             ...response,
           };
@@ -155,8 +155,7 @@ export class LimesurveyApi {
       console.error("Failed to restore state.");
       return false;
     }
-    const username = store.limesurvey.username;
-    const session = store.limesurvey.session;
+    const { username, session } = store.limesurvey;
     if (username === undefined || session === undefined) {
       console.error("No Session Key found.");
       return false;
@@ -184,15 +183,16 @@ export class LimesurveyApi {
   private checkResult(result: Record<string, string>): void {
     const store = koordStore();
 
-    if (result.status !== undefined) {
-      if (result.status === "Invalid session key") {
-        this.session = undefined;
-        this.username = undefined;
-        store.limesurvey = undefined;
-        store.error = new Error("Invalid session Key redirected to login");
-        console.debug(`Invalid session Key redirected to login`);
-        router.push({ name: "login" });
-      }
+    if (
+      result.status !== undefined &&
+      result.status === "Invalid session key"
+    ) {
+      this.session = undefined;
+      this.username = undefined;
+      store.limesurvey = undefined;
+      store.error = new Error("Invalid session Key redirected to login");
+      console.debug(`Invalid session Key redirected to login`);
+      router.push({ name: "login" });
     }
   }
 
@@ -208,7 +208,7 @@ export class LimesurveyApi {
       this.requireAuth();
       params = [this.session, ...params];
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const response = await axios
       .post(
         this.endpoint,

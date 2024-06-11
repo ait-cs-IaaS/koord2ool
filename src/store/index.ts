@@ -32,7 +32,7 @@ export const koordStore = defineStore(
     const settings = ref<SettingsModel>({
       step: 6,
       onlyActive: true,
-      useLogicalTime: false,
+      timeFormat: "real",
       expirationTime: 7,
       displayNA: true,
     });
@@ -126,6 +126,13 @@ export const koordStore = defineStore(
       });
     });
 
+    const questionCount = computed(() => {
+      if (typeof selectedSurveyID.value === "undefined") {
+        return 0;
+      }
+      return Object.keys(questions.value[selectedSurveyID.value] || {}).length;
+    });
+
     const submitDateMatch = computed(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return false;
@@ -196,6 +203,27 @@ export const koordStore = defineStore(
       return question.question_theme_name;
     }
 
+    function updateSurveyList(rawSurveys: SurveyModel[] = []) {
+      const newSurveys: Record<number, SurveyModel> = {};
+      for (const survey of rawSurveys) {
+        newSurveys[survey.sid] = {
+          ...survey,
+          ...(typeof surveys.value[survey.sid] !== "undefined"
+            ? {
+                details: surveys.value[survey.sid].details,
+                questions: surveys.value[survey.sid].questions,
+              }
+            : {}),
+        };
+      }
+      surveys.value = newSurveys;
+    }
+
+    async function refreshSurveys(): Promise<void> {
+      const surveys = await api.listSurveys();
+      updateSurveyList(surveys);
+    }
+
     async function authenticate(payload: {
       username: string;
       password: string;
@@ -232,26 +260,19 @@ export const koordStore = defineStore(
     }
 
     async function refreshSurvey(surveyId: number): Promise<void> {
-      if (isAuthenticated.value) {
-        selectedSurveyID.value = surveyId;
-        responseRange.value = [0, new Date().getTime()];
-        await Promise.all([
-          refreshQuestions(surveyId),
-          refreshResponses(surveyId),
-          refreshParticipants(surveyId).then(() => {
-            updateTokenMap(surveyId);
-          }),
-        ]);
+      if (!(surveyId in surveys.value)) {
+        await refreshSurveys();
       }
-    }
 
-    async function refreshSurveys(): Promise<SurveyModel[]> {
-      if (isAuthenticated.value) {
-        const surveys = await api.listSurveys();
-        updateSurveyList(surveys);
-        return surveys;
-      }
-      return [];
+      selectedSurveyID.value = surveyId;
+      responseRange.value = [0, new Date().getTime()];
+      await Promise.all([
+        refreshQuestions(surveyId),
+        refreshResponses(surveyId),
+        refreshParticipants(surveyId).then(() => {
+          updateTokenMap(surveyId);
+        }),
+      ]);
     }
 
     async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
@@ -280,22 +301,6 @@ export const koordStore = defineStore(
       if (isAuthenticated.value) {
         participants.value[sid] = await api.getParticipants(sid);
       }
-    }
-
-    function updateSurveyList(rawSurveys: SurveyModel[] = []) {
-      const newSurveys: Record<number, SurveyModel> = {};
-      for (const survey of rawSurveys) {
-        newSurveys[survey.sid] = {
-          ...survey,
-          ...(typeof surveys.value[survey.sid] !== "undefined"
-            ? {
-                details: surveys.value[survey.sid].details,
-                questions: surveys.value[survey.sid].questions,
-              }
-            : {}),
-        };
-      }
-      surveys.value = newSurveys;
     }
 
     function updateQuestionProperties(payload: {
@@ -332,7 +337,10 @@ export const koordStore = defineStore(
       if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
         for (const question of rawQuestions) {
-          if (question.question_theme_name === "multipleshorttext") {
+          if (
+            question.question_theme_name === "multipleshorttext" ||
+            question.question_theme_name === "multiplechoice"
+          ) {
             refreshQuestionProperties(question.qid);
           }
           asRecord[question.title] = question;
@@ -395,6 +403,7 @@ export const koordStore = defineStore(
       getSurvey,
       getSettings,
       surveyLinks,
+      questionCount,
       submitDateMatch,
       getMinResponseDate,
       getMaxResponseDate,

@@ -28,11 +28,11 @@ import {
   createTimelineFor,
   countResponsesFor,
   getQuestionText,
-  getQuestionType,
 } from "../../helpers/chartFunctions";
 import { defineComponent } from "vue";
 import { chartOptions } from "./options";
 import { onMounted } from "vue";
+import { koordStore } from "../../store";
 
 export default defineComponent({
   name: "ChartsComponent",
@@ -69,18 +69,12 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    surveyId: {
-      type: Number,
-      default: 0,
-    },
   },
   setup(props) {
+    const store = koordStore();
+
     function questionText(questionKey: string): string {
       return getQuestionText(questionKey, props.questions);
-    }
-
-    function questionType(questionKey: string): string {
-      return getQuestionType(questionKey, props.questions);
     }
 
     function counters(questionKey: string) {
@@ -88,7 +82,7 @@ export default defineComponent({
     }
 
     function chartjsdata(questionKey: string) {
-      return createTimelineFor(questionKey, props.surveyId);
+      return createTimelineFor(questionKey);
     }
 
     onMounted(() => {
@@ -99,7 +93,7 @@ export default defineComponent({
       chartOptions,
       counters,
       chartjsdata,
-      questionType,
+      questionType: store.getQuestionType,
       questionText,
       countResponsesFor,
       createTimelineFor,

@@ -1,4 +1,4 @@
-import { ChartData, ChartDataset } from "chart.js";
+import { ChartData, ChartDataset, FinancialDataPoint } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
 import { koordStore } from "../store";
 import {
@@ -53,7 +53,6 @@ export function countResponsesFor(
   let lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
 
   lastResponses = filterNA(lastResponses);
-  console.debug("lastResponses", lastResponses);
 
   lastResponses.forEach((response) => {
     const answer = response.value;
@@ -173,18 +172,6 @@ export function getQuestionText(
     return question.subquestions[subquestion];
   }
   return question.question;
-}
-
-export function getQuestionType(
-  questionKey: string,
-  questions: Record<string, QuestionModel>,
-): string {
-  const key = questionKey.split("[");
-  const question = questions[key[0]];
-  if (question === undefined) {
-    return "";
-  }
-  return question.question_theme_name || "";
 }
 
 export function parseDataForAreaChart(responses: FilteredResponse[]) {
@@ -310,27 +297,6 @@ export function doughnutChartData(
   };
 }
 
-export function createTimelineFor(
-  questionKey: string,
-  surveyId: number,
-): ChartData<"line"> {
-  const store = koordStore();
-  const question_type = store.getQuestionType(questionKey);
-  const filteredResponses = filterResponses(
-    questionKey,
-    store.responsesInTimeline,
-  );
-
-  store.updateTokenMap(surveyId);
-
-  if (question_type === "yesno" || question_type === "list_dropdown") {
-    const enrichedResponses = addExpiredEntries(filteredResponses);
-    return transformChartData(parseDataForAreaChart(enrichedResponses));
-  }
-
-  return parseDataForFreeTextChart(filteredResponses);
-}
-
 export function getParticipant(token: string): string {
   const store = koordStore();
 
@@ -341,4 +307,95 @@ export function getParticipant(token: string): string {
   return participant
     ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
     : token;
+}
+
+export function aggregateResponses(
+  data: FilteredResponse[],
+): FilteredResponse[] {
+  const store = koordStore();
+
+  if (store.settings.timeFormat !== "stepped") {
+    return data;
+  }
+
+  const aggregatedData: FilteredResponse[] = [];
+
+  const { step } = store.settings;
+
+  // if there are multiple responses from the same token withing step hours of time aggregate them
+  data.forEach((item) => {
+    const lastResponse = aggregatedData.find(
+      (response) =>
+        response.token === item.token &&
+        response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
+    );
+
+    if (lastResponse) {
+      lastResponse.value = `${lastResponse.value}, ${item.value}`;
+    } else {
+      aggregatedData.push(item);
+    }
+  });
+
+  return aggregatedData;
+}
+
+export function getOHCL(
+  data: FilteredResponse[],
+  questionKey: string,
+): ChartData<"candlestick"> {
+  const datasets: FinancialDataPoint[] = [];
+
+  data.forEach((item) => {
+    const point: FinancialDataPoint = {
+      x: item.time.getTime(),
+      o: Number(item.value),
+      h: Number(item.value),
+      l: Number(item.value),
+      c: Number(item.value),
+    };
+
+    datasets.push(point);
+  });
+
+  return {
+    datasets: [
+      {
+        label: questionKey,
+        data: datasets,
+      },
+    ],
+  };
+}
+
+export function createTimelineFor(
+  questionKey: string,
+): ChartData<"line"> | ChartData<"candlestick"> {
+  const store = koordStore();
+  if (store.selectedSurveyID === undefined) {
+    console.error("No survey selected");
+    return { datasets: [] };
+  }
+
+  const question_type = store.getQuestionType(questionKey);
+  let filteredResponses = filterResponses(
+    questionKey,
+    store.responsesInTimeline,
+  );
+
+  filteredResponses = aggregateResponses(filteredResponses);
+
+  store.updateTokenMap(store.selectedSurveyID);
+
+  if (question_type === "numerical") {
+    return getOHCL(filteredResponses, questionKey);
+  }
+
+  if (question_type === "yesno" || question_type === "list_dropdown") {
+    const enrichedResponses = addExpiredEntries(filteredResponses);
+
+    return transformChartData(parseDataForAreaChart(enrichedResponses));
+  }
+
+  return parseDataForFreeTextChart(filteredResponses);
 }

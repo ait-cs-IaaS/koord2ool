@@ -13,7 +13,9 @@ import {
   surveyList1,
   questionList1,
   chartData1,
-  chartDataX,
+  chartDataYesNo,
+  chartDataNumerical,
+  chartDataFreeText,
 } from "../testData/chartFunctionsTestData";
 import { koordStore } from "../store";
 
@@ -56,19 +58,32 @@ describe("testParseDataForAreaChart", () => {
 });
 
 describe("testCreateTimelineFor", () => {
+  setActivePinia(createPinia());
+  const store = koordStore();
+
   beforeEach(() => {
-    setActivePinia(createPinia());
-    const store = koordStore();
     store.updateSurveyList(surveyList1);
     store.updateQuestions(surveyList1[0].sid, questionList1);
     store.settings.expirationTime = 7;
     store.responses[123456] = responses1;
   });
   it("should return an empty array if no responses are provided", () => {
-    expect(createTimelineFor("test", 999999)).toEqual({ datasets: [] });
+    store.selectedSurveyID = 999999;
+    expect(createTimelineFor("test")).toEqual({ datasets: [] });
   });
 
-  it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(createTimelineFor("G01Q01HO", 123456)).toEqual(chartDataX);
+  it("should return an chartData for a YESNO chart", () => {
+    store.selectedSurveyID = 123456;
+    expect(createTimelineFor("G01Q01HO")).toEqual(chartDataYesNo);
+  });
+
+  it("should return an chartData for a Numerical chart", () => {
+    store.selectedSurveyID = 123456;
+    expect(createTimelineFor("G01Q04TEMP")).toEqual(chartDataNumerical);
+  });
+
+  it("should return an chartData for a Freetext chart", () => {
+    store.selectedSurveyID = 123456;
+    expect(createTimelineFor("G01Q05FREE")).toEqual(chartDataFreeText);
   });
 });

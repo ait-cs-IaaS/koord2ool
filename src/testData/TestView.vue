@@ -38,7 +38,7 @@
 import { defineComponent, onBeforeUnmount, ref } from "vue";
 import { Line as LineChart } from "vue-chartjs";
 import Slider from "@vueform/slider";
-import { chartData1 as series, chartDataX } from "./chartFunctionsTestData";
+import { chartData1 as series, chartDataYesNo } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import {
   surveyList1,
@@ -57,6 +57,7 @@ import {
   TimeScale,
   TimeSeriesScale,
   Filler,
+  ChartData,
 } from "chart.js";
 import { koordStore } from "../store";
 import { storeToRefs } from "pinia";
@@ -91,10 +92,11 @@ export default defineComponent({
     store.updateQuestions(surveyList1[0].sid, questionList1);
     store.settings.expirationTime = 7;
     store.responses[123456] = responses1;
-    const testData = ref(createTimelineFor("G01Q01HO", 123456));
+    store.selectedSurveyID = 123456;
+    const testData = ref(createTimelineFor("G01Q01HO") as ChartData<"line">);
 
     function reCalcTestData() {
-      testData.value = createTimelineFor("G01Q01HO", 123456);
+      testData.value = createTimelineFor("G01Q01HO") as ChartData<"line">;
     }
 
     onBeforeUnmount(() => {
@@ -105,7 +107,7 @@ export default defineComponent({
       testData,
       responseRange,
       series,
-      chartDataX,
+      chartDataX: chartDataYesNo,
       areaChartOptions,
       tooltipFormater,
       reCalcTestData,

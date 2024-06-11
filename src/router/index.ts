@@ -26,6 +26,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/survey/:surveyId",
     name: "survey",
+    props: (route) => ({ surveyId: Number(route.params.surveyId) }),
     component: () => import("../views/SurveyView.vue"),
     beforeEnter: requiresAuthGuard,
   },

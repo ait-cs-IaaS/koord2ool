@@ -2,6 +2,7 @@ import { ResponseModel, FilteredResponse } from "../types/response.model";
 import { ChartData, ChartDataset } from "chart.js";
 import { SurveyModel } from "../types/survey.model";
 import { QuestionModel } from "../types/question.model";
+import { Point } from "chart.js/dist/core/core.controller";
 
 export const responses1: ResponseModel[] = [
   {
@@ -14,6 +15,8 @@ export const responses1: ResponseModel[] = [
     startdate: "2023-02-22 11:57:00",
     datestamp: "2023-02-22 11:57:52",
     G01Q01HO: "No",
+    G01Q04TEMP: "20",
+    G01Q05FREE: "Erster Kommentar",
   },
   {
     id: "2",
@@ -25,6 +28,8 @@ export const responses1: ResponseModel[] = [
     startdate: "2023-02-20 10:33:59",
     datestamp: "2023-02-21 09:17:23",
     G01Q01HO: "No",
+    G01Q04TEMP: "15",
+    G01Q05FREE: "Freitext Test 1234",
   },
   {
     id: "3",
@@ -36,6 +41,8 @@ export const responses1: ResponseModel[] = [
     startdate: "2023-02-22 13:12:34",
     datestamp: "2023-02-22 13:16:10",
     G01Q01HO: "Yes",
+    G01Q04TEMP: "18",
+    G01Q05FREE: "Lorem Ipsum oder sowas",
   },
 ];
 
@@ -194,7 +201,78 @@ export const chartDataSet = [
   },
 ];
 
-export const chartDataSetFreeText: ChartDataset<"line">[] = [];
+export const chartDataSetFreeText: ChartDataset<"line">[] = [
+  {
+    borderColor: "#3CB371",
+    data: [
+      {
+        tooltip: "Freitext Test 1234",
+        x: 1676967443000,
+        y: 1,
+      } as Point,
+      {
+        tooltip: "Lorem Ipsum oder sowas",
+        x: 1677068170000,
+        y: 1,
+      } as Point,
+    ],
+    fill: false,
+    label: "testuser2",
+  },
+  {
+    borderColor: "#AC004B",
+    data: [
+      {
+        tooltip: "Erster Kommentar",
+        x: 1677063472000,
+        y: 0,
+      } as Point,
+    ],
+    fill: false,
+    label: "testuser1",
+  },
+];
+
+export const chartDataSetNumerical: ChartDataset<"candlestick">[] = [
+  {
+    data: [
+      {
+        c: 15,
+        h: 15,
+        l: 15,
+        o: 15,
+        x: 1676967443000,
+      },
+      {
+        c: 20,
+        h: 20,
+        l: 20,
+        o: 20,
+        x: 1677063472000,
+      },
+      {
+        c: 18,
+        h: 18,
+        l: 18,
+        o: 18,
+        x: 1677068170000,
+      },
+    ],
+    label: "G01Q04TEMP",
+  },
+];
+
+export const chartDataYesNo: ChartData<"line"> = {
+  datasets: chartDataSet,
+};
+
+export const chartDataFreeText: ChartData<"line"> = {
+  datasets: chartDataSetFreeText,
+};
+
+export const chartDataNumerical: ChartData<"candlestick"> = {
+  datasets: chartDataSetNumerical,
+};
 
 export const filteredResponses2: FilteredResponse[] = [
   {
@@ -233,14 +311,6 @@ export const filteredResponses2: FilteredResponse[] = [
     value: "Letzter TestDaten Kommentar",
   },
 ];
-
-export const chartDataX: ChartData<"line"> = {
-  datasets: chartDataSet,
-};
-
-export const chartData2: ChartData<"line"> = {
-  datasets: chartDataSetFreeText,
-};
 
 export const authResponse = {
   id: 1,

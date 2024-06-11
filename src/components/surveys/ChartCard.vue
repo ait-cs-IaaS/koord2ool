@@ -26,9 +26,14 @@
           </div>
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
-          <div v-if="questionType !== 'freetext'" class="py-4">
+          <div v-if="questionType === 'numerical'" class="py-4">
+            <candlestick-chart
+              :chartjs-data="chartjsdata as ChartData<'candlestick'>"
+            />
+          </div>
+          <div v-else-if="questionType !== 'freetext'" class="py-4">
             <line-chart
-              :chartjs-data="chartjsdata"
+              :chartjs-data="chartjsdata as ChartData<'line'>"
               :question-type="questionType"
             />
           </div>
@@ -44,6 +49,7 @@
 <script lang="ts">
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
+import CandlestickChart from "./CandlestickChart.vue";
 import { ChartData } from "chart.js";
 import { defineComponent } from "vue";
 
@@ -52,6 +58,7 @@ export default defineComponent({
   components: {
     LineChart,
     DoughnutChart,
+    CandlestickChart,
   },
   props: {
     question: { type: String, default: "" },
@@ -61,7 +68,7 @@ export default defineComponent({
       default: () => [],
     },
     chartjsdata: {
-      type: Object as () => ChartData<"line">,
+      type: Object as () => ChartData<"line"> | ChartData<"candlestick">,
       default: () => ({}) as ChartData<"line">,
     },
     questionType: { type: String, default: "" },

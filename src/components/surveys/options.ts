@@ -1,19 +1,26 @@
 import { SettingsKey, SettingsOption } from "../../types/settings.model";
 
-const useLogicalTime = {
+const timeFormat = {
   title: "Time display",
   options: [
     {
       text: "Real",
       icon: "mdi-clock",
-      value: false,
+      value: "real",
       description:
         "Actual time: time-based charts will use actual timestamps of survey responses.",
     },
     {
+      text: "Stepped",
+      icon: "mdi-timeline",
+      value: "stepped",
+      description:
+        "Stepped time: time-based charts will aggregate responses based on 'step'.",
+    },
+    {
       text: "Logical",
       icon: "mdi-timer-sand-empty",
-      value: true,
+      value: "logical",
       description:
         "Logical time: time-based charts will show change in responses evenly for readability purposes.",
     },
@@ -109,7 +116,7 @@ const expirationTime = {
 };
 
 export const chartOptions = {
-  useLogicalTime,
+  timeFormat,
   step,
   expirationTime,
   displayNA,

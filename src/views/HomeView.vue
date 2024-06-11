@@ -44,7 +44,6 @@
 <script lang="ts">
 import SurveyList from "../components/SurveyList.vue";
 import { defineComponent } from "vue";
-import { mapState } from "pinia";
 import { koordStore } from "../store";
 
 export default defineComponent({
@@ -52,8 +51,14 @@ export default defineComponent({
   components: {
     SurveyList,
   },
-  computed: {
-    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
+  setup() {
+    const { isAuthenticated, username, instance } = koordStore();
+
+    return {
+      isAuthenticated,
+      username,
+      instance,
+    };
   },
 });
 </script>
