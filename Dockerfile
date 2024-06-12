@@ -1,6 +1,6 @@
 FROM node:20 AS builder
 ARG VITE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
-ARG BASE_URI=/
+ARG BASE_URI='/__KOORD_BASEURI__/'
 ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 WORKDIR /usr/src/koordtool
