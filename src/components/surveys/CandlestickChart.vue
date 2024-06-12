@@ -1,52 +1,37 @@
 <template>
-  <candle-chart v-if="renderChart" :data="chartjsData" :style="chartStyle" />
+  <candle-chart
+    v-if="renderChart"
+    :data="chartjsData"
+    :style="chartStyle"
+    :options="chartOptions"
+  />
 </template>
 
 <script lang="ts">
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
+  ChartOptions,
   ChartData,
-  TimeScale,
-  TimeSeriesScale,
-  BarController,
-  BarElement,
-  Filler,
+  FinancialDataPoint,
 } from "chart.js";
 import {
   CandlestickController,
   CandlestickElement,
+  OhlcController,
+  OhlcElement,
 } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
-import { candlestickChartOptions } from "./line-options";
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted, nextTick } from "vue";
 import "chartjs-adapter-moment";
-import { onMounted } from "vue";
-import { nextTick } from "vue";
+import { koordStore } from "../../store";
 
-const CandleChart = createTypedChart("candlestick", CandlestickController);
+const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
 ChartJS.register(
   CandlestickController,
   CandlestickElement,
-  CategoryScale,
-  LinearScale,
-  BarController,
-  BarElement,
-  PointElement,
-  LineElement,
-  TimeScale,
-  TimeSeriesScale,
-  Filler,
-  Title,
-  Tooltip,
-  Legend,
+  OhlcController,
+  OhlcElement,
 );
 
 export default defineComponent({
@@ -59,12 +44,49 @@ export default defineComponent({
       type: Object as () => ChartData<"candlestick">,
       required: true,
     },
+    questionKey: {
+      type: String,
+      required: true,
+    },
   },
-  setup() {
+  setup(props) {
     const renderChart = ref(false);
+    const store = koordStore();
 
     const chartStyle = {
       width: "100%",
+    };
+
+    const minmax = store.minMaxFromDataset[props.questionKey];
+
+    const chartOptions: ChartOptions<"candlestick"> = {
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "day",
+          },
+        },
+        y: {
+          min: minmax?.min || 0,
+          max: minmax?.max || 100,
+        },
+      },
+      plugins: {
+        tooltip: {
+          intersect: false,
+          mode: "index",
+          callbacks: {
+            label(ctx) {
+              const point = ctx.parsed as FinancialDataPoint;
+              if (point.o === point.c) {
+                return `${point.o}`;
+              }
+              return `low: ${point.o} high: ${point.c}`;
+            },
+          },
+        },
+      },
     };
 
     onMounted(async () => {
@@ -72,7 +94,7 @@ export default defineComponent({
       renderChart.value = true;
     });
 
-    return { chartStyle, renderChart, chartOptions: candlestickChartOptions };
+    return { chartStyle, renderChart, chartOptions };
   },
 });
 </script>

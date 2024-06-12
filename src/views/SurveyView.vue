@@ -44,20 +44,17 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col>
+      <v-col v-if="hasResponses">
+        <v-btn text="Refresh" @click="refreshSurvey(surveyId)" />
         <survey-component
-          v-if="hasResponses"
           :responses="responsesInTimeline"
           :questions="questions"
           :participants="participants"
           :until="untilDate"
           :from="fromDate"
         />
-        <div v-else>
-          <v-btn @click="refreshSurvey(surveyId)">Refresh</v-btn>
-          <v-alert type="error">No responses yet.</v-alert>
-        </div>
       </v-col>
+      <v-alert v-else type="error">No responses yet.</v-alert>
     </v-row>
   </v-container>
 </template>
@@ -120,6 +117,7 @@ export default defineComponent({
     watch(
       () => props.surveyId,
       async (newVal: number) => {
+        store.reset();
         await store.refreshSurvey(newVal);
       },
     );

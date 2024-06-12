@@ -1,4 +1,4 @@
-import { ChartOptions, FinancialDataPoint, TooltipItem } from "chart.js";
+import { ChartOptions, TooltipItem } from "chart.js";
 import { koordStore } from "../../store";
 import { getParticipant } from "../../helpers/chartFunctions";
 const store = koordStore();
@@ -105,35 +105,5 @@ export const lineChartOptions: ChartOptions<"line"> = {
     mode: "nearest",
     axis: "x",
     intersect: false,
-  },
-};
-
-export const candlestickChartOptions: ChartOptions<"candlestick"> = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      type: "time",
-      time: {
-        unit: "day",
-      },
-    },
-    y: {
-      min: 0,
-      max: 100,
-    },
-  },
-  plugins: {
-    tooltip: {
-      callbacks: {
-        label: function (context: TooltipItem<"candlestick">) {
-          const point = context.parsed as FinancialDataPoint;
-
-          const { o, h, l, c } = point;
-
-          return `O: ${o}  H: ${h}  L: ${l}  C: ${c}`;
-        },
-      },
-    },
   },
 };

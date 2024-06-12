@@ -17,13 +17,13 @@ const timeFormat = {
       description:
         "Stepped time: time-based charts will aggregate responses based on 'step'.",
     },
-    {
-      text: "Logical",
-      icon: "mdi-timer-sand-empty",
-      value: "logical",
-      description:
-        "Logical time: time-based charts will show change in responses evenly for readability purposes.",
-    },
+    // {
+    //   text: "Logical",
+    //   icon: "mdi-timer-sand-empty",
+    //   value: "logical",
+    //   description:
+    //     "Logical time: time-based charts will show change in responses evenly for readability purposes.",
+    // },
   ],
 };
 

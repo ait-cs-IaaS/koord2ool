@@ -238,8 +238,8 @@ export const chartDataSetNumerical: ChartDataset<"candlestick">[] = [
     data: [
       {
         c: 15,
-        h: 15,
-        l: 15,
+        h: 16,
+        l: 14,
         o: 15,
         x: 1676967443000,
       },

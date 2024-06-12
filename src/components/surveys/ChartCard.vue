@@ -29,6 +29,7 @@
           <div v-if="questionType === 'numerical'" class="py-4">
             <candlestick-chart
               :chartjs-data="chartjsdata as ChartData<'candlestick'>"
+              :question-key="id"
             />
           </div>
           <div v-else-if="questionType !== 'freetext'" class="py-4">

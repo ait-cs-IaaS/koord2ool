@@ -5,6 +5,7 @@ import {
   ResponseModel,
   responseCount,
   FilteredResponse,
+  HLResponse,
 } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 
@@ -330,9 +331,7 @@ export function aggregateResponses(
         response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
     );
 
-    if (lastResponse) {
-      lastResponse.value = `${lastResponse.value}, ${item.value}`;
-    } else {
+    if (!lastResponse) {
       aggregatedData.push(item);
     }
   });
@@ -340,19 +339,70 @@ export function aggregateResponses(
   return aggregatedData;
 }
 
-export function getOHCL(
+export function setMinMaxFromDataset(
+  filteredResponses: FilteredResponse[],
+  questionKey: string,
+) {
+  const store = koordStore();
+  const minMax: { min: number; max: number } = { min: 0, max: 0 };
+
+  filteredResponses.forEach((item) => {
+    const value = Number(item.value);
+    if (value < minMax.min) {
+      minMax.min = value;
+    }
+    if (value > minMax.max) {
+      minMax.max = value;
+    }
+  });
+
+  store.setMinMax(minMax, questionKey);
+}
+
+export function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
+  const aggregatedData: { [key: string]: HLResponse } = {};
+
+  data.forEach((item) => {
+    const dateKey = item.time.toISOString().split("T")[0]; // Extract the date part
+
+    if (!aggregatedData[dateKey]) {
+      aggregatedData[dateKey] = {
+        token: item.token,
+        time: new Date(dateKey),
+        lowValue: item.value,
+        highValue: item.value,
+      };
+    } else {
+      const currentValue = Number(item.value);
+
+      aggregatedData[dateKey].lowValue = Math.min(
+        Number(aggregatedData[dateKey].lowValue),
+        currentValue,
+      ).toString();
+      aggregatedData[dateKey].highValue = Math.max(
+        Number(aggregatedData[dateKey].highValue),
+        currentValue,
+      ).toString();
+    }
+  });
+
+  return Object.values(aggregatedData);
+}
+
+export function getOHLC(
   data: FilteredResponse[],
   questionKey: string,
 ): ChartData<"candlestick"> {
+  const hldata = aggregateForHL(data);
   const datasets: FinancialDataPoint[] = [];
 
-  data.forEach((item) => {
+  hldata.forEach((item) => {
     const point: FinancialDataPoint = {
       x: item.time.getTime(),
-      o: Number(item.value),
-      h: Number(item.value),
-      l: Number(item.value),
-      c: Number(item.value),
+      o: +Number(item.lowValue).toFixed(),
+      h: +Number(item.highValue).toFixed(),
+      l: +Number(item.lowValue).toFixed(),
+      c: +Number(item.highValue).toFixed(),
     };
 
     datasets.push(point);
@@ -388,7 +438,8 @@ export function createTimelineFor(
   store.updateTokenMap(store.selectedSurveyID);
 
   if (question_type === "numerical") {
-    return getOHCL(filteredResponses, questionKey);
+    setMinMaxFromDataset(filteredResponses, questionKey);
+    return getOHLC(filteredResponses, questionKey);
   }
 
   if (question_type === "yesno" || question_type === "list_dropdown") {

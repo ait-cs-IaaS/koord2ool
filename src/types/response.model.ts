@@ -45,3 +45,10 @@ export interface FilteredResponse {
   time: Date;
   value: string;
 }
+
+export interface HLResponse {
+  token: string;
+  time: Date;
+  lowValue: string;
+  highValue: string;
+}

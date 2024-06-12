@@ -39,6 +39,9 @@ export const koordStore = defineStore(
     const responseRange = ref<number[]>([0, new Date().getTime()]);
     const selectedSurveyID = ref<number | undefined>(undefined);
     const limesurvey = ref<Record<string, string> | undefined>(undefined);
+    const minMaxFromDataset = ref<Record<string, { min: number; max: number }>>(
+      {},
+    );
     const api = new LimesurveyApi();
 
     const getSurveys = computed(() =>
@@ -373,11 +376,20 @@ export const koordStore = defineStore(
       });
     }
 
+    function setMinMax(
+      minMax: { min: number; max: number },
+      questionKey: string,
+    ) {
+      minMaxFromDataset.value[questionKey] = minMax;
+    }
+
     function reset() {
       participants.value = {};
       responses.value = {};
       questions.value = {};
       surveys.value = {};
+      tokenMap.value = {};
+      minMaxFromDataset.value = {};
     }
 
     return {
@@ -410,7 +422,9 @@ export const koordStore = defineStore(
       fromDate,
       untilDate,
       getExpireDate,
+      minMaxFromDataset,
       responsesInTimeline,
+      setMinMax,
       getQuestionType,
       authenticate,
       logout,
