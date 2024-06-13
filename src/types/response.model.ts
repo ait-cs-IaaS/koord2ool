@@ -46,6 +46,12 @@ export interface FilteredResponse {
   value: string;
 }
 
+export interface MultipleChoiceResponse {
+  token: string;
+  time: Date;
+  answers: Record<string, string>;
+}
+
 export interface HLResponse {
   token: string;
   time: Date;

@@ -18,7 +18,6 @@
       <v-window v-model="tab">
         <v-window-item value="charts">
           <charts
-            :question-keys="questionKeys"
             :responses="responses"
             :questions="questions"
             :participants="participants"
@@ -30,7 +29,6 @@
 
         <v-window-item value="tabular">
           <tabular
-            :q-keys="questionKeys"
             :responses="responses"
             :participants="participants"
             :show-options="showOptions"
@@ -45,10 +43,9 @@
 import Tabular from "./Tabular.vue";
 import Charts from "./Charts.vue";
 import { ResponseModel } from "../../types/response.model";
-import { getQuestionsFromResponses } from "../../helpers/response";
 import { QuestionModel } from "../..//types/question.model";
 import { ParticipantModel } from "../../types/participant.model";
-import { computed, defineComponent, ref } from "vue";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
   name: "SurveyComponent",
@@ -78,23 +75,12 @@ export default defineComponent({
       default: () => new Date(),
     },
   },
-  setup(props) {
+  setup() {
     const showOptions = ref(false);
     const tab = ref("charts");
 
-    const questionKeys = computed(() => {
-      return Array.from(
-        new Set<string>(
-          props.responses
-            .map((response) => Object.keys(getQuestionsFromResponses(response)))
-            .flat(),
-        ),
-      ).sort();
-    });
-
     return {
       tab,
-      questionKeys,
       showOptions,
     };
   },

@@ -5,6 +5,7 @@ import {
   ResponseModel,
   responseCount,
   FilteredResponse,
+  MultipleChoiceResponse,
   HLResponse,
 } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
@@ -143,6 +144,38 @@ export function getLastResponses(
   return Object.values(lastResponses);
 }
 
+export function getMultipleChoiceResponses(
+  questionKey: string,
+  responses: ResponseModel[],
+): MultipleChoiceResponse[] {
+  const store = koordStore();
+  const { available_answers } = store.getQuestions[questionKey];
+  const result: MultipleChoiceResponse[] = [];
+  if (!available_answers || typeof available_answers !== "object") {
+    return result;
+  }
+  const responseKeys = Object.keys(available_answers);
+
+  return responses.map((response) => {
+    const answers = responseKeys.reduce(
+      (acc, key) => {
+        const answerKey = available_answers[key];
+        const value = response[key];
+        acc[answerKey] =
+          value !== undefined && value !== null ? String(value) : "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    return {
+      token: response.token,
+      time: new Date(response.submitdate),
+      answers: answers,
+    } as MultipleChoiceResponse;
+  });
+}
+
 export function filterResponses(
   questionKey: string,
   responses: ResponseModel[],
@@ -248,7 +281,7 @@ export function transformChartData(
 }
 
 export function parseDataForFreeTextChart(
-  data: FilteredResponse[],
+  data: FilteredResponse[] | MultipleChoiceResponse[],
 ): ChartData<"line"> {
   const parsedData: Record<string, ChartDataset<"line">> = {};
   const store = koordStore();
@@ -262,8 +295,16 @@ export function parseDataForFreeTextChart(
         borderColor: getBorderColor(item.token),
       };
     }
+
+    let tooltip = "";
+    if ("value" in item) {
+      tooltip = item.value;
+    } else {
+      tooltip = Object.entries(item.answers).join(", ");
+    }
+
     const point = {
-      tooltip: item.value,
+      tooltip: tooltip,
       x: item.time.getTime(),
       y: store.tokenMap[item.token] || 0,
     };
@@ -446,6 +487,15 @@ export function createTimelineFor(
     const enrichedResponses = addExpiredEntries(filteredResponses);
 
     return transformChartData(parseDataForAreaChart(enrichedResponses));
+  }
+
+  if (
+    question_type === "multipleshorttext" ||
+    question_type === "multiplechoice"
+  ) {
+    return parseDataForFreeTextChart(
+      getMultipleChoiceResponses(questionKey, store.responsesInTimeline),
+    );
   }
 
   return parseDataForFreeTextChart(filteredResponses);

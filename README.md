@@ -33,11 +33,11 @@ There are two [Build arguments](https://docs.docker.com/build/guide/build-args/)
 * `LIMESURVEY_RPC_API`
 To set the default Limesurvey Backend URI, which can be overriden during container startup
 * `BASE_URI`
-To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy)
+To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy).
 
 **Example**
 ```
-docker build --build-arg BASE_URI=/koord2ool -t koord2ool .
+docker build --build-arg BASE_URI=/koord2ool/ -t koord2ool .
 ```
 
 ### Build From Source

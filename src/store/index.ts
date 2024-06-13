@@ -36,6 +36,7 @@ export const koordStore = defineStore(
       expirationTime: 7,
       displayNA: true,
     });
+    const questionKeys = ref<string[]>([]);
     const responseRange = ref<number[]>([0, new Date().getTime()]);
     const selectedSurveyID = ref<number | undefined>(undefined);
     const limesurvey = ref<Record<string, string> | undefined>(undefined);
@@ -276,6 +277,7 @@ export const koordStore = defineStore(
           updateTokenMap(surveyId);
         }),
       ]);
+      updateQuestionKeys();
     }
 
     async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
@@ -334,6 +336,22 @@ export const koordStore = defineStore(
         return { ...acc, [titleX]: questionX };
       }, {});
       question.subquestions = result;
+
+      if (
+        payload.question_properties &&
+        payload.question_properties.available_answers &&
+        typeof payload.question_properties.available_answers === "object"
+      ) {
+        question.available_answers = Object.entries(
+          payload.question_properties.available_answers,
+        ).reduce(
+          (acc, [key, value]) => {
+            acc[`${payload.question_properties.title}[${key}]`] = value;
+            return acc;
+          },
+          {} as { [key: string]: string },
+        );
+      }
     }
 
     function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
@@ -354,6 +372,32 @@ export const koordStore = defineStore(
         console.warn(
           `Survey ${sid} not found in the store; can't update questions.`,
         );
+      }
+    }
+
+    function updateQuestionKeys() {
+      // if a question has a parent_id, I want to look at the question where qid is that id, and check if the
+      // question_theme_name is multiplechoice or multipleshorttext and if yes ignore the question
+
+      const parend_qids = Object.values(getQuestions.value).reduce(
+        (acc, question) => {
+          const key = question.qid;
+          acc[key] = question.question_theme_name ?? "";
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
+      for (const question of Object.values(getQuestions.value)) {
+        if (question.parent_qid !== 0 && question.parent_qid !== undefined) {
+          if (
+            parend_qids[question.parent_qid] === "multiplechoice" ||
+            parend_qids[question.parent_qid] === "multipleshorttext"
+          ) {
+            continue;
+          }
+        }
+        questionKeys.value.push(question.title);
       }
     }
 
@@ -421,12 +465,14 @@ export const koordStore = defineStore(
       getMaxResponseDate,
       fromDate,
       untilDate,
+      questionKeys,
       getExpireDate,
       minMaxFromDataset,
       responsesInTimeline,
       setMinMax,
       getQuestionType,
       authenticate,
+      updateSurveyList,
       logout,
       setApi,
       refreshSurvey,
@@ -435,9 +481,8 @@ export const koordStore = defineStore(
       refreshQuestionProperties,
       refreshResponses,
       refreshParticipants,
-      updateSurveyList,
-      updateQuestionProperties,
       updateQuestions,
+      updateQuestionKeys,
       updateTokenMap,
       reset,
     };

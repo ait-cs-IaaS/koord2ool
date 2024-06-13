@@ -32,14 +32,11 @@
               :question-key="id"
             />
           </div>
-          <div v-else-if="questionType !== 'freetext'" class="py-4">
+          <div v-else class="py-4">
             <line-chart
               :chartjs-data="chartjsdata as ChartData<'line'>"
               :question-type="questionType"
             />
-          </div>
-          <div v-else class="py-4">
-            <p class="text-center">No chart available for this question type</p>
           </div>
         </v-col>
       </v-row>

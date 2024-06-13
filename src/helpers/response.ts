@@ -13,18 +13,6 @@ export const ignoreKeys: (keyof ResponseModel)[] = [
   "$validUntil",
 ];
 
-export function getQuestionsFromResponses(
-  response: ResponseModel,
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  Object.entries(response).forEach(([key, value]) => {
-    if (typeof value === "string" && !ignoreKeys.includes(key)) {
-      result[key] = value;
-    }
-  });
-  return result;
-}
-
 export function hasSubmitDate(response: ResponseModel): boolean {
   return response.submitdate !== "1980-01-01 00:00:00";
 }

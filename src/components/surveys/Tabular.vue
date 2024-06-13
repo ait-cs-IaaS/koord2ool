@@ -31,6 +31,7 @@ import { koordStore } from "../../store";
 import { defineComponent, computed } from "vue";
 import { tableOptions } from "./options";
 import { getParticipant } from "../../helpers/chartFunctions";
+import { storeToRefs } from "pinia";
 
 interface Header {
   title: string;
@@ -45,10 +46,6 @@ export default defineComponent({
     DisplayOptions,
   },
   props: {
-    qKeys: {
-      type: Array<string>,
-      default: () => [],
-    },
     responses: {
       type: Array<ResponseModel>,
       default: () => [],
@@ -64,6 +61,8 @@ export default defineComponent({
   },
   setup(props) {
     const store = koordStore();
+
+    const { questionKeys } = storeToRefs(store);
 
     const filteredRecords = computed(() => {
       return props.responses.filter(
@@ -85,7 +84,7 @@ export default defineComponent({
     });
 
     const showKeys = computed(() => {
-      const qk = props.qKeys;
+      const qk = questionKeys.value;
       qk.unshift("participant");
       qk.unshift("submitdate");
       qk.unshift("token");

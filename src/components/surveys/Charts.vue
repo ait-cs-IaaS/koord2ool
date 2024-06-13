@@ -29,10 +29,10 @@ import {
   countResponsesFor,
   getQuestionText,
 } from "../../helpers/chartFunctions";
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
 import { chartOptions } from "./options";
-import { onMounted } from "vue";
 import { koordStore } from "../../store";
+import { storeToRefs } from "pinia";
 
 export default defineComponent({
   name: "ChartsComponent",
@@ -53,10 +53,6 @@ export default defineComponent({
       type: Array<ParticipantModel>,
       default: () => [],
     },
-    questionKeys: {
-      type: Array<string>,
-      default: () => [],
-    },
     from: {
       type: Date,
       default: () => new Date(),
@@ -72,6 +68,8 @@ export default defineComponent({
   },
   setup(props) {
     const store = koordStore();
+
+    const { questionKeys } = storeToRefs(store);
 
     function questionText(questionKey: string): string {
       return getQuestionText(questionKey, props.questions);
@@ -91,6 +89,7 @@ export default defineComponent({
 
     return {
       chartOptions,
+      questionKeys,
       counters,
       chartjsdata,
       questionType: store.getQuestionType,
