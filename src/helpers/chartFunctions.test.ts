@@ -35,7 +35,7 @@ describe("testParseDataForAreaChart", () => {
     expect(parseDataForAreaChart([])).toEqual([]);
   });
 
-  it("should return an array of FilteredResponses enriched with expired resposes", () => {
+  it("should return an areaChartData", () => {
     expect(parseDataForAreaChart(filteredResponsesWithExpired)).toEqual(chartData1);
   });
 });

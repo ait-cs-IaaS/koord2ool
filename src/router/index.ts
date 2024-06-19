@@ -14,11 +14,6 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
-    path: "/settings",
-    name: "settings",
-    component: () => import("../views/SettingsView.vue"),
-  },
-  {
     path: "/survey/:surveyId",
     name: "survey",
     props: (route) => ({ surveyId: Number(route.params.surveyId) }),

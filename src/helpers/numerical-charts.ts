@@ -12,11 +12,11 @@ function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
       aggregatedData[dateKey] = {
         token: item.token,
         time: new Date(dateKey),
-        lowValue: Number(item.value),
-        highValue: Number(item.value),
+        lowValue: Number(item.answer),
+        highValue: Number(item.answer),
       };
     } else {
-      const currentValue = Number(item.value);
+      const currentValue = Number(item.answer);
 
       aggregatedData[dateKey].lowValue = Math.min(Number(aggregatedData[dateKey].lowValue), currentValue);
       aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
@@ -31,7 +31,7 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
   const minMax: { min: number; max: number } = { min: 0, max: 0 };
 
   filteredResponses.forEach((item) => {
-    const value = Number(item.value);
+    const value = Number(item.answer);
     if (value < minMax.min) {
       minMax.min = value;
     }

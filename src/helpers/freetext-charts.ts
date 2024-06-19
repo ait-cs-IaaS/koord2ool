@@ -1,9 +1,9 @@
 import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
-import { FilteredResponse, MultipleChoiceResponse } from "../types/response.model";
+import { FilteredResponse } from "../types/response.model";
 import { getBorderColor } from "./shared-chartFunctions";
 
-export function parseDataForFreeTextChart(data: FilteredResponse[] | MultipleChoiceResponse[]): ChartData<"line"> {
+export function parseDataForFreeTextChart(data: FilteredResponse[]): ChartData<"line"> {
   const parsedData: Record<string, ChartDataset<"line">> = {};
   const store = useSurveyStore();
 
@@ -18,10 +18,10 @@ export function parseDataForFreeTextChart(data: FilteredResponse[] | MultipleCho
     }
 
     let tooltip: string | string[] = "";
-    if ("value" in item) {
-      tooltip = item.value;
+    if (typeof item.answer === "string") {
+      tooltip = item.answer;
     } else {
-      tooltip = Object.entries(item.answers).map(([key, value]) => `${key}: ${value}`);
+      tooltip = Object.entries(item.answer).map(([key, value]) => `${key}: ${value}`);
     }
 
     const point = {

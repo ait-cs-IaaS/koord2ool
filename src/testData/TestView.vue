@@ -1,16 +1,10 @@
 <template>
   <v-container>
+    <v-row>
+      <display-options :options="chartOptions" />
+    </v-row>
     <v-row class="py-4" style="max-height: 1200px">
-      <v-col cols="12" class="mb-5">
-        <Slider
-          v-model="responseRange"
-          :min="new Date('2023-01-01').getTime()"
-          :max="new Date('2023-12-31').getTime()"
-          :step="24 * 60 * 60 * 1000"
-          :format="tooltipFormater"
-          @change="reCalcTestData"
-        />
-      </v-col>
+      <v-btn text="Refresh" @click="reCalcTestData" />
       <v-col cols="12">
         <h2>REFERENCE</h2>
         <line-chart :data="testData" style="max-height: 600px" :options="areaChartOptions" />
@@ -29,7 +23,7 @@
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, ref } from "vue";
 import { Line as LineChart } from "vue-chartjs";
-import Slider from "@vueform/slider";
+import DisplayOptions from "../components/surveys/DisplayOptions.vue";
 import { chartData1 as series, chartDataYesNo } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import { surveyList1, questionList1, responses1 } from "../testData/chartFunctionsTestData";
@@ -50,7 +44,7 @@ import {
 import { useSurveyStore } from "../store/surveyStore";
 import { storeToRefs } from "pinia";
 import { areaChartOptions } from "../components/surveys/line-options";
-import { tooltipFormater } from "../helpers/slider";
+import { chartOptions } from "../components/surveys/options";
 
 import "chartjs-adapter-moment";
 
@@ -60,7 +54,7 @@ export default defineComponent({
   name: "PidraKin",
   components: {
     LineChart,
-    Slider,
+    DisplayOptions,
   },
   setup() {
     const store = useSurveyStore();
@@ -69,6 +63,7 @@ export default defineComponent({
     store.updateQuestions(surveyList1[0].sid, questionList1);
     store.settings.expirationTime = 7;
     store.responses[123456] = responses1;
+    store.responseRange = [new Date("2023-02-10").getTime(), new Date("2023-05-31").getTime()];
     store.selectedSurveyID = 123456;
     const testData = ref(createTimelineFor("G01Q01HO") as ChartData<"line">);
 
@@ -86,7 +81,7 @@ export default defineComponent({
       series,
       chartDataX: chartDataYesNo,
       areaChartOptions,
-      tooltipFormater,
+      chartOptions,
       reCalcTestData,
     };
   },

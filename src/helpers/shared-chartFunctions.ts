@@ -19,6 +19,10 @@ export function addExpiredEntries(responses: FilteredResponse[]): FilteredRespon
     (acc, response) => {
       const expiredTime = expirationDate(response.time);
 
+      if (expiredTime > store.untilDate || expiredTime > currentDate) {
+        return acc;
+      }
+
       const hasEntryWithinExpiration = acc.some(
         (existingResponse) =>
           existingResponse.token === response.token &&
@@ -27,14 +31,11 @@ export function addExpiredEntries(responses: FilteredResponse[]): FilteredRespon
           existingResponse !== response,
       );
 
-      if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
-        if (expiredTime > store.untilDate) {
-          return acc;
-        }
+      if (!hasEntryWithinExpiration) {
         const expiredResponse: FilteredResponse = {
           token: response.token,
           time: expiredTime,
-          value: "N/A",
+          answer: "N/A",
         };
 
         acc.push(expiredResponse);

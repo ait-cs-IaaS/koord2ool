@@ -16,7 +16,6 @@
     </v-menu>
 
     <v-btn v-if="!isAuthenticated" to="/login" prepend-icon="mdi-login" text="Login" />
-    <v-btn v-if="isAuthenticated" class="mr-2" to="/settings" theme="secondary" text="Settings" prepend-icon="mdi-cog" />
     <v-btn v-if="isAuthenticated" class="mr-2" text="Logout" prepend-icon="mdi-logout" @click="logout" />
   </v-app-bar>
 </template>

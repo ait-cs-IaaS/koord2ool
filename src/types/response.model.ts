@@ -43,15 +43,8 @@ export interface responseCount {
 export interface FilteredResponse {
   token: string;
   time: Date;
-  value: string;
+  answer: string | Record<string, string>;
 }
-
-export interface MultipleChoiceResponse {
-  token: string;
-  time: Date;
-  answers: Record<string, string>;
-}
-
 export interface HLResponse {
   token: string;
   time: Date;

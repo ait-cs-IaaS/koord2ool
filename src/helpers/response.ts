@@ -26,13 +26,36 @@ export function minResponseDate(responses: ResponseModel[]): Date {
 }
 
 export function maxResponseDate(responses: ResponseModel[]): Date {
-  return responses.map((response) => new Date(response.submitdate)).reduce((max, date) => (date > max ? date : max), new Date());
+  return responses.map((response) => new Date(response.submitdate)).reduce((max, date) => (date > max ? date : max), new Date(0));
 }
 
 export function responseMapper(questionKey: string, response: ResponseModel): FilteredResponse {
   return {
     token: response.token,
     time: new Date(response.submitdate),
-    value: response[questionKey] || "N/A",
+    answer: response[questionKey] || "N/A",
+  };
+}
+
+export function multipleChoiceResponseMapper(available_answers: string | Record<string, string>, response: ResponseModel): FilteredResponse {
+  if (typeof available_answers !== "object") {
+    return responseMapper(available_answers, response);
+  }
+
+  const responseKeys = Object.keys(available_answers);
+
+  const answers = responseKeys.reduce(
+    (acc, key) => {
+      const answerKey = available_answers[key];
+      const value = response[key];
+      acc[answerKey] = value !== undefined && value !== null ? String(value) : "";
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+  return {
+    token: response.token,
+    time: new Date(response.submitdate),
+    answer: answers,
   };
 }

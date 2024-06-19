@@ -11,7 +11,7 @@ type ChartDataEntry = {
 function valuesFromResponses(data: FilteredResponse[]): Array<string> {
   const store = useSurveyStore();
 
-  const uniqueValues = new Set(data.map((item) => item.value));
+  const uniqueValues = new Set(data.map((item) => item.answer as string));
 
   const filteredValues = Array.from(uniqueValues).filter((value) => value !== "N/A");
 
@@ -30,12 +30,17 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
   const totalUsers = getTotalUsers(responses);
   const counters = initializeCounters(uniqueValues, totalUsers);
   const chartData = initializeChartData(uniqueValues);
+  const sortedResponses = sortResponsesByTime(responses);
 
   if (store.settings.timeFormat === "stepped") {
-    return generateSteppedChartData(responses, uniqueValues, userLastResponse, counters, chartData);
+    return generateSteppedChartData(sortedResponses, uniqueValues, userLastResponse, counters, chartData);
   }
 
-  return generateContinuousChartData(responses, uniqueValues, userLastResponse, counters, chartData);
+  return generateContinuousChartData(sortedResponses, uniqueValues, userLastResponse, counters, chartData);
+}
+
+function sortResponsesByTime(responses: FilteredResponse[]): FilteredResponse[] {
+  return [...responses].sort((a, b) => a.time.getTime() - b.time.getTime());
 }
 
 function initializeUserLastResponse(responses: FilteredResponse[]): { [token: string]: string } {
@@ -102,9 +107,10 @@ function generateContinuousChartData(
     if (userLastResponse[response.token]) {
       counters[userLastResponse[response.token]]--;
     }
+    const answer = response.answer as string;
 
-    counters[response.value]++;
-    userLastResponse[response.token] = response.value;
+    counters[answer]++;
+    userLastResponse[response.token] = answer;
 
     uniqueValues.forEach((value) => {
       const entry = chartData.find((entry) => entry.name === value);
@@ -124,9 +130,10 @@ function updateCountersForRange(
     if (userLastResponse[response.token]) {
       counters[userLastResponse[response.token]]--;
     }
+    const answer = response.answer as string;
 
-    counters[response.value]++;
-    userLastResponse[response.token] = response.value;
+    counters[answer]++;
+    userLastResponse[response.token] = answer;
   });
 }
 

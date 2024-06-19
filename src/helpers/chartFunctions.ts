@@ -1,7 +1,7 @@
 import { ChartData, ChartDataset } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
 import { useSurveyStore } from "../store/surveyStore";
-import { ResponseModel, responseCount, FilteredResponse, MultipleChoiceResponse } from "../types/response.model";
+import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
 import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
@@ -10,7 +10,7 @@ import { parseDataForFreeTextChart } from "./freetext-charts";
 
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
-  return data.filter((item) => item.value !== "N/A" || store.settings.displayNA);
+  return data.filter((item) => item.answer !== "N/A" || store.settings.displayNA);
 }
 
 export function isInvalidSurvey(): boolean {
@@ -18,24 +18,38 @@ export function isInvalidSurvey(): boolean {
   return store.getResponses.length === 0 || Object.keys(store.getQuestions).length === 0 || store.getParticipants.length === 0;
 }
 
+function countResponses(responseCounts: responseCount[], answer: string): responseCount[] {
+  const existingIndex = responseCounts.findIndex((item) => item.name === answer);
+
+  if (existingIndex !== -1) {
+    responseCounts[existingIndex].value++;
+  } else {
+    responseCounts.push({ name: answer, value: 1 });
+  }
+
+  return responseCounts;
+}
+
 export function countResponsesFor(questionKey: string): responseCount[] {
   const store = useSurveyStore();
 
   const responseCounts: responseCount[] = [];
+  const multiplechoice = isMultipleChoiceQuestion(store.getQuestionType(questionKey));
 
   let lastResponses = getLastResponses(addExpiredEntries(store.getFilteredResponses(questionKey)));
 
   lastResponses = filterNA(lastResponses);
 
   lastResponses.forEach((response) => {
-    const answer = response.value;
-
-    const existingIndex = responseCounts.findIndex((item) => item.name === answer);
-
-    if (existingIndex !== -1) {
-      responseCounts[existingIndex].value++;
+    if (multiplechoice) {
+      const answers = response.answer as Record<string, string>;
+      Object.values(answers).forEach((answer) => {
+        countResponses(responseCounts, answer);
+      });
     } else {
-      responseCounts.push({ name: answer, value: 1 });
+      const answer = response.answer as string;
+
+      countResponses(responseCounts, answer);
     }
   });
 
@@ -53,34 +67,6 @@ export function getLastResponses(responses: FilteredResponse[]): FilteredRespons
   });
 
   return Object.values(lastResponses);
-}
-
-export function getMultipleChoiceResponses(questionKey: string, responses: ResponseModel[]): MultipleChoiceResponse[] {
-  const store = useSurveyStore();
-  const { available_answers } = store.getQuestions[questionKey];
-  const result: MultipleChoiceResponse[] = [];
-  if (!available_answers || typeof available_answers !== "object") {
-    return result;
-  }
-  const responseKeys = Object.keys(available_answers);
-
-  return responses.map((response) => {
-    const answers = responseKeys.reduce(
-      (acc, key) => {
-        const answerKey = available_answers[key];
-        const value = response[key];
-        acc[answerKey] = value !== undefined && value !== null ? String(value) : "";
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    return {
-      token: response.token,
-      time: new Date(response.submitdate),
-      answers: answers,
-    } as MultipleChoiceResponse;
-  });
 }
 
 export function getQuestionText(questionKey: string): string {
@@ -165,11 +151,6 @@ export function createNumericChartData(questionKey: string): ChartData<"candlest
 
   const question_type = store.getQuestionType(questionKey);
 
-  if (question_type === undefined) {
-    console.error(`Question ${questionKey} not found`);
-    return { datasets: [] };
-  }
-
   const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
 
   store.updateTokenMap(store.selectedSurveyID);
@@ -190,11 +171,6 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
 
   const question_type = store.getQuestionType(questionKey);
 
-  if (question_type === undefined) {
-    console.error(`Question ${questionKey} not found`);
-    return { datasets: [] };
-  }
-
   const filteredResponses = store.getFilteredResponses(questionKey);
 
   store.updateTokenMap(store.selectedSurveyID);
@@ -206,7 +182,7 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
   }
 
   if (isMultipleChoiceQuestion(question_type)) {
-    return parseDataForFreeTextChart(getMultipleChoiceResponses(questionKey, store.responsesInTimeline)) as ChartData<"line">;
+    return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;
   }
 
   return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;

@@ -1,7 +1,7 @@
 import { LimesurveyApi } from "../api/limesurvey";
 import { SurveyModel } from "../types/survey.model";
 import { ResponseModel, FilteredResponse } from "../types/response.model";
-import { hasSubmitDateMatch, minResponseDate, maxResponseDate, responseMapper } from "../helpers/response";
+import { hasSubmitDateMatch, minResponseDate, maxResponseDate, responseMapper, multipleChoiceResponseMapper } from "../helpers/response";
 import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel } from "../types/participant.model";
@@ -61,9 +61,9 @@ export const useSurveyStore = defineStore(
       return participants.value[selectedSurveyID.value];
     });
 
-    const getQuestions = computed(() => {
+    const getQuestions = computed<Record<string, QuestionModel>>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
-        return {} as Record<string, QuestionModel>;
+        return {};
       }
       return questions.value[selectedSurveyID.value] || {};
     });
@@ -115,7 +115,7 @@ export const useSurveyStore = defineStore(
       return minResponseDate(responses.value[selectedSurveyID.value]);
     });
 
-    const getMaxResponseDate = computed(() => {
+    const getMaxResponseDate = computed<Date>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return new Date();
       }
@@ -154,13 +154,21 @@ export const useSurveyStore = defineStore(
     });
 
     function getFilteredResponses(qid: string): FilteredResponse[] {
-      return responsesInTimeline.value.map((response) => responseMapper(qid, response)).sort((a, b) => a.time.valueOf() - b.time.valueOf());
+      return responsesInTimeline.value
+        .map((response) => {
+          if (isMultipleChoiceQuestion(getQuestionType(qid))) {
+            const { available_answers } = getQuestions.value[qid];
+            return multipleChoiceResponseMapper(available_answers || qid, response);
+          }
+          return responseMapper(qid, response);
+        })
+        .sort((a, b) => a.time.valueOf() - b.time.valueOf());
     }
 
-    function getQuestionType(qid: string) {
+    function getQuestionType(qid: string): string {
       const questions = getQuestions.value;
       const question = questions[qid];
-      if (question === undefined) {
+      if (question === undefined || question.question_theme_name === undefined) {
         return "";
       }
       return question.question_theme_name;
@@ -217,6 +225,7 @@ export const useSurveyStore = defineStore(
 
     async function refreshResponses(sid: number): Promise<void> {
       responses.value[sid] = await api.getResponses(sid);
+      responseRange.value[1] = maxResponseDate(responses.value[sid]).getTime();
     }
 
     async function refreshParticipants(sid: number): Promise<void> {
