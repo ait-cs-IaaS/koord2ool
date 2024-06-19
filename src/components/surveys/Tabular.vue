@@ -7,7 +7,7 @@
     </v-row>
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <v-data-table :items="filteredRecords" :headers="headers" no-data-text="There are no records to show">
+        <v-data-table :items="filteredRecords" :headers="headersFromKeys" no-data-text="There are no records to show">
           <template #item.token="{ item }">
             <span>
               {{ getParticipant(item.token) }}
@@ -57,35 +57,25 @@ export default defineComponent({
       });
     });
 
-    const showKeys = computed(() => {
+    const showKeys = computed<string[]>(() => {
       const qk = [...store.questionKeys];
-      qk.unshift("participant");
       qk.unshift("submitdate");
       qk.unshift("token");
       return qk;
     });
 
-    const headers = computed(() => {
-      const headers = store.responsesInTimeline.reduce((acc: Record<string, Header>, response: ResponseModel) => {
-        const keys = Object.keys(response);
-        keys.forEach((key) => {
-          if (!acc[key]) {
-            acc[key] = {
-              title: key,
-              key: key,
-              align: "start",
-              sortable: true,
-            };
-          }
-        });
-        return acc;
-      }, {});
-      return Object.values(headers).filter((header: Header) => showKeys.value.includes(header.key));
+    const headersFromKeys = computed<Header[]>(() => {
+      return showKeys.value.map((key) => ({
+        title: key,
+        key: key,
+        align: "start",
+        sortable: true,
+      }));
     });
 
     return {
       filteredRecords,
-      headers,
+      headersFromKeys,
       tableOptions,
       getParticipant,
     };

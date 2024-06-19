@@ -90,6 +90,11 @@ in "Participants settings":
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
 
+Currently only the following [question types](https://manual.limesurvey.org/Question_types/en) are supported: "yesno", "list_dropdown", "bootstrap_dropdown", "listradio", "numerical"
+  "multipleshorttext", "multiplechoice", "shortfreetext", "longfreetext"
+
+
+
 ### Changing a Survey
 
 Note that if you change a survey, you *may* lose data.
