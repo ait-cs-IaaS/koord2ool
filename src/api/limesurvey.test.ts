@@ -2,12 +2,7 @@ import { LimesurveyApi } from "../api/limesurvey";
 import { expect, describe, it, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import axios from "axios";
-import {
-  authResponse,
-  surveyListResponse,
-  questionListResponse,
-  expiredSessionResponse,
-} from "../testData/chartFunctionsTestData";
+import { authResponse, surveyListResponse, questionListResponse, expiredSessionResponse } from "../testData/chartFunctionsTestData";
 import router from "../router";
 
 vi.mock("axios");
@@ -27,9 +22,7 @@ describe("testLimesurveyApiInit", () => {
     }).toThrowError("LimeSurvey API endpoint not configured");
   });
   it("should return an instance of LimesurveyApi", () => {
-    const api = new LimesurveyApi(
-      "http://localhost:8080/index.php/admin/remotecontrol",
-    );
+    const api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
     expect(api).toBeInstanceOf(LimesurveyApi);
   });
 });
@@ -43,20 +36,12 @@ describe("testLimesurveyAuthenticate", () => {
     });
   });
   it("Should throw an error if no username is provided", async () => {
-    const api = new LimesurveyApi(
-      "http://localhost:8080/index.php/admin/remotecontrol",
-    );
-    await expect(api.authenticate("", "password")).rejects.toThrowError(
-      "LimeSurvey API username or password not configured",
-    );
+    const api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
+    await expect(api.authenticate("", "password")).rejects.toThrowError("LimeSurvey API username or password not configured");
   });
   it("Return Session Token", async () => {
-    const api = new LimesurveyApi(
-      "http://localhost:8080/index.php/admin/remotecontrol",
-    );
-    await expect(api.authenticate("user", "password")).resolves.toEqual(
-      "rApXJtkTOK_ovHUyH2J3ZkZrghgMfqJK",
-    );
+    const api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
+    await expect(api.authenticate("user", "password")).resolves.toEqual("rApXJtkTOK_ovHUyH2J3ZkZrghgMfqJK");
   });
 });
 
@@ -64,9 +49,7 @@ describe("testLimesurveyAPI", () => {
   let api: LimesurveyApi;
   beforeEach(() => {
     setActivePinia(createPinia());
-    api = new LimesurveyApi(
-      "http://localhost:8080/index.php/admin/remotecontrol",
-    );
+    api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
     api.setSession("1234", "user");
   });
   it("Should redirect to login if session key is expired", async () => {

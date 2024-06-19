@@ -1,4 +1,4 @@
-import { ResponseModel } from "../types/response.model";
+import { ResponseModel, FilteredResponse } from "../types/response.model";
 
 export const ignoreKeys: (keyof ResponseModel)[] = [
   "datestamp",
@@ -22,13 +22,17 @@ export function hasSubmitDateMatch(responses: ResponseModel[]): boolean {
 }
 
 export function minResponseDate(responses: ResponseModel[]): Date {
-  return responses
-    .map((response) => new Date(response.submitdate))
-    .reduce((min, date) => (date < min ? date : min), new Date());
+  return responses.map((response) => new Date(response.submitdate)).reduce((min, date) => (date < min ? date : min), new Date());
 }
 
 export function maxResponseDate(responses: ResponseModel[]): Date {
-  return responses
-    .map((response) => new Date(response.submitdate))
-    .reduce((max, date) => (date > max ? date : max), new Date());
+  return responses.map((response) => new Date(response.submitdate)).reduce((max, date) => (date > max ? date : max), new Date());
+}
+
+export function responseMapper(questionKey: string, response: ResponseModel): FilteredResponse {
+  return {
+    token: response.token,
+    time: new Date(response.submitdate),
+    value: response[questionKey] || "N/A",
+  };
 }

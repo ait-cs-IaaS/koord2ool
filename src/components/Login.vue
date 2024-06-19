@@ -1,14 +1,7 @@
 <template>
   <v-form fluid @submit.prevent="login(username, password)">
     <v-col>
-      <v-text-field
-        v-model="username"
-        autocomplete="username"
-        label="User"
-        :disabled="disabled"
-        :rules="[acceptUser]"
-        required
-      />
+      <v-text-field v-model="username" autocomplete="username" label="User" :disabled="disabled" :rules="[acceptUser]" required />
     </v-col>
     <v-col>
       <v-text-field
@@ -22,21 +15,14 @@
       />
     </v-col>
     <v-col>
-      <v-btn
-        type="submit"
-        color="primary"
-        :disabled="disabled || !canAuthenticate"
-      >
-        Log in
-      </v-btn>
+      <v-btn type="submit" color="primary" :disabled="disabled || !canAuthenticate"> Log in </v-btn>
     </v-col>
   </v-form>
 </template>
 
 <script lang="ts">
-import { mapActions } from "pinia";
-import { defineComponent } from "vue";
-import { koordStore } from "../store";
+import { defineComponent, ref, computed, onMounted } from "vue";
+import { useMainStore } from "../store/mainStore";
 
 export default defineComponent({
   name: "LoginComponent",
@@ -47,65 +33,53 @@ export default defineComponent({
     },
   },
   emits: ["auth-before", "auth-success", "auth-fail"],
-  data() {
-    return {
-      username: "",
-      password: "",
-    };
-  },
-  computed: {
-    acceptPassword(): boolean {
-      return this.password.length > 0;
-    },
+  setup(props, { emit }) {
+    const username = ref("");
+    const password = ref("");
+    const mainStore = useMainStore();
 
-    acceptUser(): boolean {
-      return this.username.length > 0;
-    },
+    const acceptPassword = computed(() => password.value.length > 0);
+    const acceptUser = computed(() => username.value.length > 0);
+    const canAuthenticate = computed(() => !props.disabled && username.value !== "" && password.value !== "");
 
-    canAuthenticate(): boolean {
-      return !this.disabled && this.username !== "" && this.password !== "";
-    },
-  },
-
-  mounted(): void {
-    const { VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD } =
-      import.meta.env;
-    if (VITE_APP_LIMESURVEY_LOGIN && VITE_APP_LIMESURVEY_PASSWORD) {
-      this.$nextTick(() => {
+    onMounted(() => {
+      const { VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD } = import.meta.env;
+      if (VITE_APP_LIMESURVEY_LOGIN && VITE_APP_LIMESURVEY_PASSWORD) {
         // Authenticate with LimeSurvey automatically if these environment variables are set.
-        this.login(VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD);
-      });
-    }
-  },
+        login(VITE_APP_LIMESURVEY_LOGIN, VITE_APP_LIMESURVEY_PASSWORD);
+      }
+    });
 
-  methods: {
-    ...mapActions(koordStore, ["authenticate"]),
-    getCredentials(
-      login?: unknown,
-      password?: unknown,
-    ): { password: string; username: string } {
-      const useLogin =
-        !login || typeof login !== "string" ? this.username : login;
-      const usePassword =
-        !password || typeof password !== "string" ? this.password : password;
-      return { username: useLogin, password: usePassword };
-    },
+    const getCredentials = (login?: string, pwd?: string) => {
+      return {
+        username: login || username.value,
+        password: pwd || password.value,
+      };
+    };
 
-    async login(login?: string, password?: string): Promise<void> {
-      this.$emit("auth-before", login);
+    const login = async (login?: string, pwd?: string) => {
+      emit("auth-before", login);
       try {
-        const credentials = this.getCredentials(login, password);
-        const okay = await this.authenticate(credentials);
+        const credentials = getCredentials(login, pwd);
+        const okay = await mainStore.authenticate(credentials);
         if (okay) {
-          this.$emit("auth-success", login);
+          emit("auth-success", login);
         } else {
-          // noinspection ExceptionCaughtLocallyJS
           throw new Error("Authentication failed");
         }
       } catch (e) {
-        this.$emit("auth-fail", login, e);
+        emit("auth-fail", login, e);
       }
-    },
+    };
+
+    return {
+      username,
+      password,
+      acceptPassword,
+      acceptUser,
+      canAuthenticate,
+      login,
+    };
   },
 });
 </script>

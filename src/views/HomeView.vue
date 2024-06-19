@@ -25,15 +25,7 @@
         <p>You can use this tool to visualize survey responses.</p>
         <p>
           <span class="font-weight-bold">Further links:</span>
-          <v-btn
-            v-if="instance"
-            :href="instance"
-            target="_blank"
-            varint="text"
-            flat
-          >
-            Limesurvey @ {{ instance }}
-          </v-btn>
+          <v-btn v-if="instance" :href="instance" target="_blank" varint="text" flat> Limesurvey @ {{ instance }} </v-btn>
         </p>
         <survey-list />
       </v-col>
@@ -44,7 +36,7 @@
 <script lang="ts">
 import SurveyList from "../components/SurveyList.vue";
 import { defineComponent } from "vue";
-import { koordStore } from "../store";
+import { useMainStore } from "../store/mainStore";
 
 export default defineComponent({
   name: "LoginView",
@@ -52,7 +44,7 @@ export default defineComponent({
     SurveyList,
   },
   setup() {
-    const { isAuthenticated, username, instance } = koordStore();
+    const { isAuthenticated, username, instance } = useMainStore();
 
     return {
       isAuthenticated,

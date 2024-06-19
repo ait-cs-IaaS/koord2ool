@@ -17,12 +17,12 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { mapState } from "pinia";
-import { koordStore } from "../store";
+import { useSurveyStore } from "../store/surveyStore";
 
 export default defineComponent({
   name: "SettingsView",
   computed: {
-    ...mapState(koordStore, ["settings", "instance"]),
+    ...mapState(useSurveyStore, ["settings", "instance"]),
   },
 });
 </script>

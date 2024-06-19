@@ -1,18 +1,12 @@
 <template>
-  <Slider
-    v-model="responseRange"
-    :min="minValue"
-    :max="maxValue"
-    :step="stepSize"
-    :format="tooltipFormater"
-  />
+  <Slider v-model="responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
 <script lang="ts">
 import Slider from "@vueform/slider";
 import { storeToRefs } from "pinia";
 import { defineComponent, ref } from "vue";
-import { koordStore } from "../store";
+import { useSurveyStore } from "../store/surveyStore";
 import { tooltipFormater } from "../helpers/slider";
 
 export default defineComponent({
@@ -21,29 +15,20 @@ export default defineComponent({
     Slider,
   },
   setup() {
-    const store = koordStore();
+    const store = useSurveyStore();
 
-    const { settings, getMinResponseDate, getMaxResponseDate, responseRange } =
-      storeToRefs(store);
+    const { settings, getMinResponseDate, getMaxResponseDate, responseRange } = storeToRefs(store);
 
-    const minValue = ref(
-      Math.round(getMidnight(getMinResponseDate.value).getTime()),
-    );
-    const maxValue = ref(
-      Math.round(getMidnightTomrrow(getMaxResponseDate.value).getTime()),
-    );
+    const minValue = ref(Math.round(getMidnight(getMinResponseDate.value).getTime()));
+    const maxValue = ref(Math.round(getMidnightTomrrow(getMaxResponseDate.value).getTime()));
     const stepSize = ref(settings.value.step * 3600 * 1000);
 
     function getMidnight(date: Date): Date {
-      return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-      );
+      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     }
 
     function getMidnightTomrrow(date: Date): Date {
-      return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1),
-      );
+      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1));
     }
 
     return {

@@ -1,10 +1,7 @@
 import { expect, describe, it, beforeEach } from "vitest";
-import {
-  filterResponses,
-  addExpiredEntries,
-  parseDataForAreaChart,
-  createTimelineFor,
-} from "./chartFunctions";
+import { createTimelineFor, createNumericChartData } from "./chartFunctions";
+import { parseDataForAreaChart } from "./yesno-charts";
+import { addExpiredEntries } from "./shared-chartFunctions";
 import { setActivePinia, createPinia } from "pinia";
 import {
   responses1,
@@ -17,17 +14,7 @@ import {
   chartDataNumerical,
   chartDataFreeText,
 } from "../testData/chartFunctionsTestData";
-import { koordStore } from "../store";
-
-describe("testFilteredResponses", () => {
-  it("should return an empty array if no responses are provided", () => {
-    expect(filterResponses("test", [])).toEqual([]);
-  });
-
-  it("should return an array of FilteredResponses", () => {
-    expect(filterResponses("G01Q01HO", responses1)).toEqual(filteredResponses1);
-  });
-});
+import { useSurveyStore } from "../store/surveyStore";
 
 describe("testAddExpiredEntries", () => {
   beforeEach(() => {
@@ -39,9 +26,7 @@ describe("testAddExpiredEntries", () => {
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(addExpiredEntries(filteredResponses1)).toEqual(
-      filteredResponsesWithExpired,
-    );
+    expect(addExpiredEntries(filteredResponses1)).toEqual(filteredResponsesWithExpired);
   });
 });
 
@@ -51,15 +36,13 @@ describe("testParseDataForAreaChart", () => {
   });
 
   it("should return an array of FilteredResponses enriched with expired resposes", () => {
-    expect(parseDataForAreaChart(filteredResponsesWithExpired)).toEqual(
-      chartData1,
-    );
+    expect(parseDataForAreaChart(filteredResponsesWithExpired)).toEqual(chartData1);
   });
 });
 
 describe("testCreateTimelineFor", () => {
   setActivePinia(createPinia());
-  const store = koordStore();
+  const store = useSurveyStore();
 
   beforeEach(() => {
     store.updateSurveyList(surveyList1);
@@ -79,7 +62,7 @@ describe("testCreateTimelineFor", () => {
 
   it("should return an chartData for a Numerical chart", () => {
     store.selectedSurveyID = 123456;
-    expect(createTimelineFor("G01Q04TEMP")).toEqual(chartDataNumerical);
+    expect(createNumericChartData("G01Q04TEMP")).toEqual(chartDataNumerical);
   });
 
   it("should return an chartData for a Freetext chart", () => {

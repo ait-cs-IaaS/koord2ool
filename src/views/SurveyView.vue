@@ -16,18 +16,11 @@
         <v-row v-if="!submitDateMatch">
           <v-col>
             Responses have no responseDate set.
-            <a
-              href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation"
-              target="_blank"
-              >Info</a
-            >
+            <a href="https://help.limesurvey.org/portal/en/kb/articles/survey-activation" target="_blank">Info</a>
           </v-col>
         </v-row>
         <v-row v-if="hasResponses">
-          <v-col>
-            showing {{ responsesInTimeline.length }} of
-            {{ responses.length }} answer(s)
-          </v-col>
+          <v-col> showing {{ responsesInTimeline.length }} of {{ responses.length }} answer(s) </v-col>
         </v-row>
         <v-row>
           <v-col cols="2">Number of questions</v-col>
@@ -46,13 +39,7 @@
     <v-row>
       <v-col v-if="hasResponses">
         <v-btn text="Refresh" @click="refreshSurvey(surveyId)" />
-        <survey-component
-          :responses="responsesInTimeline"
-          :questions="questions"
-          :participants="participants"
-          :until="untilDate"
-          :from="fromDate"
-        />
+        <survey-component :responses="responsesInTimeline" />
       </v-col>
       <v-alert v-else type="error">No responses yet.</v-alert>
     </v-row>
@@ -64,7 +51,7 @@ import SurveyComponent from "../components/surveys/Survey.vue";
 import TimeSlider from "../components/TimeSlider.vue";
 
 import { defineComponent, onMounted, watch, computed } from "vue";
-import { koordStore } from "../store";
+import { useSurveyStore } from "../store/surveyStore";
 import { storeToRefs } from "pinia";
 
 export default defineComponent({
@@ -83,32 +70,17 @@ export default defineComponent({
   },
 
   setup(props) {
-    const store = koordStore();
+    const store = useSurveyStore();
 
-    const {
-      getParticipants,
-      getQuestions,
-      getResponses,
-      getSurvey,
-      submitDateMatch,
-      settings,
-      fromDate,
-      untilDate,
-      responsesInTimeline,
-      questionCount,
-    } = storeToRefs(store);
+    const { getResponses, getSurvey, submitDateMatch, responsesInTimeline, questionCount } = storeToRefs(store);
 
     const hasResponses = computed(() => getResponses.value.length > 0);
 
     const surveyActive = computed(() => {
-      return (
-        typeof getSurvey.value !== "undefined" && getSurvey.value.active === "Y"
-      );
+      return typeof getSurvey.value !== "undefined" && getSurvey.value.active === "Y";
     });
 
-    console.debug(
-      `Survey with ID: ${props.surveyId} is active: ${surveyActive.value}`,
-    );
+    console.debug(`Survey with ID: ${props.surveyId} is active: ${surveyActive.value}`);
 
     onMounted(async () => {
       await store.refreshSurvey(props.surveyId);
@@ -123,14 +95,9 @@ export default defineComponent({
     );
 
     return {
-      participants: getParticipants,
       responses: getResponses,
       survey: getSurvey,
-      questions: getQuestions,
       submitDateMatch,
-      settings,
-      fromDate,
-      untilDate,
       questionCount,
       hasResponses,
       responsesInTimeline,

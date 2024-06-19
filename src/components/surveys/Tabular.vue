@@ -2,16 +2,12 @@
   <v-container fluid class="px-3 mx-0">
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <display-options :display-options="showOptions" :options="options" />
+        <display-options :options="tableOptions" />
       </v-col>
     </v-row>
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
-        <v-data-table
-          :items="filteredRecords"
-          :headers="headers"
-          no-data-text="There are no records to show"
-        >
+        <v-data-table :items="filteredRecords" :headers="headers" no-data-text="There are no records to show">
           <template #item.token="{ item }">
             <span>
               {{ getParticipant(item.token) }}
@@ -25,13 +21,11 @@
 
 <script lang="ts">
 import { ResponseModel } from "../../types/response.model";
-import { ParticipantModel } from "../../types/participant.model";
 import DisplayOptions from "./DisplayOptions.vue";
-import { koordStore } from "../../store";
+import { useSurveyStore } from "../../store/surveyStore";
 import { defineComponent, computed } from "vue";
 import { tableOptions } from "./options";
 import { getParticipant } from "../../helpers/chartFunctions";
-import { storeToRefs } from "pinia";
 
 interface Header {
   title: string;
@@ -45,46 +39,26 @@ export default defineComponent({
   components: {
     DisplayOptions,
   },
-  props: {
-    responses: {
-      type: Array<ResponseModel>,
-      default: () => [],
-    },
-    participants: {
-      type: Array<ParticipantModel>,
-      default: () => [],
-    },
-    showOptions: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  setup(props) {
-    const store = koordStore();
-
-    const { questionKeys } = storeToRefs(store);
+  setup() {
+    const store = useSurveyStore();
 
     const filteredRecords = computed(() => {
-      return props.responses.filter(
-        (response: ResponseModel, index: number, array: ResponseModel[]) => {
-          if (store.settings.onlyActive) {
-            const token = response.token;
-            const lastResponse = array
-              .filter((item) => item.token === token)
-              .reduce((prev, current) => {
-                return new Date(prev.submitdate) > new Date(current.submitdate)
-                  ? prev
-                  : current;
-              });
-            return response === lastResponse;
-          }
-          return true;
-        },
-      );
+      return store.responsesInTimeline.filter((response: ResponseModel, index: number, array: ResponseModel[]) => {
+        if (store.settings.onlyActive) {
+          const token = response.token;
+          const lastResponse = array
+            .filter((item) => item.token === token)
+            .reduce((prev, current) => {
+              return new Date(prev.submitdate) > new Date(current.submitdate) ? prev : current;
+            });
+          return response === lastResponse;
+        }
+        return true;
+      });
     });
 
     const showKeys = computed(() => {
-      const qk = questionKeys.value;
+      const qk = [...store.questionKeys];
       qk.unshift("participant");
       qk.unshift("submitdate");
       qk.unshift("token");
@@ -92,32 +66,27 @@ export default defineComponent({
     });
 
     const headers = computed(() => {
-      const headers = props.responses.reduce(
-        (acc: Record<string, Header>, response: ResponseModel) => {
-          const keys = Object.keys(response);
-          keys.forEach((key) => {
-            if (!acc[key]) {
-              acc[key] = {
-                title: key,
-                key: key,
-                align: "start",
-                sortable: true,
-              };
-            }
-          });
-          return acc;
-        },
-        {},
-      );
-      return Object.values(headers).filter((header: Header) =>
-        showKeys.value.includes(header.key),
-      );
+      const headers = store.responsesInTimeline.reduce((acc: Record<string, Header>, response: ResponseModel) => {
+        const keys = Object.keys(response);
+        keys.forEach((key) => {
+          if (!acc[key]) {
+            acc[key] = {
+              title: key,
+              key: key,
+              align: "start",
+              sortable: true,
+            };
+          }
+        });
+        return acc;
+      }, {});
+      return Object.values(headers).filter((header: Header) => showKeys.value.includes(header.key));
     });
 
     return {
       filteredRecords,
       headers,
-      options: tableOptions,
+      tableOptions,
       getParticipant,
     };
   },

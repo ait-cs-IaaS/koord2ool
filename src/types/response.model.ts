@@ -55,6 +55,6 @@ export interface MultipleChoiceResponse {
 export interface HLResponse {
   token: string;
   time: Date;
-  lowValue: string;
-  highValue: string;
+  lowValue: number;
+  highValue: number;
 }

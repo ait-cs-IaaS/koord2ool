@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import "./style.css";
 import App from "./App.vue";
-import store from "./store";
+import store from "./store/surveyStore";
 import router from "./router";
 import vuetify from "./plugins/vuetify";
 import "@mdi/font/css/materialdesignicons.css";

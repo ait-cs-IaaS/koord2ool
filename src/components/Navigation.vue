@@ -11,53 +11,39 @@
       </template>
 
       <v-list>
-        <v-list-item
-          v-for="{ key, label, to } in surveyLinks"
-          :key="key"
-          :to="to"
-          :title="label"
-        />
+        <v-list-item v-for="{ key, label, to } in surveyLinks" :key="key" :to="to" :title="label" />
       </v-list>
     </v-menu>
 
-    <v-btn
-      v-if="!isAuthenticated"
-      to="/login"
-      prepend-icon="mdi-login"
-      text="Login"
-    />
-    <v-btn
-      v-if="isAuthenticated"
-      class="mr-2"
-      to="/settings"
-      theme="secondary"
-      text="Settings"
-      prepend-icon="mdi-cog"
-    />
-    <v-btn
-      v-if="isAuthenticated"
-      class="mr-2"
-      to="/logout"
-      text="Logout"
-      prepend-icon="mdi-logout"
-    />
+    <v-btn v-if="!isAuthenticated" to="/login" prepend-icon="mdi-login" text="Login" />
+    <v-btn v-if="isAuthenticated" class="mr-2" to="/settings" theme="secondary" text="Settings" prepend-icon="mdi-cog" />
+    <v-btn v-if="isAuthenticated" class="mr-2" text="Logout" prepend-icon="mdi-logout" @click="logout" />
   </v-app-bar>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import { storeToRefs } from "pinia";
-import { koordStore } from "../store";
+import { useSurveyStore } from "../store/surveyStore";
+import { useMainStore } from "../store/mainStore";
 
 export default defineComponent({
   name: "NavigationComponent",
   setup() {
-    const store = koordStore();
-    const { surveyLinks, isAuthenticated } = storeToRefs(store);
+    const surveyStore = useSurveyStore();
+    const mainStore = useMainStore();
+
+    const { isAuthenticated } = storeToRefs(mainStore);
+    const { surveyLinks } = storeToRefs(surveyStore);
+
+    function logout(): void {
+      mainStore.logout();
+    }
 
     return {
       surveyLinks,
       isAuthenticated,
+      logout,
     };
   },
 });

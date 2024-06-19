@@ -1,18 +1,17 @@
 <template>
   <v-container fluid>
     <v-row>
-      <display-options :display-options="showOptions" :options="chartOptions">
-      </display-options>
+      <display-options :options="chartOptions" />
     </v-row>
     <v-row class="pt-3">
-      <v-col v-for="questionKey of questionKeys" :key="questionKey" cols="12">
-        <chart-card
-          :id="questionKey"
-          :question="questionText(questionKey)"
-          :counters="counters(questionKey)"
-          :chartjsdata="chartjsdata(questionKey)"
-          :question-type="questionType(questionKey)"
-        />
+      <v-col v-if="isInvalidSurvey()">
+        <v-alert outlined type="error" icon="mdi-alert" border-color="red">
+          This survey is invalid. Please check if participant-based responses are enabled, timestamps are enabled and there is at least one
+          response.
+        </v-alert>
+      </v-col>
+      <v-col v-for="questionKey of questionKeys" v-else :key="questionKey" cols="12">
+        <chart-card :question-key="questionKey" />
       </v-col>
     </v-row>
   </v-container>
@@ -20,18 +19,12 @@
 
 <script lang="ts">
 import { ResponseModel } from "../../types/response.model";
-import { ParticipantModel } from "../../types/participant.model";
-import { QuestionModel } from "../../types/question.model";
 import ChartCard from "./ChartCard.vue";
 import DisplayOptions from "./DisplayOptions.vue";
-import {
-  createTimelineFor,
-  countResponsesFor,
-  getQuestionText,
-} from "../../helpers/chartFunctions";
+import { isInvalidSurvey } from "../../helpers/chartFunctions";
 import { defineComponent, onMounted } from "vue";
 import { chartOptions } from "./options";
-import { koordStore } from "../../store";
+import { useSurveyStore } from "../../store/surveyStore";
 import { storeToRefs } from "pinia";
 
 export default defineComponent({
@@ -41,47 +34,15 @@ export default defineComponent({
     ChartCard,
   },
   props: {
-    questions: {
-      type: Object as () => Record<string, QuestionModel>,
-      default: () => ({}) as Record<string, QuestionModel>,
-    },
     responses: {
       type: Array<ResponseModel>,
       default: () => [],
     },
-    participants: {
-      type: Array<ParticipantModel>,
-      default: () => [],
-    },
-    from: {
-      type: Date,
-      default: () => new Date(),
-    },
-    until: {
-      type: Date,
-      default: () => new Date(),
-    },
-    showOptions: {
-      type: Boolean,
-      default: false,
-    },
   },
-  setup(props) {
-    const store = koordStore();
+  setup() {
+    const store = useSurveyStore();
 
     const { questionKeys } = storeToRefs(store);
-
-    function questionText(questionKey: string): string {
-      return getQuestionText(questionKey, props.questions);
-    }
-
-    function counters(questionKey: string) {
-      return countResponsesFor(questionKey, props.responses);
-    }
-
-    function chartjsdata(questionKey: string) {
-      return createTimelineFor(questionKey);
-    }
 
     onMounted(() => {
       //console.log("filteredResponses", filteredResponses.value);
@@ -90,12 +51,7 @@ export default defineComponent({
     return {
       chartOptions,
       questionKeys,
-      counters,
-      chartjsdata,
-      questionType: store.getQuestionType,
-      questionText,
-      countResponsesFor,
-      createTimelineFor,
+      isInvalidSurvey,
     };
   },
 });

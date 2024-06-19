@@ -1,38 +1,18 @@
 <template>
-  <candle-chart
-    v-if="renderChart"
-    :data="chartjsData"
-    :style="chartStyle"
-    :options="chartOptions"
-  />
+  <candle-chart v-if="renderChart" :data="chartjsData" :style="chartStyle" :options="chartOptions" />
 </template>
 
 <script lang="ts">
-import {
-  Chart as ChartJS,
-  ChartOptions,
-  ChartData,
-  FinancialDataPoint,
-} from "chart.js";
-import {
-  CandlestickController,
-  CandlestickElement,
-  OhlcController,
-  OhlcElement,
-} from "chartjs-chart-financial";
+import { Chart as ChartJS, ChartOptions, ChartData, FinancialDataPoint } from "chart.js";
+import { CandlestickController, CandlestickElement, OhlcController, OhlcElement } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick } from "vue";
 import "chartjs-adapter-moment";
-import { koordStore } from "../../store";
+import { useSurveyStore } from "../../store/surveyStore";
 
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
-ChartJS.register(
-  CandlestickController,
-  CandlestickElement,
-  OhlcController,
-  OhlcElement,
-);
+ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
 
 export default defineComponent({
   name: "CandleStickChartComponent",
@@ -51,7 +31,7 @@ export default defineComponent({
   },
   setup(props) {
     const renderChart = ref(false);
-    const store = koordStore();
+    const store = useSurveyStore();
 
     const chartStyle = {
       width: "100%",

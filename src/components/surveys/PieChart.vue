@@ -3,13 +3,7 @@
 </template>
 
 <script lang="ts">
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  ChartDataset,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartDataset } from "chart.js";
 import { Pie } from "vue-chartjs";
 import { chartColors } from "./colors";
 import { chartOptions } from "./pie-options";

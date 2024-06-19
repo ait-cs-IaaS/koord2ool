@@ -15,12 +15,7 @@
     </v-row>
     <v-row>
       <v-col cols="4">
-        <login
-          :disabled="authenticating"
-          @auth-before="setBusy"
-          @auth-fail="setFailed"
-          @auth-success="setSuccess"
-        />
+        <login :disabled="authenticating" @auth-before="setBusy" @auth-fail="setFailed" @auth-success="setSuccess" />
       </v-col>
     </v-row>
   </v-container>
@@ -30,8 +25,9 @@
 import Login from "../components/Login.vue";
 import { defineComponent, onBeforeMount, ref } from "vue";
 import { storeToRefs } from "pinia";
-import { koordStore } from "../store";
 import { useRouter } from "vue-router";
+import { useMainStore } from "../store/mainStore";
+import { useSurveyStore } from "../store/surveyStore";
 
 export default defineComponent({
   name: "LoginView",
@@ -46,9 +42,10 @@ export default defineComponent({
   },
   setup(props) {
     const authenticating = ref(false);
-    const store = koordStore();
+    const mainStore = useMainStore();
+    const surveyStore = useSurveyStore();
 
-    const { isAuthenticated, instance } = storeToRefs(store);
+    const { isAuthenticated, instance } = storeToRefs(mainStore);
     const router = useRouter();
 
     onBeforeMount(() => {
@@ -66,7 +63,7 @@ export default defineComponent({
     }
 
     function setSuccess(): void {
-      store.refreshSurveys();
+      surveyStore.refreshSurveys();
       router.push(props.returnTo);
     }
 

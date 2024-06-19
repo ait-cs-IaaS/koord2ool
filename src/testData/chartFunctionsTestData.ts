@@ -238,24 +238,17 @@ export const chartDataSetNumerical: ChartDataset<"candlestick">[] = [
     data: [
       {
         c: 15,
-        h: 16,
-        l: 14,
+        h: 15,
+        l: 15,
         o: 15,
-        x: 1676967443000,
+        x: 1676937600000,
       },
       {
         c: 20,
         h: 20,
-        l: 20,
-        o: 20,
-        x: 1677063472000,
-      },
-      {
-        c: 18,
-        h: 18,
         l: 18,
         o: 18,
-        x: 1677068170000,
+        x: 1677024000000,
       },
     ],
     label: "G01Q04TEMP",

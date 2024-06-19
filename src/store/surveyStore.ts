@@ -1,11 +1,7 @@
 import { LimesurveyApi } from "../api/limesurvey";
 import { SurveyModel } from "../types/survey.model";
-import { ResponseModel } from "../types/response.model";
-import {
-  hasSubmitDateMatch,
-  minResponseDate,
-  maxResponseDate,
-} from "../helpers/response";
+import { ResponseModel, FilteredResponse } from "../types/response.model";
+import { hasSubmitDateMatch, minResponseDate, maxResponseDate, responseMapper } from "../helpers/response";
 import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel } from "../types/participant.model";
@@ -13,6 +9,7 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import { createPinia, defineStore, type Pinia } from "pinia";
 import { ref, computed } from "vue";
 import { SettingsModel } from "../types/settings.model";
+import { isMultipleChoiceQuestion } from "../helpers/questionMapping";
 
 /** Pinia Store */
 const pinia: Pinia = createPinia();
@@ -20,10 +17,11 @@ pinia.use(piniaPluginPersistedstate);
 
 export default pinia;
 
-export const koordStore = defineStore(
-  "koord",
+export const useSurveyStore = defineStore(
+  "surveyStore",
   () => {
-    const error = ref<Error | undefined>(undefined);
+    const api = new LimesurveyApi();
+
     const tokenMap = ref<Record<string, number>>({});
     const participants = ref<Record<number, ParticipantModel[]>>({});
     const responses = ref<Record<number, ResponseModel[]>>({});
@@ -39,51 +37,11 @@ export const koordStore = defineStore(
     const questionKeys = ref<string[]>([]);
     const responseRange = ref<number[]>([0, new Date().getTime()]);
     const selectedSurveyID = ref<number | undefined>(undefined);
-    const limesurvey = ref<Record<string, string> | undefined>(undefined);
-    const minMaxFromDataset = ref<Record<string, { min: number; max: number }>>(
-      {},
-    );
-    const api = new LimesurveyApi();
+    const minMaxFromDataset = ref<Record<string, { min: number; max: number }>>({});
 
-    const getSurveys = computed(() =>
-      Object.values(surveys.value).map((survey) => survey.sid),
-    );
-    const hasError = computed(() => typeof error.value !== "undefined");
-    const isAuthenticated = computed(
-      () =>
-        typeof limesurvey.value !== "undefined" &&
-        typeof limesurvey.value.username !== "undefined",
-    );
-    const username = computed(() =>
-      typeof limesurvey.value !== "undefined"
-        ? limesurvey.value.username
-        : "User",
-    );
-    const instance = computed(() => {
-      const endpoint = import.meta.env.VITE_APP_LIMESURVEY_API;
-      if (!/\/admin\/remotecontrol$/.test(endpoint)) {
-        error.value = new Error(
-          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`,
-        );
-        return "";
-      }
-      if (endpoint === undefined) {
-        error.value = new Error(
-          "LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable.",
-        );
-        return "";
-      }
-      const domain = new URL(endpoint);
-      if (domain.hostname === undefined) {
-        error.value = new Error(
-          `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something like "https://example.com/admin/remotecontrol"`,
-        );
-        return "";
-      }
-      return `${domain.protocol}//${domain.hostname}`;
-    });
+    const getSurveys = computed<number[]>(() => Object.values(surveys.value).map((survey) => survey.sid));
 
-    const getResponses = computed(() => {
+    const getResponses = computed<ResponseModel[]>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return [] as ResponseModel[];
       }
@@ -93,7 +51,7 @@ export const koordStore = defineStore(
       return responses.value[selectedSurveyID.value];
     });
 
-    const getParticipants = computed(() => {
+    const getParticipants = computed<ParticipantModel[]>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return [] as ParticipantModel[];
       }
@@ -110,7 +68,7 @@ export const koordStore = defineStore(
       return questions.value[selectedSurveyID.value] || {};
     });
 
-    const getSurvey = computed(() => {
+    const getSurvey = computed<SurveyModel>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return {} as SurveyModel;
       }
@@ -167,28 +125,25 @@ export const koordStore = defineStore(
       return maxResponseDate(responses.value[selectedSurveyID.value]);
     });
 
-    const fromDate = computed(() => {
-      if (responseRange.value[0] === undefined) {
+    const fromDate = computed<Date>(() => {
+      if (responseRange.value[0] === undefined || responseRange.value[0] === 0) {
         return getMinResponseDate.value;
       }
       return new Date(responseRange.value[0]);
     });
 
-    const untilDate = computed(() => {
+    const untilDate = computed<Date>(() => {
       if (responseRange.value[1] === undefined) {
         return getMaxResponseDate.value;
       }
       return new Date(responseRange.value[1]);
     });
 
-    const getExpireDate = computed(() => {
-      return new Date(
-        new Date().getTime() -
-          settings.value.expirationTime * 24 * 60 * 60 * 1000,
-      );
+    const getExpireDate = computed<Date>(() => {
+      return new Date(new Date().getTime() - settings.value.expirationTime * 24 * 60 * 60 * 1000);
     });
 
-    const responsesInTimeline = computed(() => {
+    const responsesInTimeline = computed<ResponseModel[]>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return [] as ResponseModel[];
       }
@@ -197,6 +152,10 @@ export const koordStore = defineStore(
         return fromDate.value <= thisTime && thisTime <= untilDate.value;
       });
     });
+
+    function getFilteredResponses(qid: string): FilteredResponse[] {
+      return responsesInTimeline.value.map((response) => responseMapper(qid, response)).sort((a, b) => a.time.valueOf() - b.time.valueOf());
+    }
 
     function getQuestionType(qid: string) {
       const questions = getQuestions.value;
@@ -228,48 +187,13 @@ export const koordStore = defineStore(
       updateSurveyList(surveys);
     }
 
-    async function authenticate(payload: {
-      username: string;
-      password: string;
-    }): Promise<boolean> {
-      const session = await api.authenticate(
-        payload.username,
-        payload.password,
-      );
-
-      console.debug("Session: ", session);
-
-      const okay = session !== undefined;
-
-      if (okay) {
-        setApi({ session, username: payload.username });
-        await refreshSurveys();
-      } else {
-        error.value = new Error("Failed to authenticate");
-      }
-
-      return okay;
-    }
-
-    function logout() {
-      limesurvey.value = undefined;
-      api.username = undefined;
-      api.session = undefined;
-    }
-
-    function setApi(apiSession: { session: string; username: string }) {
-      api.username = apiSession.username;
-      api.session = apiSession.session;
-      limesurvey.value = apiSession;
-    }
-
     async function refreshSurvey(surveyId: number): Promise<void> {
       if (!(surveyId in surveys.value)) {
         await refreshSurveys();
       }
 
+      resetSurvey();
       selectedSurveyID.value = surveyId;
-      responseRange.value = [0, new Date().getTime()];
       await Promise.all([
         refreshQuestions(surveyId),
         refreshResponses(surveyId),
@@ -281,36 +205,25 @@ export const koordStore = defineStore(
     }
 
     async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
-      if (limesurvey.value) {
-        const questions = await api.getQuestions(sid);
-        updateQuestions(sid, questions);
-        return questions;
-      }
-      return [];
+      const questions = await api.getQuestions(sid);
+      updateQuestions(sid, questions);
+      return questions;
     }
 
     async function refreshQuestionProperties(qid: number): Promise<void> {
-      if (limesurvey.value) {
-        const question_properties = await api.getQuestionProperties(qid);
-        updateQuestionProperties({ question_properties });
-      }
+      const question_properties = await api.getQuestionProperties(qid);
+      updateQuestionProperties({ question_properties });
     }
 
     async function refreshResponses(sid: number): Promise<void> {
-      if (limesurvey.value) {
-        responses.value[sid] = await api.getResponses(sid);
-      }
+      responses.value[sid] = await api.getResponses(sid);
     }
 
     async function refreshParticipants(sid: number): Promise<void> {
-      if (isAuthenticated.value) {
-        participants.value[sid] = await api.getParticipants(sid);
-      }
+      participants.value[sid] = await api.getParticipants(sid);
     }
 
-    function updateQuestionProperties(payload: {
-      question_properties: QuestionPropertyModel;
-    }) {
+    function updateQuestionProperties(payload: { question_properties: QuestionPropertyModel }) {
       const sid: number = +payload.question_properties.sid;
       const title: string = payload.question_properties.title;
       const { questions } = surveys.value[sid];
@@ -323,10 +236,7 @@ export const koordStore = defineStore(
         console.debug("No question for title: ", title);
         return;
       }
-      if (
-        typeof payload.question_properties.subquestions === "string" ||
-        payload.question_properties.subquestions === undefined
-      ) {
+      if (typeof payload.question_properties.subquestions === "string" || payload.question_properties.subquestions === undefined) {
         return;
       }
       const { subquestions } = payload.question_properties;
@@ -342,9 +252,7 @@ export const koordStore = defineStore(
         payload.question_properties.available_answers &&
         typeof payload.question_properties.available_answers === "object"
       ) {
-        question.available_answers = Object.entries(
-          payload.question_properties.available_answers,
-        ).reduce(
+        question.available_answers = Object.entries(payload.question_properties.available_answers).reduce(
           (acc, [key, value]) => {
             acc[`${payload.question_properties.title}[${key}]`] = value;
             return acc;
@@ -358,10 +266,7 @@ export const koordStore = defineStore(
       if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
         for (const question of rawQuestions) {
-          if (
-            question.question_theme_name === "multipleshorttext" ||
-            question.question_theme_name === "multiplechoice"
-          ) {
+          if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
             refreshQuestionProperties(question.qid);
           }
           asRecord[question.title] = question;
@@ -369,9 +274,7 @@ export const koordStore = defineStore(
         questions.value[sid] = asRecord;
         surveys.value[sid].questions = asRecord;
       } else {
-        console.warn(
-          `Survey ${sid} not found in the store; can't update questions.`,
-        );
+        console.warn(`Survey ${sid} not found in the store; can't update questions.`);
       }
     }
 
@@ -390,10 +293,7 @@ export const koordStore = defineStore(
 
       for (const question of Object.values(getQuestions.value)) {
         if (question.parent_qid !== 0 && question.parent_qid !== undefined) {
-          if (
-            parend_qids[question.parent_qid] === "multiplechoice" ||
-            parend_qids[question.parent_qid] === "multipleshorttext"
-          ) {
+          if (parend_qids[question.parent_qid] === "multiplechoice" || parend_qids[question.parent_qid] === "multipleshorttext") {
             continue;
           }
         }
@@ -407,10 +307,7 @@ export const koordStore = defineStore(
       }
       const tokens: string[] = [];
       responses.value[sid].forEach((response) => {
-        const token =
-          participants.value[sid]?.find(
-            (participant) => participant.id === response.token,
-          )?.token ?? response.token;
+        const token = participants.value[sid]?.find((participant) => participant.id === response.token)?.token ?? response.token;
         if (!tokens.includes(token)) {
           tokens.push(token);
         }
@@ -420,11 +317,13 @@ export const koordStore = defineStore(
       });
     }
 
-    function setMinMax(
-      minMax: { min: number; max: number },
-      questionKey: string,
-    ) {
+    function setMinMax(minMax: { min: number; max: number }, questionKey: string) {
       minMaxFromDataset.value[questionKey] = minMax;
+    }
+
+    function resetSurvey() {
+      tokenMap.value = {};
+      responseRange.value = [0, new Date().getTime()];
     }
 
     function reset() {
@@ -437,7 +336,6 @@ export const koordStore = defineStore(
     }
 
     return {
-      error,
       tokenMap,
       participants,
       responses,
@@ -446,13 +344,8 @@ export const koordStore = defineStore(
       settings,
       responseRange,
       selectedSurveyID,
-      limesurvey,
       api,
       getSurveys,
-      hasError,
-      isAuthenticated,
-      username,
-      instance,
       getResponses,
       getParticipants,
       getQuestions,
@@ -471,10 +364,8 @@ export const koordStore = defineStore(
       responsesInTimeline,
       setMinMax,
       getQuestionType,
-      authenticate,
+      getFilteredResponses,
       updateSurveyList,
-      logout,
-      setApi,
       refreshSurvey,
       refreshSurveys,
       refreshQuestions,
@@ -489,7 +380,7 @@ export const koordStore = defineStore(
   },
   {
     persist: {
-      paths: ["limesurvey", "settings"],
+      paths: ["settings", "surveys"],
     },
   },
 );

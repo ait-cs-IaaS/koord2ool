@@ -7,15 +7,13 @@ const timeFormat = {
       text: "Real",
       icon: "mdi-clock",
       value: "real",
-      description:
-        "Actual time: time-based charts will use actual timestamps of survey responses.",
+      description: "Actual time: time-based charts will use actual timestamps of survey responses.",
     },
     {
       text: "Stepped",
       icon: "mdi-timeline",
       value: "stepped",
-      description:
-        "Stepped time: time-based charts will aggregate responses based on 'step'.",
+      description: "Stepped time: time-based charts will aggregate responses based on 'step'.",
     },
     // {
     //   text: "Logical",
@@ -121,7 +119,4 @@ export const chartOptions = {
   expirationTime,
   displayNA,
 } as Record<SettingsKey, SettingsOption>;
-export const tableOptions = { onlyActive } as Record<
-  SettingsKey,
-  SettingsOption
->;
+export const tableOptions = { onlyActive } as Record<SettingsKey, SettingsOption>;

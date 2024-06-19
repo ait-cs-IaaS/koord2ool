@@ -3,13 +3,7 @@
 </template>
 
 <script lang="ts">
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  ChartData,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartData } from "chart.js";
 import { Doughnut } from "vue-chartjs";
 import { chartOptions } from "./doughnut-options";
 import { doughnutChartData } from "../../helpers/chartFunctions";
@@ -34,9 +28,7 @@ export default defineComponent({
       height: "300px",
     });
 
-    const chartData = computed(
-      (): ChartData<"doughnut"> => doughnutChartData(props.counters),
-    );
+    const chartData = computed((): ChartData<"doughnut"> => doughnutChartData(props.counters));
 
     return {
       options,

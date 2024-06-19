@@ -1,10 +1,5 @@
 <template>
-  <line-chart
-    v-if="renderChart"
-    :data="chartjsData"
-    :style="chartStyle"
-    :options="chartOptions"
-  />
+  <line-chart v-if="renderChart" :data="chartjsData" :style="chartStyle" :options="chartOptions" />
 </template>
 
 <script lang="ts">
@@ -28,19 +23,9 @@ import { defineComponent, ref, computed } from "vue";
 import "chartjs-adapter-moment";
 import { onMounted } from "vue";
 import { nextTick } from "vue";
+import { renderAreaChart } from "../../helpers/questionMapping";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  TimeScale,
-  TimeSeriesScale,
-  Filler,
-  Title,
-  Tooltip,
-  Legend,
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, TimeScale, TimeSeriesScale, Filler, Title, Tooltip, Legend);
 
 export default defineComponent({
   name: "LineChartComponent",
@@ -56,10 +41,7 @@ export default defineComponent({
   },
   setup(props) {
     const chartOptions = computed(() => {
-      if (
-        props.questionType === "yesno" ||
-        props.questionType === "list_dropdown"
-      ) {
+      if (renderAreaChart(props.questionType)) {
         return areaChartOptions;
       }
       return lineChartOptions;

@@ -1,67 +1,36 @@
-import { ChartData, ChartDataset, FinancialDataPoint } from "chart.js";
+import { ChartData, ChartDataset } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
-import { koordStore } from "../store";
-import {
-  ResponseModel,
-  responseCount,
-  FilteredResponse,
-  MultipleChoiceResponse,
-  HLResponse,
-} from "../types/response.model";
-import { QuestionModel } from "../types/question.model";
-
-export type ChartDataEntry = {
-  name: string;
-  data: [number, number][];
-};
-
-function getBorderColor(key: string): string {
-  return chartColors[
-    key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
-      chartColors.length
-  ];
-}
+import { useSurveyStore } from "../store/surveyStore";
+import { ResponseModel, responseCount, FilteredResponse, MultipleChoiceResponse } from "../types/response.model";
+import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
+import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
+import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
+import { addExpiredEntries } from "./shared-chartFunctions";
+import { parseDataForFreeTextChart } from "./freetext-charts";
 
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
-  const store = koordStore();
-  return data.filter(
-    (item) => item.value !== "N/A" || store.settings.displayNA,
-  );
+  const store = useSurveyStore();
+  return data.filter((item) => item.value !== "N/A" || store.settings.displayNA);
 }
 
-function valuesFromResponses(data: FilteredResponse[]): Array<string> {
-  const store = koordStore();
-
-  const uniqueValues = new Set(data.map((item) => item.value));
-
-  const filteredValues = Array.from(uniqueValues).filter(
-    (value) => value !== "N/A",
-  );
-
-  if (uniqueValues.has("N/A") && store.settings.displayNA) {
-    filteredValues.push("N/A");
-  }
-
-  return filteredValues;
+export function isInvalidSurvey(): boolean {
+  const store = useSurveyStore();
+  return store.getResponses.length === 0 || Object.keys(store.getQuestions).length === 0 || store.getParticipants.length === 0;
 }
 
-export function countResponsesFor(
-  questionKey: string,
-  responses: ResponseModel[],
-): responseCount[] {
+export function countResponsesFor(questionKey: string): responseCount[] {
+  const store = useSurveyStore();
+
   const responseCounts: responseCount[] = [];
 
-  const filteredResponses = filterResponses(questionKey, responses);
-  let lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
+  let lastResponses = getLastResponses(addExpiredEntries(store.getFilteredResponses(questionKey)));
 
   lastResponses = filterNA(lastResponses);
 
   lastResponses.forEach((response) => {
     const answer = response.value;
 
-    const existingIndex = responseCounts.findIndex(
-      (item) => item.name === answer,
-    );
+    const existingIndex = responseCounts.findIndex((item) => item.name === answer);
 
     if (existingIndex !== -1) {
       responseCounts[existingIndex].value++;
@@ -73,65 +42,7 @@ export function countResponsesFor(
   return responseCounts;
 }
 
-function responseMapper(
-  questionKey: string,
-  response: ResponseModel,
-): FilteredResponse {
-  return {
-    token: response.token,
-    time: new Date(response.submitdate),
-    value: response[questionKey] || "N/A",
-  };
-}
-
-function expirationDate(relativeDate: Date): Date {
-  const store = koordStore();
-  return new Date(
-    relativeDate.getTime() +
-      store.settings.expirationTime * 24 * 60 * 60 * 1000,
-  );
-}
-
-export function addExpiredEntries(
-  responses: FilteredResponse[],
-): FilteredResponse[] {
-  const store = koordStore();
-  const currentDate = new Date();
-
-  return responses.reduce(
-    (acc, response) => {
-      const expiredTime = expirationDate(response.time);
-
-      const hasEntryWithinExpiration = acc.some(
-        (existingResponse) =>
-          existingResponse.token === response.token &&
-          existingResponse.time >= response.time &&
-          existingResponse.time <= expiredTime &&
-          existingResponse !== response,
-      );
-
-      if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
-        if (expiredTime > store.untilDate) {
-          return acc;
-        }
-        const expiredResponse: FilteredResponse = {
-          token: response.token,
-          time: expiredTime,
-          value: "N/A",
-        };
-
-        acc.push(expiredResponse);
-      }
-
-      return acc;
-    },
-    [...responses],
-  );
-}
-
-export function getLastResponses(
-  responses: FilteredResponse[],
-): FilteredResponse[] {
+export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
   const lastResponses: Record<string, FilteredResponse> = {};
 
   responses.forEach((response) => {
@@ -144,11 +55,8 @@ export function getLastResponses(
   return Object.values(lastResponses);
 }
 
-export function getMultipleChoiceResponses(
-  questionKey: string,
-  responses: ResponseModel[],
-): MultipleChoiceResponse[] {
-  const store = koordStore();
+export function getMultipleChoiceResponses(questionKey: string, responses: ResponseModel[]): MultipleChoiceResponse[] {
+  const store = useSurveyStore();
   const { available_answers } = store.getQuestions[questionKey];
   const result: MultipleChoiceResponse[] = [];
   if (!available_answers || typeof available_answers !== "object") {
@@ -161,8 +69,7 @@ export function getMultipleChoiceResponses(
       (acc, key) => {
         const answerKey = available_answers[key];
         const value = response[key];
-        acc[answerKey] =
-          value !== undefined && value !== null ? String(value) : "";
+        acc[answerKey] = value !== undefined && value !== null ? String(value) : "";
         return acc;
       },
       {} as Record<string, string>,
@@ -176,19 +83,9 @@ export function getMultipleChoiceResponses(
   });
 }
 
-export function filterResponses(
-  questionKey: string,
-  responses: ResponseModel[],
-): FilteredResponse[] {
-  return responses
-    .map((response) => responseMapper(questionKey, response))
-    .sort((a, b) => a.time.valueOf() - b.time.valueOf());
-}
-
-export function getQuestionText(
-  questionKey: string,
-  questions: Record<string, QuestionModel>,
-): string {
+export function getQuestionText(questionKey: string): string {
+  const store = useSurveyStore();
+  const questions = store.getQuestions;
   const key = questionKey.split("[");
   const question = questions[key[0]];
   if (question === undefined) {
@@ -198,127 +95,13 @@ export function getQuestionText(
     return question.question;
   }
   const subquestion = key[1].split("]")[0];
-  if (
-    question.subquestions !== undefined &&
-    subquestion !== undefined &&
-    question.subquestions[subquestion] !== undefined
-  ) {
+  if (question.subquestions !== undefined && subquestion !== undefined && question.subquestions[subquestion] !== undefined) {
     return question.subquestions[subquestion];
   }
   return question.question;
 }
 
-export function parseDataForAreaChart(responses: FilteredResponse[]) {
-  const uniqueValues = valuesFromResponses(responses);
-  // Track the last response of each user
-
-  // Initialize with "N/A" to account for users who have not responded yet
-  const userLastResponse: { [token: string]: string } = responses
-    .map((r) => ({
-      [r.token]: "N/A",
-    }))
-    .reduce((acc, curr) => ({ ...acc, ...curr }), {});
-
-  // Determine the total number of unique users
-  const totalUsers = new Set(responses.map((r) => r.token)).size;
-
-  // Initialize counters for each response type
-  const counters: Record<string, number> = uniqueValues.reduce(
-    (acc, value) => {
-      acc[value] = value === "N/A" ? totalUsers : 0;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  // Initialize chart data
-  const chartData: ChartDataEntry[] = uniqueValues.map((value) => ({
-    name: value,
-    data: [],
-  }));
-
-  // Sort responses by time
-  const sortedResponses = [...responses].sort(
-    (a, b) => a.time.getTime() - b.time.getTime(),
-  );
-
-  sortedResponses.forEach((response) => {
-    const time = response.time.getTime();
-
-    // Decrease the count for user's last response
-    if (userLastResponse[response.token]) {
-      counters[userLastResponse[response.token]]--;
-    }
-
-    // Update the response counters
-    counters[response.value]++;
-    userLastResponse[response.token] = response.value;
-
-    // Update chart data
-    uniqueValues.forEach((value) => {
-      const entry = chartData.find((entry) => entry.name === value);
-      entry?.data.push([time, counters[value]]);
-    });
-  });
-
-  return chartData;
-}
-
-export function transformChartData(
-  chartData: ChartDataEntry[],
-): ChartData<"line"> {
-  const chartdataset = chartData.map((item) => ({
-    cubicInterpolationMode: "monotone" as const,
-    label: item.name,
-    data: item.data.map(([x, y]) => ({ x, y })),
-    fill: true,
-    pointRadius: 1,
-    backgroundColor: getBorderColor(item.name),
-  }));
-  return {
-    datasets: chartdataset,
-  };
-}
-
-export function parseDataForFreeTextChart(
-  data: FilteredResponse[] | MultipleChoiceResponse[],
-): ChartData<"line"> {
-  const parsedData: Record<string, ChartDataset<"line">> = {};
-  const store = koordStore();
-
-  data.forEach((item) => {
-    if (!parsedData[item.token]) {
-      parsedData[item.token] = {
-        label: item.token,
-        data: [],
-        fill: false,
-        borderColor: getBorderColor(item.token),
-      };
-    }
-
-    let tooltip = "";
-    if ("value" in item) {
-      tooltip = item.value;
-    } else {
-      tooltip = Object.entries(item.answers).join(", ");
-    }
-
-    const point = {
-      tooltip: tooltip,
-      x: item.time.getTime(),
-      y: store.tokenMap[item.token] || 0,
-    };
-    parsedData[item.token].data.push(point);
-  });
-
-  return {
-    datasets: Object.values(parsedData),
-  };
-}
-
-export function doughnutChartData(
-  responseCounts: responseCount[],
-): ChartData<"doughnut"> {
+export function doughnutChartData(responseCounts: responseCount[]): ChartData<"doughnut"> {
   const labels: string[] = [];
   const datasets: ChartDataset<"doughnut">[] = [];
   const data: number[] = [];
@@ -340,21 +123,15 @@ export function doughnutChartData(
 }
 
 export function getParticipant(token: string): string {
-  const store = koordStore();
+  const store = useSurveyStore();
 
   // participant where participant.token === token
-  const participant = store.getParticipants.find(
-    (participant) => participant.token === token,
-  );
-  return participant
-    ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}`
-    : token;
+  const participant = store.getParticipants.find((participant) => participant.token === token);
+  return participant ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}` : token;
 }
 
-export function aggregateResponses(
-  data: FilteredResponse[],
-): FilteredResponse[] {
-  const store = koordStore();
+export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[] {
+  const store = useSurveyStore();
 
   if (store.settings.timeFormat !== "stepped") {
     return data;
@@ -367,9 +144,7 @@ export function aggregateResponses(
   // if there are multiple responses from the same token withing step hours of time aggregate them
   data.forEach((item) => {
     const lastResponse = aggregatedData.find(
-      (response) =>
-        response.token === item.token &&
-        response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
+      (response) => response.token === item.token && response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
     );
 
     if (!lastResponse) {
@@ -377,126 +152,62 @@ export function aggregateResponses(
     }
   });
 
+  console.debug(`Aggregated ${data.length} responses to ${aggregatedData.length}`);
   return aggregatedData;
 }
 
-export function setMinMaxFromDataset(
-  filteredResponses: FilteredResponse[],
-  questionKey: string,
-) {
-  const store = koordStore();
-  const minMax: { min: number; max: number } = { min: 0, max: 0 };
-
-  filteredResponses.forEach((item) => {
-    const value = Number(item.value);
-    if (value < minMax.min) {
-      minMax.min = value;
-    }
-    if (value > minMax.max) {
-      minMax.max = value;
-    }
-  });
-
-  store.setMinMax(minMax, questionKey);
-}
-
-export function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
-  const aggregatedData: { [key: string]: HLResponse } = {};
-
-  data.forEach((item) => {
-    const dateKey = item.time.toISOString().split("T")[0]; // Extract the date part
-
-    if (!aggregatedData[dateKey]) {
-      aggregatedData[dateKey] = {
-        token: item.token,
-        time: new Date(dateKey),
-        lowValue: item.value,
-        highValue: item.value,
-      };
-    } else {
-      const currentValue = Number(item.value);
-
-      aggregatedData[dateKey].lowValue = Math.min(
-        Number(aggregatedData[dateKey].lowValue),
-        currentValue,
-      ).toString();
-      aggregatedData[dateKey].highValue = Math.max(
-        Number(aggregatedData[dateKey].highValue),
-        currentValue,
-      ).toString();
-    }
-  });
-
-  return Object.values(aggregatedData);
-}
-
-export function getOHLC(
-  data: FilteredResponse[],
-  questionKey: string,
-): ChartData<"candlestick"> {
-  const hldata = aggregateForHL(data);
-  const datasets: FinancialDataPoint[] = [];
-
-  hldata.forEach((item) => {
-    const point: FinancialDataPoint = {
-      x: item.time.getTime(),
-      o: +Number(item.lowValue).toFixed(),
-      h: +Number(item.highValue).toFixed(),
-      l: +Number(item.lowValue).toFixed(),
-      c: +Number(item.highValue).toFixed(),
-    };
-
-    datasets.push(point);
-  });
-
-  return {
-    datasets: [
-      {
-        label: questionKey,
-        data: datasets,
-      },
-    ],
-  };
-}
-
-export function createTimelineFor(
-  questionKey: string,
-): ChartData<"line"> | ChartData<"candlestick"> {
-  const store = koordStore();
+export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
+  const store = useSurveyStore();
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
     return { datasets: [] };
   }
 
   const question_type = store.getQuestionType(questionKey);
-  let filteredResponses = filterResponses(
-    questionKey,
-    store.responsesInTimeline,
-  );
 
-  filteredResponses = aggregateResponses(filteredResponses);
+  if (question_type === undefined) {
+    console.error(`Question ${questionKey} not found`);
+    return { datasets: [] };
+  }
+
+  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
 
   store.updateTokenMap(store.selectedSurveyID);
 
-  if (question_type === "numerical") {
+  if (isNumericalQuestion(question_type)) {
     setMinMaxFromDataset(filteredResponses, questionKey);
     return getOHLC(filteredResponses, questionKey);
   }
+  return { datasets: [] };
+}
 
-  if (question_type === "yesno" || question_type === "list_dropdown") {
-    const enrichedResponses = addExpiredEntries(filteredResponses);
-
-    return transformChartData(parseDataForAreaChart(enrichedResponses));
+export function createTimelineFor(questionKey: string): ChartData<"line"> {
+  const store = useSurveyStore();
+  if (store.selectedSurveyID === undefined) {
+    console.error("No survey selected");
+    return { datasets: [] };
   }
 
-  if (
-    question_type === "multipleshorttext" ||
-    question_type === "multiplechoice"
-  ) {
-    return parseDataForFreeTextChart(
-      getMultipleChoiceResponses(questionKey, store.responsesInTimeline),
-    );
+  const question_type = store.getQuestionType(questionKey);
+
+  if (question_type === undefined) {
+    console.error(`Question ${questionKey} not found`);
+    return { datasets: [] };
   }
 
-  return parseDataForFreeTextChart(filteredResponses);
+  const filteredResponses = store.getFilteredResponses(questionKey);
+
+  store.updateTokenMap(store.selectedSurveyID);
+
+  if (isYesNoQuestion(question_type)) {
+    const enrichedResponses = aggregateResponses(addExpiredEntries(filteredResponses));
+
+    return transformChartData(parseDataForAreaChart(enrichedResponses)) as ChartData<"line">;
+  }
+
+  if (isMultipleChoiceQuestion(question_type)) {
+    return parseDataForFreeTextChart(getMultipleChoiceResponses(questionKey, store.responsesInTimeline)) as ChartData<"line">;
+  }
+
+  return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;
 }

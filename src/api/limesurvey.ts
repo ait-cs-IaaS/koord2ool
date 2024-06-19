@@ -4,8 +4,8 @@ import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel, ParticipantError } from "../types/participant.model";
 import router from "../router";
-import { koordStore } from "../store";
 import axios from "axios";
+import { useMainStore } from "../store/mainStore";
 
 // https://api.limesurvey.org/classes/remotecontrol_handle.html
 
@@ -17,34 +17,22 @@ export class LimesurveyApi {
 
   private nextId = 1;
 
-  constructor(
-    private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API,
-  ) {
+  constructor(private readonly endpoint = import.meta.env.VITE_APP_LIMESURVEY_API) {
     console.debug(`LimeSurvey API endpoint: ${endpoint}`);
     if (typeof endpoint === "undefined") {
       throw new Error("LimeSurvey API endpoint not configured");
     }
     if (!/\/admin\/remotecontrol$/.test(endpoint)) {
-      console.warn(
-        `LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`,
-      );
+      console.warn(`LimeSurvey RPC endpoint configured to be "${endpoint}"; expecting something ending in "/admin/remotecontrol"`);
       throw new Error("LimeSurvey API endpoint not configured");
     }
   }
 
-  async authenticate(
-    username: string,
-    password: string,
-  ): Promise<string | undefined> {
+  async authenticate(username: string, password: string): Promise<string | undefined> {
     if (username === "" || password === "") {
       throw new Error("LimeSurvey API username or password not configured");
     }
-    const session = await this.call<Auth>(
-      "get_session_key",
-      false,
-      username,
-      password,
-    );
+    const session = await this.call<Auth>("get_session_key", false, username, password);
     if (session && typeof session === "string") {
       this.session = session;
       this.username = username;
@@ -87,20 +75,8 @@ export class LimesurveyApi {
     return this.call("get_question_properties", true, qid);
   }
 
-  async getResponses(
-    sid: number,
-    headingType = "code",
-  ): Promise<ResponseModel[]> {
-    const data = await this.call(
-      "export_responses",
-      true,
-      sid,
-      "json",
-      "en",
-      "complete",
-      headingType,
-      "long",
-    );
+  async getResponses(sid: number, headingType = "code"): Promise<ResponseModel[]> {
+    const data = await this.call("export_responses", true, sid, "json", "en", "complete", headingType, "long");
     if (typeof data === "string") {
       const asObj = JSON.parse(atob(data));
       if (Array.isArray(asObj.responses)) {
@@ -131,18 +107,12 @@ export class LimesurveyApi {
     return [];
   }
 
-  isParticipantsError(
-    o: ParticipantModel[] | ParticipantError,
-  ): o is ParticipantError {
+  isParticipantsError(o: ParticipantModel[] | ParticipantError): o is ParticipantError {
     return "status" in o;
   }
 
   async getParticipants(sid: number): Promise<ParticipantModel[]> {
-    const participants = await this.call<ParticipantModel[] | ParticipantError>(
-      "list_participants",
-      true,
-      sid,
-    );
+    const participants = await this.call<ParticipantModel[] | ParticipantError>("list_participants", true, sid);
     if (this.isParticipantsError(participants)) {
       return [];
     }
@@ -150,7 +120,7 @@ export class LimesurveyApi {
   }
 
   private restoreSession(): boolean {
-    const store = koordStore();
+    const store = useMainStore();
     if (store.limesurvey === undefined) {
       console.error("Failed to restore state.");
       return false;
@@ -181,12 +151,9 @@ export class LimesurveyApi {
   }
 
   private checkResult(result: Record<string, string>): void {
-    const store = koordStore();
+    const store = useMainStore();
 
-    if (
-      result.status !== undefined &&
-      result.status === "Invalid session key"
-    ) {
+    if (result.status !== undefined && result.status === "Invalid session key") {
       this.session = undefined;
       this.username = undefined;
       store.limesurvey = undefined;
@@ -196,13 +163,9 @@ export class LimesurveyApi {
     }
   }
 
-  private async call<T = unknown>(
-    rpcMethod: string,
-    authenticated = true,
-    ...params: unknown[]
-  ): Promise<T> {
+  private async call<T = unknown>(rpcMethod: string, authenticated = true, ...params: unknown[]): Promise<T> {
     console.debug(`Calling ${rpcMethod}`);
-    const store = koordStore();
+    const store = useMainStore();
 
     if (authenticated) {
       this.requireAuth();
