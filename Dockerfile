@@ -5,8 +5,8 @@ ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
-RUN npm ci &&\
-    npm run build -- --base=${BASE_URI}
+RUN pnpm install --frozen-lockfile &&\
+    pnpm run build -- --base=${BASE_URI}
 
 FROM nginx:stable-alpine
 WORKDIR /usr

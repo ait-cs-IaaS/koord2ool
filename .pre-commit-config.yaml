@@ -5,13 +5,13 @@ repos:
       - id: eslint
         name: lint
         language: node
-        entry: npm run lint
+        entry: pnpm run lint
         files: ^src/
         types_or: [javascript, jsx, ts, tsx, vue]
       - id: prettier
         name: format
         language: node
-        entry: npm run format
+        entry: pnpm run format
         files: ^src/
         types_or: [javascript, jsx, ts, tsx, vue]
 

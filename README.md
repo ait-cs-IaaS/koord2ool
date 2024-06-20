@@ -45,8 +45,8 @@ docker build --build-arg BASE_URI=/koord2ool/ -t koord2ool .
 Koord2ool can also be built from source, following steps are necesarry.
 
 - Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
-- Run `npm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
-- Run `npm run build`. Generated files are available in the dist folder and can be pushed to the web server.
+- Run `pnpm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
+- Run `pnpm run build`. Generated files are available in the dist folder and can be pushed to the web server.
 - Server files from `dist` folder with any web server (e.g., nginx)
 - Install and Configure LimeSurvey
 - Login with LimeSurvey Credentials
