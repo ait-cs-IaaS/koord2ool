@@ -35,6 +35,7 @@ export const useSurveyStore = defineStore(
       displayNA: true,
     });
     const questionKeys = ref<string[]>([]);
+    const questionKeysWithSubquestions = ref<string[]>([]);
     const responseRange = ref<number[]>([0, new Date().getTime()]);
     const selectedSurveyID = ref<number | undefined>(undefined);
     const minMaxFromDataset = ref<Record<string, { min: number; max: number }>>({});
@@ -166,8 +167,7 @@ export const useSurveyStore = defineStore(
     }
 
     function getQuestionType(qid: string): string {
-      const questions = getQuestions.value;
-      const question = questions[qid];
+      const question = getQuestions.value[qid];
       if (question === undefined || question.question_theme_name === undefined) {
         return "";
       }
@@ -209,18 +209,17 @@ export const useSurveyStore = defineStore(
           updateTokenMap(surveyId);
         }),
       ]);
-      updateQuestionKeys();
     }
 
     async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
       const questions = await api.getQuestions(sid);
-      updateQuestions(sid, questions);
+      await updateQuestions(sid, questions);
       return questions;
     }
 
-    async function refreshQuestionProperties(qid: number): Promise<void> {
-      const question_properties = await api.getQuestionProperties(qid);
-      updateQuestionProperties({ question_properties });
+    async function refreshQuestionProperties(question: QuestionModel): Promise<QuestionModel> {
+      const question_properties = await api.getQuestionProperties(question.qid);
+      return updateQuestionProperties({ question_properties }, question);
     }
 
     async function refreshResponses(sid: number): Promise<void> {
@@ -232,21 +231,9 @@ export const useSurveyStore = defineStore(
       participants.value[sid] = await api.getParticipants(sid);
     }
 
-    function updateQuestionProperties(payload: { question_properties: QuestionPropertyModel }) {
-      const sid: number = +payload.question_properties.sid;
-      const title: string = payload.question_properties.title;
-      const { questions } = surveys.value[sid];
-      if (questions === undefined) {
-        console.debug("No questions for survey: ", sid);
-        return;
-      }
-      const question = questions[title];
-      if (question === undefined) {
-        console.debug("No question for title: ", title);
-        return;
-      }
+    function updateQuestionProperties(payload: { question_properties: QuestionPropertyModel }, question: QuestionModel): QuestionModel {
       if (typeof payload.question_properties.subquestions === "string" || payload.question_properties.subquestions === undefined) {
-        return;
+        return question;
       }
       const { subquestions } = payload.question_properties;
       const result = Object.keys(subquestions).reduce((acc, key) => {
@@ -269,14 +256,23 @@ export const useSurveyStore = defineStore(
           {} as { [key: string]: string },
         );
       }
+      return question;
     }
 
-    function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
+    async function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
       if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
-        for (const question of rawQuestions) {
+        for (let question of rawQuestions) {
+          if (question.parent_qid === 0) {
+            questionKeys.value.push(question.title);
+          }
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
-            refreshQuestionProperties(question.qid);
+            question = await refreshQuestionProperties(question);
+            if (question.available_answers === undefined) {
+              questionKeysWithSubquestions.value.push(question.title);
+            } else {
+              questionKeysWithSubquestions.value.push(...Object.keys(question.available_answers));
+            }
           }
           asRecord[question.title] = question;
         }
@@ -284,29 +280,6 @@ export const useSurveyStore = defineStore(
         surveys.value[sid].questions = asRecord;
       } else {
         console.warn(`Survey ${sid} not found in the store; can't update questions.`);
-      }
-    }
-
-    function updateQuestionKeys() {
-      // if a question has a parent_id, I want to look at the question where qid is that id, and check if the
-      // question_theme_name is multiplechoice or multipleshorttext and if yes ignore the question
-
-      const parend_qids = Object.values(getQuestions.value).reduce(
-        (acc, question) => {
-          const key = question.qid;
-          acc[key] = question.question_theme_name ?? "";
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
-
-      for (const question of Object.values(getQuestions.value)) {
-        if (question.parent_qid !== 0 && question.parent_qid !== undefined) {
-          if (parend_qids[question.parent_qid] === "multiplechoice" || parend_qids[question.parent_qid] === "multipleshorttext") {
-            continue;
-          }
-        }
-        questionKeys.value.push(question.title);
       }
     }
 
@@ -368,6 +341,7 @@ export const useSurveyStore = defineStore(
       fromDate,
       untilDate,
       questionKeys,
+      questionKeysWithSubquestions,
       getExpireDate,
       minMaxFromDataset,
       responsesInTimeline,
@@ -382,7 +356,6 @@ export const useSurveyStore = defineStore(
       refreshResponses,
       refreshParticipants,
       updateQuestions,
-      updateQuestionKeys,
       updateTokenMap,
       reset,
     };

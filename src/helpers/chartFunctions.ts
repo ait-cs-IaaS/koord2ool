@@ -43,8 +43,10 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   lastResponses.forEach((response) => {
     if (multiplechoice) {
       const answers = response.answer as Record<string, string>;
-      Object.values(answers).forEach((answer) => {
-        countResponses(responseCounts, answer);
+      Object.entries(answers).forEach(([key, answer]) => {
+        if (answer !== "N/A") {
+          countResponses(responseCounts, `${key}: ${answer}`);
+        }
       });
     } else {
       const answer = response.answer as string;
@@ -182,7 +184,7 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
   }
 
   if (isMultipleChoiceQuestion(question_type)) {
-    return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;
+    return transformChartData(parseDataForAreaChart(filteredResponses)) as ChartData<"line">;
   }
 
   return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;

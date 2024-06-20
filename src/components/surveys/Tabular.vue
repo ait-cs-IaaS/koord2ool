@@ -58,7 +58,7 @@ export default defineComponent({
     });
 
     const showKeys = computed<string[]>(() => {
-      const qk = [...store.questionKeys];
+      const qk = [...store.questionKeysWithSubquestions];
       qk.unshift("submitdate");
       qk.unshift("token");
       return qk;
