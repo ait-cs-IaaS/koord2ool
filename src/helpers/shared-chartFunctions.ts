@@ -3,7 +3,6 @@ import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 
 export function getBorderColor(key: string): string {
-  console.debug("getBorderColor", key);
   return chartColors[key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % chartColors.length];
 }
 

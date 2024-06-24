@@ -268,11 +268,11 @@ export const useSurveyStore = defineStore(
           }
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
             question = await refreshQuestionProperties(question);
-            if (question.available_answers === undefined) {
-              questionKeysWithSubquestions.value.push(question.title);
-            } else {
+            if (question.available_answers !== undefined) {
               questionKeysWithSubquestions.value.push(...Object.keys(question.available_answers));
             }
+          } else if (question.parent_qid === 0) {
+            questionKeysWithSubquestions.value.push(question.title);
           }
           asRecord[question.title] = question;
         }

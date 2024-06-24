@@ -11,7 +11,16 @@ type ChartDataEntry = {
 function valuesFromResponses(data: FilteredResponse[]): Array<string> {
   const store = useSurveyStore();
 
-  const uniqueValues = new Set(data.map((item) => item.answer as string));
+  const uniqueValues = new Set(
+    data
+      .flatMap((item) => {
+        if (typeof item.answer === "string") {
+          return [item.answer];
+        }
+        return Object.entries(item.answer).map(([key, value]) => `${key}: ${value}`);
+      })
+      .filter((value) => typeof value === "string" && value.trim() !== ""),
+  );
 
   const filteredValues = Array.from(uniqueValues).filter((value) => value !== "N/A");
 
@@ -26,6 +35,7 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
   const store = useSurveyStore();
 
   const uniqueValues = valuesFromResponses(responses);
+  console.debug(JSON.stringify(uniqueValues, null, 2));
   const userLastResponse = initializeUserLastResponse(responses);
   const totalUsers = getTotalUsers(responses);
   const counters = initializeCounters(uniqueValues, totalUsers);
@@ -102,20 +112,8 @@ function generateContinuousChartData(
   chartData: ChartDataEntry[],
 ): ChartDataEntry[] {
   responses.forEach((response) => {
-    const time = response.time.getTime();
-
-    if (userLastResponse[response.token]) {
-      counters[userLastResponse[response.token]]--;
-    }
-    const answer = response.answer as string;
-
-    counters[answer]++;
-    userLastResponse[response.token] = answer;
-
-    uniqueValues.forEach((value) => {
-      const entry = chartData.find((entry) => entry.name === value);
-      entry?.data.push([time, counters[value]]);
-    });
+    updateCounters(response, userLastResponse, counters);
+    addCurrentCountersToChartData(response.time, uniqueValues, counters, chartData);
   });
 
   return chartData;
@@ -127,14 +125,18 @@ function updateCountersForRange(
   counters: Record<string, number>,
 ): void {
   responsesInRange.forEach((response) => {
-    if (userLastResponse[response.token]) {
-      counters[userLastResponse[response.token]]--;
-    }
-    const answer = response.answer as string;
-
-    counters[answer]++;
-    userLastResponse[response.token] = answer;
+    updateCounters(response, userLastResponse, counters);
   });
+}
+
+function updateCounters(response: FilteredResponse, userLastResponse: { [token: string]: string }, counters: Record<string, number>): void {
+  if (userLastResponse[response.token]) {
+    counters[userLastResponse[response.token]]--;
+  }
+  const answer = response.answer as string;
+
+  counters[answer]++;
+  userLastResponse[response.token] = answer;
 }
 
 function addCurrentCountersToChartData(

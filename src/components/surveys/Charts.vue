@@ -18,11 +18,10 @@
 </template>
 
 <script lang="ts">
-import { ResponseModel } from "../../types/response.model";
 import ChartCard from "./ChartCard.vue";
 import DisplayOptions from "./DisplayOptions.vue";
 import { isInvalidSurvey } from "../../helpers/chartFunctions";
-import { defineComponent, onMounted } from "vue";
+import { defineComponent } from "vue";
 import { chartOptions } from "./options";
 import { useSurveyStore } from "../../store/surveyStore";
 import { storeToRefs } from "pinia";
@@ -33,20 +32,10 @@ export default defineComponent({
     DisplayOptions,
     ChartCard,
   },
-  props: {
-    responses: {
-      type: Array<ResponseModel>,
-      default: () => [],
-    },
-  },
   setup() {
     const store = useSurveyStore();
 
     const { questionKeys } = storeToRefs(store);
-
-    onMounted(() => {
-      //console.log("filteredResponses", filteredResponses.value);
-    });
 
     return {
       chartOptions,

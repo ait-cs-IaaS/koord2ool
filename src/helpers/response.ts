@@ -48,7 +48,9 @@ export function multipleChoiceResponseMapper(available_answers: string | Record<
     (acc, key) => {
       const answerKey = available_answers[key];
       const value = response[key];
-      acc[answerKey] = value !== undefined && value !== null ? String(value) : "";
+      if (value !== "N/A") {
+        acc[answerKey] = value !== undefined && value !== null ? String(value) : "";
+      }
       return acc;
     },
     {} as Record<string, string>,

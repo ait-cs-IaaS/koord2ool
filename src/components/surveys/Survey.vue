@@ -7,7 +7,7 @@
     <v-card-text>
       <v-window v-model="tab">
         <v-window-item value="charts">
-          <charts :responses="responses" />
+          <charts />
         </v-window-item>
 
         <v-window-item value="tabular">
@@ -21,7 +21,6 @@
 <script lang="ts">
 import Tabular from "./Tabular.vue";
 import Charts from "./Charts.vue";
-import { ResponseModel } from "../../types/response.model";
 import { defineComponent, ref } from "vue";
 
 export default defineComponent({
@@ -29,12 +28,6 @@ export default defineComponent({
   components: {
     Tabular,
     Charts,
-  },
-  props: {
-    responses: {
-      type: Array<ResponseModel>,
-      default: () => [],
-    },
   },
   setup() {
     const tab = ref("charts");

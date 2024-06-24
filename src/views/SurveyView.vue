@@ -20,7 +20,7 @@
           </v-col>
         </v-row>
         <v-row v-if="hasResponses">
-          <v-col> showing {{ responsesInTimeline.length }} of {{ responses.length }} answer(s) </v-col>
+          <v-col> showing {{ responseCount }} answer(s) </v-col>
         </v-row>
         <v-row>
           <v-col cols="2">Number of questions</v-col>
@@ -39,7 +39,7 @@
     <v-row>
       <v-col v-if="hasResponses">
         <v-btn text="Refresh" @click="refreshSurvey(surveyId)" />
-        <survey-component :responses="responsesInTimeline" />
+        <survey-component />
       </v-col>
       <v-alert v-else type="error">No responses yet.</v-alert>
     </v-row>
@@ -74,10 +74,14 @@ export default defineComponent({
 
     const { getResponses, getSurvey, submitDateMatch, responsesInTimeline, questionCount } = storeToRefs(store);
 
-    const hasResponses = computed(() => getResponses.value.length > 0);
+    const hasResponses = computed(() => responsesInTimeline.value.length > 0);
 
     const surveyActive = computed(() => {
       return typeof getSurvey.value !== "undefined" && getSurvey.value.active === "Y";
+    });
+
+    const responseCount = computed(() => {
+      return `${responsesInTimeline.value.length} of ${getResponses.value.length}`;
     });
 
     console.debug(`Survey with ID: ${props.surveyId} is active: ${surveyActive.value}`);
@@ -95,7 +99,7 @@ export default defineComponent({
     );
 
     return {
-      responses: getResponses,
+      responseCount,
       survey: getSurvey,
       submitDateMatch,
       questionCount,
