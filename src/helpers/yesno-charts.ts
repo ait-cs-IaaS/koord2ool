@@ -1,7 +1,7 @@
 import { ChartData } from "chart.js";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
-import { getBorderColor } from "./shared-chartFunctions";
+import { chartColors } from "../components/surveys/colors";
 
 type ChartDataEntry = {
   name: string;
@@ -17,7 +17,7 @@ function valuesFromResponses(data: FilteredResponse[]): Array<string> {
         if (typeof item.answer === "string") {
           return [item.answer];
         }
-        return Object.entries(item.answer).map(([key, value]) => `${key}: ${value}`);
+        return Object.keys(item.answer);
       })
       .filter((value) => typeof value === "string" && value.trim() !== ""),
   );
@@ -35,7 +35,6 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
   const store = useSurveyStore();
 
   const uniqueValues = valuesFromResponses(responses);
-  console.debug(JSON.stringify(uniqueValues, null, 2));
   const userLastResponse = initializeUserLastResponse(responses);
   const totalUsers = getTotalUsers(responses);
   const counters = initializeCounters(uniqueValues, totalUsers);
@@ -130,10 +129,24 @@ function updateCountersForRange(
 }
 
 function updateCounters(response: FilteredResponse, userLastResponse: { [token: string]: string }, counters: Record<string, number>): void {
+  const { answer } = response;
+
+  if (typeof answer !== "string") {
+    const answers = Object.entries(answer);
+
+    answers.forEach((answer) => {
+      counters[userLastResponse[response.token]] = 0;
+      if (answer[1] === "Yes") {
+        counters[answer[0]]++;
+        userLastResponse[response.token] = answer[0];
+      }
+    });
+    return;
+  }
+
   if (userLastResponse[response.token]) {
     counters[userLastResponse[response.token]]--;
   }
-  const answer = response.answer as string;
 
   counters[answer]++;
   userLastResponse[response.token] = answer;
@@ -152,14 +165,15 @@ function addCurrentCountersToChartData(
 }
 
 export function transformChartData(chartData: ChartDataEntry[]): ChartData<"line"> {
-  const chartdataset = chartData.map((item) => ({
+  const chartdataset = chartData.map((item, index) => ({
     cubicInterpolationMode: "monotone" as const,
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
     fill: true,
     pointRadius: 1,
-    backgroundColor: getBorderColor(item.name),
+    backgroundColor: chartColors[index % chartColors.length],
   }));
+
   return {
     datasets: chartdataset,
   };

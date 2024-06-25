@@ -7,6 +7,7 @@ import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
+import { QuestionModel } from "../types/question.model";
 
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
@@ -41,14 +42,16 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   lastResponses = filterNA(lastResponses);
 
   lastResponses.forEach((response) => {
-    if (multiplechoice) {
+    if (multiplechoice && typeof response.answer === "object") {
       const answers = response.answer as Record<string, string>;
       Object.entries(answers).forEach(([key, answer]) => {
-        countResponses(responseCounts, `${key}: ${answer}`);
+        if (answer === "Yes") {
+          console.debug(`Answer: ${key}: ${answer} - questionKey: ${questionKey}`);
+          countResponses(responseCounts, key);
+        }
       });
     } else {
       const answer = response.answer as string;
-
       countResponses(responseCounts, answer);
     }
   });
@@ -106,6 +109,17 @@ export function doughnutChartData(responseCounts: responseCount[]): ChartData<"d
     labels,
     datasets,
   };
+}
+
+export function getQuestionTitle(qid: number): string {
+  console.debug(`getQuestionTitle(${qid})`);
+  return getQuestion(qid)?.title || `${qid}`;
+}
+
+export function getQuestion(qid: number): QuestionModel | undefined {
+  const store = useSurveyStore();
+
+  return Object.values(store.getQuestions).find((question) => question.qid === qid);
 }
 
 export function getParticipant(token: string): string {
@@ -178,12 +192,12 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
   if (isYesNoQuestion(question_type)) {
     const enrichedResponses = aggregateResponses(addExpiredEntries(filteredResponses));
 
-    return transformChartData(parseDataForAreaChart(enrichedResponses)) as ChartData<"line">;
+    return transformChartData(parseDataForAreaChart(enrichedResponses));
   }
 
   if (isMultipleChoiceQuestion(question_type)) {
-    parseDataForAreaChart(filteredResponses);
+    return transformChartData(parseDataForAreaChart(filteredResponses));
   }
 
-  return parseDataForFreeTextChart(filteredResponses) as ChartData<"line">;
+  return parseDataForFreeTextChart(filteredResponses);
 }

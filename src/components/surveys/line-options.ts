@@ -9,6 +9,7 @@ export const areaChartOptions: ChartOptions<"line"> = {
   maintainAspectRatio: false,
   scales: {
     x: {
+      offset: true,
       type: "time",
       time: {
         unit: "day",
