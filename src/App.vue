@@ -9,8 +9,6 @@ import NavComponent from "./components/Navigation.vue";
     <v-main class="main">
       <router-view />
     </v-main>
-
-    <v-footer app> AWAKE </v-footer>
   </v-app>
 </template>
 

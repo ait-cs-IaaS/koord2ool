@@ -3,17 +3,11 @@
 </template>
 
 <script lang="ts">
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  ChartDataset,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartDataset } from "chart.js";
 import { Pie } from "vue-chartjs";
 import { chartColors } from "./colors";
 import { chartOptions } from "./pie-options";
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -28,33 +22,26 @@ export default defineComponent({
       default: () => [],
     },
   },
-  data() {
-    return {
-      options: chartOptions,
-    };
-  },
-  computed: {
-    chartData(): { labels: string[]; datasets: ChartDataset<"pie">[] } {
+  setup(props) {
+    const chartData = computed(() => {
       const labels: string[] = [];
       const datasets: ChartDataset<"pie">[] = [];
-      if (Array.isArray(this.counters)) {
-        const data: number[] = [];
-        const backgroundColor: string[] = [];
-        this.counters.forEach(({ name, value }, index) => {
-          labels.push(name);
-          data.push(value);
-          backgroundColor.push(chartColors[index % chartColors.length]);
-        });
+      props.counters.forEach(({ name, value }, index) => {
+        labels.push(name);
         datasets.push({
-          data,
-          backgroundColor,
+          data: [value],
+          backgroundColor: [chartColors[index % chartColors.length]],
         });
-      }
+      });
       return {
         labels,
         datasets,
       };
-    },
+    });
+    return {
+      options: chartOptions,
+      chartData,
+    };
   },
 });
 </script>

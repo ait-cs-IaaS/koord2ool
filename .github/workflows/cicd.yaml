@@ -18,14 +18,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 'lts/Iron'
-          cache: 'npm'
+          cache: 'pnpm'
       - name: install dependencies
-        run: npm ci
+        run: pnpm install
       - name: lint with eslint
-        run: npm run lint_and_format
+        run: pnpm run lint_and_format
 
   build:
     name: build docker

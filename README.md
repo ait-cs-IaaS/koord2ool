@@ -33,11 +33,11 @@ There are two [Build arguments](https://docs.docker.com/build/guide/build-args/)
 * `LIMESURVEY_RPC_API`
 To set the default Limesurvey Backend URI, which can be overriden during container startup
 * `BASE_URI`
-To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy)
+To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy).
 
 **Example**
 ```
-docker build --build-arg BASE_URI=/koord2ool -t koord2ool .
+docker build --build-arg BASE_URI=/koord2ool/ -t koord2ool .
 ```
 
 ### Build From Source
@@ -45,8 +45,8 @@ docker build --build-arg BASE_URI=/koord2ool -t koord2ool .
 Koord2ool can also be built from source, following steps are necesarry.
 
 - Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
-- Run `npm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
-- Run `npm run build`. Generated files are available in the dist folder and can be pushed to the web server.
+- Run `pnpm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
+- Run `pnpm run build`. Generated files are available in the dist folder and can be pushed to the web server.
 - Server files from `dist` folder with any web server (e.g., nginx)
 - Install and Configure LimeSurvey
 - Login with LimeSurvey Credentials
@@ -89,6 +89,11 @@ in "Participants settings":
 
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
+
+Currently only the following [question types](https://manual.limesurvey.org/Question_types/en) are supported: "yesno", "list_dropdown", "bootstrap_dropdown", "listradio", "numerical"
+  "multipleshorttext", "multiplechoice", "shortfreetext", "longfreetext"
+
+
 
 ### Changing a Survey
 

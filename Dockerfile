@@ -1,12 +1,15 @@
 FROM node:20 AS builder
 ARG VITE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
-ARG BASE_URI=/
+ARG BASE_URI='/__KOORD_BASEURI__/'
 ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
-RUN npm ci &&\
-    npm run build -- --base=${BASE_URI}
+RUN pnpm install --frozen-lockfile &&\
+    pnpm run build -- --base=${BASE_URI}
 
 FROM nginx:stable-alpine
 WORKDIR /usr

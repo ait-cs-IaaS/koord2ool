@@ -1,18 +1,12 @@
 <template>
-  <Slider
-    v-model="responseRange"
-    :min="minValue"
-    :max="maxValue"
-    :step="stepSize"
-    :format="tooltipFormater"
-  />
+  <Slider v-model="responseRange" :min="minValue" :max="maxValue" :step="stepSize" :format="tooltipFormater" />
 </template>
 
 <script lang="ts">
 import Slider from "@vueform/slider";
-import { mapWritableState, mapState } from "pinia";
-import { defineComponent } from "vue";
-import { koordStore } from "../store";
+import { storeToRefs } from "pinia";
+import { defineComponent, ref } from "vue";
+import { useSurveyStore } from "../store/surveyStore";
 import { tooltipFormater } from "../helpers/slider";
 
 export default defineComponent({
@@ -20,45 +14,30 @@ export default defineComponent({
   components: {
     Slider,
   },
-  data: function () {
-    return {};
-  },
-  computed: {
-    ...mapState(koordStore, [
-      "settings",
-      "getMaxResponseDate",
-      "getMinResponseDate",
-    ]),
-    ...mapWritableState(koordStore, ["responseRange"]),
+  setup() {
+    const store = useSurveyStore();
 
-    minValue(): number {
-      return Math.round(this.getMidnight(this.getMinResponseDate()).getTime());
-    },
+    const { settings, getMinResponseDate, getMaxResponseDate, responseRange } = storeToRefs(store);
 
-    maxValue(): number {
-      return Math.round(
-        this.getMidnightTomrrow(this.getMaxResponseDate()).getTime()
-      );
-    },
+    const minValue = ref(Math.round(getMidnight(getMinResponseDate.value).getTime()));
+    const maxValue = ref(Math.round(getMidnightTomrrow(getMaxResponseDate.value).getTime()));
+    const stepSize = ref(settings.value.step * 3600 * 1000);
 
-    stepSize(): number {
-      return this.settings.step * 3600 * 1000;
-    },
-  },
-  methods: {
-    tooltipFormater(value: number): string {
-      return tooltipFormater(value);
-    },
-    getMidnight(date: Date): Date {
-      return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-      );
-    },
-    getMidnightTomrrow(date: Date): Date {
-      return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1)
-      );
-    },
+    function getMidnight(date: Date): Date {
+      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    }
+
+    function getMidnightTomrrow(date: Date): Date {
+      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1));
+    }
+
+    return {
+      responseRange,
+      minValue,
+      maxValue,
+      stepSize,
+      tooltipFormater,
+    };
   },
 });
 </script>

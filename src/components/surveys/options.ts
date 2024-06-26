@@ -1,22 +1,27 @@
 import { SettingsKey, SettingsOption } from "../../types/settings.model";
 
-const useLogicalTime = {
+const timeFormat = {
   title: "Time display",
   options: [
     {
       text: "Real",
       icon: "mdi-clock",
-      value: false,
-      description:
-        "Actual time: time-based charts will use actual timestamps of survey responses.",
+      value: "real",
+      description: "Actual time: time-based charts will use actual timestamps of survey responses.",
     },
     {
-      text: "Logical",
-      icon: "mdi-timer-sand-empty",
-      value: true,
-      description:
-        "Logical time: time-based charts will show change in responses evenly for readability purposes.",
+      text: "Stepped",
+      icon: "mdi-timeline",
+      value: "stepped",
+      description: "Stepped time: time-based charts will aggregate responses based on 'step'.",
     },
+    // {
+    //   text: "Logical",
+    //   icon: "mdi-timer-sand-empty",
+    //   value: "logical",
+    //   description:
+    //     "Logical time: time-based charts will show change in responses evenly for readability purposes.",
+    // },
   ],
 };
 
@@ -109,12 +114,9 @@ const expirationTime = {
 };
 
 export const chartOptions = {
-  useLogicalTime,
+  timeFormat,
   step,
   expirationTime,
   displayNA,
 } as Record<SettingsKey, SettingsOption>;
-export const tableOptions = { onlyActive } as Record<
-  SettingsKey,
-  SettingsOption
->;
+export const tableOptions = { onlyActive } as Record<SettingsKey, SettingsOption>;

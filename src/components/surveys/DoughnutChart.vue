@@ -3,17 +3,11 @@
 </template>
 
 <script lang="ts">
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  ChartDataset,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartData } from "chart.js";
 import { Doughnut } from "vue-chartjs";
-import { chartColors } from "./colors";
 import { chartOptions } from "./doughnut-options";
-import { defineComponent } from "vue";
+import { doughnutChartData } from "../../helpers/chartFunctions";
+import { defineComponent, computed, ref } from "vue";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -28,36 +22,19 @@ export default defineComponent({
       default: () => [],
     },
   },
-  data() {
+  setup(props) {
+    const options = chartOptions;
+    const chartStyle = ref({
+      height: "300px",
+    });
+
+    const chartData = computed((): ChartData<"doughnut"> => doughnutChartData(props.counters));
+
     return {
-      options: chartOptions,
-      chartStyle: {
-        height: "300px",
-      },
+      options,
+      chartStyle,
+      chartData,
     };
-  },
-  computed: {
-    chartData(): { labels: string[]; datasets: ChartDataset<"doughnut">[] } {
-      const labels: string[] = [];
-      const datasets: ChartDataset<"doughnut">[] = [];
-      if (Array.isArray(this.counters)) {
-        const data: number[] = [];
-        const backgroundColor: string[] = [];
-        this.counters.forEach(({ name, value }, index) => {
-          labels.push(name);
-          data.push(value);
-          backgroundColor.push(chartColors[index % chartColors.length]);
-        });
-        datasets.push({
-          data,
-          backgroundColor,
-        });
-      }
-      return {
-        labels,
-        datasets,
-      };
-    },
   },
 });
 </script>

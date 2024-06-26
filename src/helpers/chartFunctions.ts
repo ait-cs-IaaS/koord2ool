@@ -1,127 +1,65 @@
 import { ChartData, ChartDataset } from "chart.js";
 import { chartColors } from "../components/surveys/colors";
-import { koordStore } from "../store";
-import {
-  ResponseModel,
-  responseCount,
-  FilteredResponse,
-} from "../types/response.model";
+import { useSurveyStore } from "../store/surveyStore";
+import { responseCount, FilteredResponse } from "../types/response.model";
+import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
+import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
+import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
+import { addExpiredEntries } from "./shared-chartFunctions";
+import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
 
-export type ChartDataEntry = {
-  name: string;
-  data: [number, number][];
-};
-
-function getBorderColor(key: string): string {
-  return chartColors[
-    key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
-      chartColors.length
-  ];
+function filterNA(data: FilteredResponse[]): FilteredResponse[] {
+  const store = useSurveyStore();
+  return data.filter((item) => item.answer !== "N/A" || store.settings.displayNA);
 }
 
-function valuesFromResponses(data: FilteredResponse[]): Array<string> {
-  const store = koordStore();
+export function isInvalidSurvey(): boolean {
+  const store = useSurveyStore();
+  return store.getResponses.length === 0 || Object.keys(store.getQuestions).length === 0 || store.getParticipants.length === 0;
+}
 
-  const uniqueValues = new Set(data.map((item) => item.value));
+function countResponses(responseCounts: responseCount[], answer: string): responseCount[] {
+  const existingIndex = responseCounts.findIndex((item) => item.name === answer);
 
-  const filteredValues = Array.from(uniqueValues).filter(
-    (value) => value !== "N/A"
-  );
-
-  if (uniqueValues.has("N/A") && store.settings.displayNA) {
-    filteredValues.push("N/A");
+  if (existingIndex !== -1) {
+    responseCounts[existingIndex].value++;
+  } else {
+    responseCounts.push({ name: answer, value: 1 });
   }
 
-  return filteredValues;
+  return responseCounts;
 }
 
-export function countResponsesFor(
-  questionKey: string,
-  responses: ResponseModel[]
-): responseCount[] {
+export function countResponsesFor(questionKey: string): responseCount[] {
+  const store = useSurveyStore();
+
   const responseCounts: responseCount[] = [];
+  const multiplechoice = isMultipleChoiceQuestion(store.getQuestionType(questionKey));
 
-  const filteredResponses = filterResponses(questionKey, responses);
-  const lastResponses = getLastResponses(addExpiredEntries(filteredResponses));
+  let lastResponses = getLastResponses(addExpiredEntries(store.getFilteredResponses(questionKey)));
 
-  console.debug("lastResponses", lastResponses);
+  lastResponses = filterNA(lastResponses);
 
   lastResponses.forEach((response) => {
-    const answer = response.value;
-
-    const existingIndex = responseCounts.findIndex(
-      (item) => item.name === answer
-    );
-
-    if (existingIndex !== -1) {
-      responseCounts[existingIndex].value++;
+    if (multiplechoice && typeof response.answer === "object") {
+      const answers = response.answer as Record<string, string>;
+      Object.entries(answers).forEach(([key, answer]) => {
+        if (answer === "Yes") {
+          console.debug(`Answer: ${key}: ${answer} - questionKey: ${questionKey}`);
+          countResponses(responseCounts, key);
+        }
+      });
     } else {
-      responseCounts.push({ name: answer, value: 1 });
+      const answer = response.answer as string;
+      countResponses(responseCounts, answer);
     }
   });
 
   return responseCounts;
 }
 
-function responseMapper(
-  questionKey: string,
-  response: ResponseModel
-): FilteredResponse {
-  return {
-    token: response.token,
-    time: new Date(response.submitdate),
-    value: response[questionKey] || "N/A",
-  };
-}
-
-function expirationDate(relativeDate: Date): Date {
-  const store = koordStore();
-  return new Date(
-    relativeDate.getTime() + store.settings.expirationTime * 24 * 60 * 60 * 1000
-  );
-}
-
-export function addExpiredEntries(
-  responses: FilteredResponse[]
-): FilteredResponse[] {
-  const store = koordStore();
-  const currentDate = new Date();
-
-  return responses.reduce(
-    (acc, response) => {
-      const expiredTime = expirationDate(response.time);
-
-      const hasEntryWithinExpiration = acc.some(
-        (existingResponse) =>
-          existingResponse.token === response.token &&
-          existingResponse.time >= response.time &&
-          existingResponse.time <= expiredTime &&
-          existingResponse !== response
-      );
-
-      if (!hasEntryWithinExpiration && expiredTime <= currentDate) {
-        if (expiredTime > store.untilDate) {
-          return acc;
-        }
-        const expiredResponse: FilteredResponse = {
-          token: response.token,
-          time: expiredTime,
-          value: "N/A",
-        };
-
-        acc.push(expiredResponse);
-      }
-
-      return acc;
-    },
-    [...responses]
-  );
-}
-
-export function getLastResponses(
-  responses: FilteredResponse[]
-): FilteredResponse[] {
+export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
   const lastResponses: Record<string, FilteredResponse> = {};
 
   responses.forEach((response) => {
@@ -134,19 +72,9 @@ export function getLastResponses(
   return Object.values(lastResponses);
 }
 
-export function filterResponses(
-  questionKey: string,
-  responses: ResponseModel[]
-): FilteredResponse[] {
-  return responses
-    .map((response) => responseMapper(questionKey, response))
-    .sort((a, b) => a.time.valueOf() - b.time.valueOf());
-}
-
-export function getQuestionText(
-  questionKey: string,
-  questions: Record<string, QuestionModel>
-): string {
+export function getQuestionText(questionKey: string): string {
+  const store = useSurveyStore();
+  const questions = store.getQuestions;
   const key = questionKey.split("[");
   const question = questions[key[0]];
   if (question === undefined) {
@@ -156,141 +84,119 @@ export function getQuestionText(
     return question.question;
   }
   const subquestion = key[1].split("]")[0];
-  if (
-    question.subquestions !== undefined &&
-    subquestion !== undefined &&
-    question.subquestions[subquestion] !== undefined
-  ) {
+  if (question.subquestions !== undefined && subquestion !== undefined && question.subquestions[subquestion] !== undefined) {
     return question.subquestions[subquestion];
   }
   return question.question;
 }
 
-export function getQuestionType(
-  questionKey: string,
-  questions: Record<string, QuestionModel>
-): string {
-  const key = questionKey.split("[");
-  const question = questions[key[0]];
-  if (question === undefined) {
-    return "";
+export function doughnutChartData(responseCounts: responseCount[]): ChartData<"doughnut"> {
+  const labels: string[] = [];
+  const datasets: ChartDataset<"doughnut">[] = [];
+  const data: number[] = [];
+  const backgroundColor: string[] = [];
+  responseCounts.forEach(({ name, value }, index) => {
+    labels.push(name);
+    data.push(value);
+    backgroundColor.push(chartColors[index % chartColors.length]);
+  });
+  datasets.push({
+    data,
+    backgroundColor,
+  });
+
+  return {
+    labels,
+    datasets,
+  };
+}
+
+export function getQuestionTitle(qid: number): string {
+  console.debug(`getQuestionTitle(${qid})`);
+  return getQuestion(qid)?.title || `${qid}`;
+}
+
+export function getQuestion(qid: number): QuestionModel | undefined {
+  const store = useSurveyStore();
+
+  return Object.values(store.getQuestions).find((question) => question.qid === qid);
+}
+
+export function getParticipant(token: string): string {
+  const store = useSurveyStore();
+
+  // participant where participant.token === token
+  const participant = store.getParticipants.find((participant) => participant.token === token);
+  return participant ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}` : token;
+}
+
+export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[] {
+  const store = useSurveyStore();
+
+  if (store.settings.timeFormat !== "stepped") {
+    return data;
   }
-  return question.question_theme_name || "";
-}
 
-export function parseDataForAreaChart(responses: FilteredResponse[]) {
-  const uniqueValues = valuesFromResponses(responses);
-  // Track the last response of each user
+  const aggregatedData: FilteredResponse[] = [];
 
-  // Initialize with "N/A" to account for users who have not responded yet
-  const userLastResponse: { [token: string]: string } = responses
-    .map((r) => ({
-      [r.token]: "N/A",
-    }))
-    .reduce((acc, curr) => ({ ...acc, ...curr }), {});
+  const { step } = store.settings;
 
-  // Determine the total number of unique users
-  const totalUsers = new Set(responses.map((r) => r.token)).size;
-
-  // Initialize counters for each response type
-  const counters: Record<string, number> = uniqueValues.reduce((acc, value) => {
-    acc[value] = value === "N/A" ? totalUsers : 0;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Initialize chart data
-  const chartData: ChartDataEntry[] = uniqueValues.map((value) => ({
-    name: value,
-    data: [],
-  }));
-
-  // Sort responses by time
-  const sortedResponses = [...responses].sort(
-    (a, b) => a.time.getTime() - b.time.getTime()
-  );
-
-  sortedResponses.forEach((response) => {
-    const time = response.time.getTime();
-
-    // Decrease the count for user's last response
-    if (userLastResponse[response.token]) {
-      counters[userLastResponse[response.token]]--;
-    }
-
-    // Update the response counters
-    counters[response.value]++;
-    userLastResponse[response.token] = response.value;
-
-    // Update chart data
-    uniqueValues.forEach((value) => {
-      const entry = chartData.find((entry) => entry.name === value);
-      entry?.data.push([time, counters[value]]);
-    });
-  });
-
-  return chartData;
-}
-
-export function transformChartData(
-  chartData: ChartDataEntry[]
-): ChartData<"line"> {
-  const chartdataset = chartData.map((item) => ({
-    cubicInterpolationMode: "monotone" as const,
-    label: item.name,
-    data: item.data.map(([x, y]) => ({ x, y })),
-    fill: true,
-    pointRadius: 1,
-    backgroundColor: getBorderColor(item.name),
-  }));
-  return {
-    datasets: chartdataset,
-  };
-}
-
-export function parseDataForFreeTextChart(
-  data: FilteredResponse[]
-): ChartData<"line"> {
-  const parsedData: Record<string, ChartDataset<"line">> = {};
-  const store = koordStore();
-
+  // if there are multiple responses from the same token withing step hours of time aggregate them
   data.forEach((item) => {
-    if (!parsedData[item.token]) {
-      parsedData[item.token] = {
-        label: item.token,
-        data: [],
-        fill: false,
-        borderColor: getBorderColor(item.token),
-      };
+    const lastResponse = aggregatedData.find(
+      (response) => response.token === item.token && response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
+    );
+
+    if (!lastResponse) {
+      aggregatedData.push(item);
     }
-    const point = {
-      tooltip: item.value,
-      x: item.time.getTime(),
-      y: store.tokenMap[item.token] || 0,
-    };
-    parsedData[item.token].data.push(point);
   });
 
-  return {
-    datasets: Object.values(parsedData),
-  };
+  console.debug(`Aggregated ${data.length} responses to ${aggregatedData.length}`);
+  return aggregatedData;
 }
 
-export function createTimelineFor(
-  questionKey: string,
-  surveyId: number
-): ChartData<"line"> {
-  const store = koordStore();
-  const question_type = store.getQuestionType(surveyId, questionKey);
-  const filteredResponses = filterResponses(
-    questionKey,
-    store.responsesInTimeline(surveyId)
-  );
+export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
+  const store = useSurveyStore();
+  if (store.selectedSurveyID === undefined) {
+    console.error("No survey selected");
+    return { datasets: [] };
+  }
 
-  store.updateTokenMap(surveyId);
+  const question_type = store.getQuestionType(questionKey);
 
-  if (question_type === "yesno" || question_type === "list_dropdown") {
-    const enrichedResponses = addExpiredEntries(filteredResponses);
+  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+
+  store.updateTokenMap(store.selectedSurveyID);
+
+  if (isNumericalQuestion(question_type)) {
+    setMinMaxFromDataset(filteredResponses, questionKey);
+    return getOHLC(filteredResponses, questionKey);
+  }
+  return { datasets: [] };
+}
+
+export function createTimelineFor(questionKey: string): ChartData<"line"> {
+  const store = useSurveyStore();
+  if (store.selectedSurveyID === undefined) {
+    console.error("No survey selected");
+    return { datasets: [] };
+  }
+
+  const question_type = store.getQuestionType(questionKey);
+
+  const filteredResponses = store.getFilteredResponses(questionKey);
+
+  store.updateTokenMap(store.selectedSurveyID);
+
+  if (isYesNoQuestion(question_type)) {
+    const enrichedResponses = aggregateResponses(addExpiredEntries(filteredResponses));
+
     return transformChartData(parseDataForAreaChart(enrichedResponses));
+  }
+
+  if (isMultipleChoiceQuestion(question_type)) {
+    return transformChartData(parseDataForAreaChart(filteredResponses));
   }
 
   return parseDataForFreeTextChart(filteredResponses);

@@ -13,6 +13,8 @@ export interface QuestionModel {
 
   qid: number;
 
+  parent_qid?: number;
+
   mandatory?: "N" | "Y";
 
   type?: string;
@@ -20,6 +22,8 @@ export interface QuestionModel {
   question_theme_name?: string;
 
   subquestions?: Record<string, string>;
+
+  available_answers?: string | Record<string, string>;
 
   /**
    * This is a catch-all property for past, present, or future use.

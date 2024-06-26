@@ -14,18 +14,9 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
-    path: "/logout",
-    name: "logout",
-    component: () => import("../views/LogoutView.vue"),
-  },
-  {
-    path: "/settings",
-    name: "settings",
-    component: () => import("../views/SettingsView.vue"),
-  },
-  {
     path: "/survey/:surveyId",
     name: "survey",
+    props: (route) => ({ surveyId: Number(route.params.surveyId) }),
     component: () => import("../views/SurveyView.vue"),
     beforeEnter: requiresAuthGuard,
   },

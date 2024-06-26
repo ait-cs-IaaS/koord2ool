@@ -25,17 +25,9 @@
         <p>You can use this tool to visualize survey responses.</p>
         <p>
           <span class="font-weight-bold">Further links:</span>
-          <v-btn
-            v-if="instance"
-            :href="instance"
-            target="_blank"
-            varint="text"
-            flat
-          >
-            Limesurvey @ {{ instance }}
-          </v-btn>
+          <v-btn v-if="instance" :href="instance" target="_blank" varint="text" flat> Limesurvey @ {{ instance }} </v-btn>
         </p>
-        <survey-list :username="username" />
+        <survey-list />
       </v-col>
     </v-row>
   </v-container>
@@ -44,16 +36,21 @@
 <script lang="ts">
 import SurveyList from "../components/SurveyList.vue";
 import { defineComponent } from "vue";
-import { mapState } from "pinia";
-import { koordStore } from "../store";
+import { useMainStore } from "../store/mainStore";
 
 export default defineComponent({
   name: "LoginView",
   components: {
     SurveyList,
   },
-  computed: {
-    ...mapState(koordStore, ["isAuthenticated", "username", "instance"]),
+  setup() {
+    const { isAuthenticated, username, instance } = useMainStore();
+
+    return {
+      isAuthenticated,
+      username,
+      instance,
+    };
   },
 });
 </script>

@@ -1,17 +1,16 @@
 export interface SettingsModel {
-  useLogicalTime: boolean;
+  timeFormat: string;
   step: number;
   expirationTime: number;
   onlyActive: boolean;
   displayNA: boolean;
-  useAPEX: boolean;
 }
 
 export type SettingsKey = keyof SettingsModel;
 
 export interface Option {
   text: string;
-  value: boolean | number;
+  value: boolean | number | string;
   icon: string;
   description?: string;
 }

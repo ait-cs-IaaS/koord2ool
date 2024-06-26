@@ -4,5 +4,5 @@ ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
-RUN npm ci &&\
-    npm start
+RUN pnpm install &&\
+    pnpm start

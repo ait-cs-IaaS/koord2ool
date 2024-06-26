@@ -1,12 +1,15 @@
 import { ChartOptions, TooltipItem } from "chart.js";
-import { koordStore } from "../../store";
-const store = koordStore();
+import { useSurveyStore } from "../../store/surveyStore";
+import { getParticipant } from "../../helpers/chartFunctions";
+const store = useSurveyStore();
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const areaChartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
   scales: {
     x: {
+      offset: true,
       type: "time",
       time: {
         unit: "day",
@@ -16,6 +19,7 @@ export const areaChartOptions: ChartOptions<"line"> = {
       stacked: true,
       beginAtZero: true,
       ticks: {
+        stepSize: 1,
         callback: function (value) {
           return value;
         },
@@ -35,7 +39,7 @@ export const areaChartOptions: ChartOptions<"line"> = {
     tooltip: {
       callbacks: {
         label: function (context: TooltipItem<"line">) {
-          return `${context.dataset.label}: ${context.formattedValue}`;
+          return (context.raw as any)?.tooltip || `${context.dataset.label}: ${context.formattedValue}`;
         },
       },
     },
@@ -50,7 +54,7 @@ export const areaChartOptions: ChartOptions<"line"> = {
 function findKeyByValue(object: Record<string, number>, value: number): string {
   for (const prop in object) {
     if (Object.hasOwn(object, prop) && object[prop] === value) {
-      return prop;
+      return getParticipant(prop);
     }
   }
   return "";
@@ -60,6 +64,14 @@ function findKeyByValue(object: Record<string, number>, value: number): string {
 export const lineChartOptions: ChartOptions<"line"> = {
   responsive: true,
   maintainAspectRatio: false,
+  elements: {
+    point: {
+      radius: 5,
+    },
+    line: {
+      borderWidth: 0,
+    },
+  },
   scales: {
     x: {
       type: "time",
@@ -68,14 +80,13 @@ export const lineChartOptions: ChartOptions<"line"> = {
       },
     },
     y: {
+      offset: true,
       min: 0,
-      max:
-        Object.keys(store.tokenMap).length > 0
-          ? Object.keys(store.tokenMap).length - 1
-          : undefined,
+      max: Object.keys(store.tokenMap).length > 0 ? Object.keys(store.tokenMap).length - 1 : undefined,
       ticks: {
+        stepSize: 1,
         callback: function (value, index) {
-          return findKeyByValue(store.tokenMap, index) || 0;
+          return findKeyByValue(store.tokenMap, index);
         },
       },
     },

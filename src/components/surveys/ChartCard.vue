@@ -4,8 +4,8 @@
       <v-row class="chartrow">
         <v-col cols="12" lg="4">
           <v-card-title>
-            <span class="question-id">{{ id }} – </span>
-            <span class="question-title">{{ question }}</span>
+            <span class="question-id">{{ questionKey }} – </span>
+            <span class="question-title">{{ questionText }}</span>
           </v-card-title>
 
           <v-card-text class="mb-0">
@@ -18,19 +18,19 @@
           </v-card-text>
         </v-col>
         <v-col cols="12" lg="3" class="doughnut-col">
-          <div class="px-2 py-4">
+          <div v-if="counters.length > 0" class="px-2 py-4">
             <doughnut-chart :counters="counters" />
+          </div>
+          <div v-else class="py-4">
+            <p class="text-center">No data available</p>
           </div>
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
-          <div v-if="questionType !== 'freetext'" class="py-4">
-            <line-chart
-              :chartjs-data="chartjsdata"
-              :question-type="questionType"
-            />
+          <div v-if="questionType === 'numerical'" class="py-4">
+            <candlestick-chart :chartjs-data="numericalChartData" :question-key="questionKey" />
           </div>
           <div v-else class="py-4">
-            <p class="text-center">No chart available for this question type</p>
+            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" />
           </div>
         </v-col>
       </v-row>
@@ -41,27 +41,51 @@
 <script lang="ts">
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
-import { ChartData } from "chart.js";
-import { defineComponent } from "vue";
+import CandlestickChart from "./CandlestickChart.vue";
+import { computed, defineComponent } from "vue";
+import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData } from "../../helpers/chartFunctions";
+import { useSurveyStore } from "../../store/surveyStore";
 
 export default defineComponent({
   name: "ChartCard",
   components: {
     LineChart,
     DoughnutChart,
+    CandlestickChart,
   },
   props: {
-    question: { type: String, default: "" },
-    id: { type: String, default: "" },
-    counters: {
-      type: Array as () => { name: string; value: number }[],
-      default: () => [],
-    },
-    chartjsdata: {
-      type: Object as () => ChartData<"line">,
-      default: () => ({} as ChartData<"line">),
-    },
-    questionType: { type: String, default: "" },
+    questionKey: { type: String, default: "" },
+  },
+  setup(props) {
+    const store = useSurveyStore();
+
+    const questionText = computed(() => {
+      return getQuestionText(props.questionKey);
+    });
+
+    const counters = computed(() => {
+      return countResponsesFor(props.questionKey);
+    });
+
+    const questionType = computed(() => {
+      return store.getQuestionType(props.questionKey);
+    });
+
+    const chartjsdata = computed(() => {
+      return createTimelineFor(props.questionKey);
+    });
+
+    const numericalChartData = computed(() => {
+      return createNumericChartData(props.questionKey);
+    });
+
+    return {
+      questionText,
+      counters,
+      numericalChartData,
+      chartjsdata,
+      questionType,
+    };
   },
 });
 </script>

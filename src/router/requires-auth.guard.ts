@@ -1,8 +1,8 @@
 import { NavigationGuard } from "vue-router";
-import { koordStore } from "../store";
+import { useMainStore } from "../store/mainStore";
 
 const requiresAuth: NavigationGuard = (to) => {
-  const store = koordStore();
+  const store = useMainStore();
   if (!store.isAuthenticated && to.name !== "login") {
     return { name: "login" };
   }
