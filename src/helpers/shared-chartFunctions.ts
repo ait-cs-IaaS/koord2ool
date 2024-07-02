@@ -3,7 +3,15 @@ import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 
 export function getBorderColor(key: string): string {
-  return chartColors[key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) % chartColors.length];
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    const char = key.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % chartColors.length;
+  console.debug(`getBorderColor(${key}) => ${chartColors[index]} || ${index}`);
+  return chartColors[index];
 }
 
 function expirationDate(relativeDate: Date): Date {

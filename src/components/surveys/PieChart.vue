@@ -5,9 +5,9 @@
 <script lang="ts">
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartDataset } from "chart.js";
 import { Pie } from "vue-chartjs";
-import { chartColors } from "./colors";
 import { chartOptions } from "./pie-options";
 import { computed, defineComponent } from "vue";
+import { getBorderColor } from "../../helpers/shared-chartFunctions";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -26,11 +26,11 @@ export default defineComponent({
     const chartData = computed(() => {
       const labels: string[] = [];
       const datasets: ChartDataset<"pie">[] = [];
-      props.counters.forEach(({ name, value }, index) => {
+      props.counters.forEach(({ name, value }) => {
         labels.push(name);
         datasets.push({
           data: [value],
-          backgroundColor: [chartColors[index % chartColors.length]],
+          backgroundColor: [getBorderColor(name)],
         });
       });
       return {

@@ -1,11 +1,10 @@
 import { ChartData, ChartDataset } from "chart.js";
-import { chartColors } from "../components/surveys/colors";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
 import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
-import { addExpiredEntries } from "./shared-chartFunctions";
+import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
 
@@ -95,10 +94,10 @@ export function doughnutChartData(responseCounts: responseCount[]): ChartData<"d
   const datasets: ChartDataset<"doughnut">[] = [];
   const data: number[] = [];
   const backgroundColor: string[] = [];
-  responseCounts.forEach(({ name, value }, index) => {
+  responseCounts.forEach(({ name, value }) => {
     labels.push(name);
     data.push(value);
-    backgroundColor.push(chartColors[index % chartColors.length]);
+    backgroundColor.push(getBorderColor(name));
   });
   datasets.push({
     data,

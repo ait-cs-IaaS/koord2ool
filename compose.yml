@@ -3,5 +3,6 @@ services:
     image: ghcr.io/ait-cs-iaas/koord2ool:latest
     environment:
       - LIMESURVEY_RPC_API=https://lime.cyberrange.rocks/index.php/admin/remotecontrol
+      # - BASE_URI=/koordtool/
     ports:
       - "8080:80"

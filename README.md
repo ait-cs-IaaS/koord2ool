@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-
 docker-compose up -d
 ```
 
-![Screenshot from 2023-05-24 13-19-04](https://github.com/ait-cs-IaaS/koord2ool/assets/6696618/da947fb3-5e57-40f5-98c8-4b514f822daa)
+![Screenshot from a Yes/No question](https://github.com/ait-cs-IaaS/koord2ool/assets/6696618/8ed2cf4b-e5d8-4665-8fa8-19c3c76e73b8)
 
 ## Deployment
 
@@ -27,13 +27,18 @@ For a production deployment a seperate LimeSurvey instance and the [compose.yml]
 There is a [Dockerfile](Dockerfile) that can be built and deployed, which is automatically packaged as a Container Image via a CI/CD pipeline, specifically a [GitHub Action](.github/workflows/cicd.yaml).
 The resulting artifact is then published to the GitHub Container Registry: `docker pull ghcr.io/ait-cs-iaas/koord2ool:latest`
 
-### Build via Docker
+## Configuration
 
-There are two [Build arguments](https://docs.docker.com/build/guide/build-args/) that can be set while building the Docker Image.
+There are two environment variables to configure koord2ool:
+
 * `LIMESURVEY_RPC_API`
 To set the default Limesurvey Backend URI, which can be overriden during container startup
 * `BASE_URI`
 To set the a Base URI differnt from `/` under which koord2ool will be reachable (e.g. behind a reverse proxy).
+
+These two variables can also be used as [Build arguments](https://docs.docker.com/build/guide/build-args/) while building the Docker Image.
+
+### Build via Docker
 
 **Example**
 ```

@@ -1,7 +1,7 @@
 import { ChartData } from "chart.js";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
-import { chartColors } from "../components/surveys/colors";
+import { getBorderColor } from "./shared-chartFunctions";
 
 type ChartDataEntry = {
   name: string;
@@ -165,13 +165,13 @@ function addCurrentCountersToChartData(
 }
 
 export function transformChartData(chartData: ChartDataEntry[]): ChartData<"line"> {
-  const chartdataset = chartData.map((item, index) => ({
+  const chartdataset = chartData.map((item) => ({
     cubicInterpolationMode: "monotone" as const,
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
     fill: true,
     pointRadius: 1,
-    backgroundColor: chartColors[index % chartColors.length],
+    backgroundColor: getBorderColor(item.name),
   }));
 
   return {
