@@ -9,7 +9,7 @@ RUN corepack enable
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
 RUN pnpm install --frozen-lockfile &&\
-    pnpm run build -- --base=${BASE_URI}
+    pnpm run build --base=${BASE_URI}
 
 FROM nginx:stable-alpine
 WORKDIR /usr
