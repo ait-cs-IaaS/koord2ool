@@ -11,7 +11,7 @@ The project has been improved in some regards within the scope of AWAKE.
 
 ```bash
 # Download compose.yml
-curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-dev.yml -O compose.yml
+curl -fsSL https://raw.githubusercontent.com/ait-cs-IaaS/koord2ool/main/compose-dev.yml -o compose.yml
 
 # Start all services
 docker-compose up -d
@@ -67,7 +67,7 @@ Cross-Origin Resource Sharing headers *need* to be set, e.g.:
 
 Access-Control-Allow-Headers: *
 Access-Control-Allow-Methods: POST
-Access-Control-Allow-Origin:*
+Access-Control-Allow-Origin: *
 
 ```
 
@@ -75,7 +75,7 @@ In hardened environments, it is advisable to restrict CORS headers further, in p
 [`Access-Control-Allow-Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin).
 
 You must enable the remote procedure call interface in the administrative settings of LimeSurvey.
-For Development there is a helper script for activating the endpoint under [dev/activate_rpc](dev/activate_rpc).
+For Development there is a helper script for activating the endpoint under [dev/survey_manager.py](dev/survey_manager.py).
 Take note of the URL where this endpoint is exposed, e.g. `https://limesurvey.example.com/admin/remotecontrol`.
 
 ## How to Use
