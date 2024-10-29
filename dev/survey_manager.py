@@ -5,7 +5,6 @@ import json
 import click
 import os
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -48,61 +47,6 @@ def upload_survey(session_key, survey_id, lsa_file_path):
         return response.json()
 
 
-def login_to_limesurvey(admin_url, username, password):
-    """Log in to LimeSurvey and obtain a session cookie."""
-    login_url = f"{admin_url}/index.php/admin/authentication/sa/login"
-    payload = {"user": username, "password": password}
-    session = requests.Session()
-    response = session.post(login_url, data=payload)
-
-    if "PHPSESSID" in session.cookies:
-        print("Login successful, session cookie obtained.")
-        return session
-    else:
-        print("Login failed, check credentials.")
-        return None
-
-
-def enable_json_rpc(session, admin_url):
-    """Enable JSON-RPC API if it is not enabled, handles CSRF token."""
-    globalsettings_url = f"{admin_url}/index.php/admin/globalsettings"
-
-    response = session.get(globalsettings_url)
-
-    if response.status_code != 200:
-        print(
-            f"Failed to load global settings page. Status code: {response.status_code}"
-        )
-        return
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    csrf_token_input = soup.find("input", {"name": "YII_CSRF_TOKEN"})
-
-    if not csrf_token_input:
-        print("Could not find CSRF token in the page.")
-        return
-
-    csrf_token = csrf_token_input["value"]  # type: ignore
-
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "action": "globalsettingssave",
-        "RPCInterface": "json",
-        "rpc_publish_api": "1",  # Enable API
-        "add_access_control_header": "1",  # Optionally add access control header
-        "YII_CSRF_TOKEN": csrf_token,  # Include CSRF token in the data
-    }
-
-    response = session.post(globalsettings_url, headers=headers, data=data)
-
-    if response.status_code == 200:
-        print("Successfully enabled JSON-RPC API.")
-    else:
-        print(
-            f"Failed to enable JSON-RPC API. Status code: {response.status_code}, Message: {response.text}"
-        )
-
-
 @click.group()
 def cli():
     """LimeSurvey JSON-RPC Command Line Interface."""
@@ -112,7 +56,7 @@ def cli():
 @cli.command()
 @click.option("--method", "-m", required=True, help="JSON-RPC method name")
 @click.option(
-    "--params", "-p", required=True, help="Parameters for the method, in JSON format"
+    "--params", "-p", default='[]', help="Parameters for the method, in JSON format"
 )
 def call(method, params):
     """Send a generic command to LimeSurvey JSON-RPC."""
@@ -162,14 +106,6 @@ def add_participants(survey_id, participants):
         session_key, "add_participants", [survey_id, participants_data]
     )
     print(json.dumps(result, indent=2))
-
-
-@cli.command()
-def enable_rpc():
-    """Enable the JSON-RPC API in LimeSurvey."""
-    admin_url = API_URL.replace("/index.php/admin/remotecontrol", "")
-    if session := login_to_limesurvey(admin_url, USERNAME, PASSWORD):
-        enable_json_rpc(session, admin_url)
 
 
 if __name__ == "__main__":
