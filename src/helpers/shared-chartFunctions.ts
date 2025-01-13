@@ -2,16 +2,16 @@ import { chartColors } from "../components/surveys/colors";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 
-export function getBorderColor(key: string): string {
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    const char = key.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  const index = Math.abs(hash) % chartColors.length;
-  console.debug(`getBorderColor(${key}) => ${chartColors[index]} || ${index}`);
-  return chartColors[index];
+const keyToColorMap: Record<string, string> = {};
+
+export function getBorderColor(key:string) : string{
+  if (!keyToColorMap[key]) {
+    const index = Object.keys(keyToColorMap).length % chartColors.length;
+    keyToColorMap[key] = chartColors[index];
+  } 
+  console.debug(`getBorderColor new method!`);
+  console.debug(`getBorderColor(${key}) => ${keyToColorMap[key]} || index: ${Object.keys(keyToColorMap).length - 1}`);
+  return keyToColorMap[key];
 }
 
 function expirationDate(relativeDate: Date): Date {

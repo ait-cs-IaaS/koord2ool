@@ -32,6 +32,8 @@ export class LimesurveyApi {
     if (username === "" || password === "") {
       throw new Error("LimeSurvey API username or password not configured");
     }
+    console.debug(`Authenticating with username: ${username} and: ${password}`)
+
     const session = await this.call<Auth>("get_session_key", false, username, password);
     if (session && typeof session === "string") {
       this.session = session;
@@ -195,6 +197,13 @@ export class LimesurveyApi {
     if (response.status !== 200) {
       const error = new Error(`Calling ${rpcMethod} failed`);
       store.error = error;
+      throw error;
+    }
+
+    if ( response.data == "" ) {
+      const error = new Error("Could not get Sessionkey, check is JSON-RPC is enabled");
+      store.error = error;
+      console.error("Could not get Sessionkey, check if JSON-RPC is enabled");
       throw error;
     }
 
