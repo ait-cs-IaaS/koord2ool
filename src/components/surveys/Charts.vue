@@ -6,12 +6,19 @@
     <v-row class="pt-3">
       <v-col v-if="isInvalidSurvey()">
         <v-alert outlined type="error" icon="mdi-alert" border-color="red">
-          This survey is invalid. Please check if participant-based responses are enabled, timestamps are enabled and there is at least one
+          This survey is invalid. Please check if participant-based responses are enabled, timestamps are enabled, and there is at least one
           response.
         </v-alert>
       </v-col>
-      <v-col v-for="questionKey of questionKeys" v-else :key="questionKey" cols="12">
-        <chart-card :question-key="questionKey" />
+      <v-col v-else>
+        <v-alert outlined type="success" icon="mdi-check-circle" border-color="green">
+          This survey passes all checks and is ready for visualization.
+        </v-alert>
+        <v-row>
+          <v-col v-for="questionKey of questionKeys" :key="questionKey" cols="12">
+            <chart-card :question-key="questionKey" />
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
   </v-container>
@@ -34,7 +41,6 @@ export default defineComponent({
   },
   setup() {
     const store = useSurveyStore();
-
     const { questionKeys } = storeToRefs(store);
 
     return {
