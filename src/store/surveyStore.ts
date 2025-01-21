@@ -77,16 +77,20 @@ export const useSurveyStore = defineStore(
     });
 
     const getSettings = computed(() => settings.value);
-    const surveyLinks = computed(() => {
+    const surveyLinks = computed((): Array<{ key: number; label: string; to: string; compatible: boolean }> => {
       const surveyIds: number[] = Object.keys(surveys.value).map(Number);
       return surveyIds.sort().map((surveyId) => {
-        const title = surveys.value[surveyId].surveyls_title;
+        const survey = surveys.value[surveyId];
+        if (!survey) {
+          return null;
+        }
         return {
           key: surveyId,
-          label: `${surveyId} - ${title}`,
+          label: `${surveyId} - ${survey.surveyls_title}`,
           to: `/survey/${surveyId}`,
+          compatible: survey.compatible ?? false, 
         };
-      });
+      }).filter(Boolean) as Array<{ key: number; label: string; to: string; compatible: boolean }>;
     });
 
     const questionCount = computed(() => {
@@ -191,8 +195,30 @@ export const useSurveyStore = defineStore(
     }
 
     async function refreshSurveys(): Promise<void> {
-      const surveys = await api.listSurveys();
-      updateSurveyList(surveys);
+      try {
+        const surveysFromApi = await api.listSurveys();
+    
+        const surveysWithCompatibility = await Promise.all(
+          surveysFromApi.map(async (survey) => {
+            const participants = await api.getParticipants(survey.sid);
+            const responses = await api.getResponses(survey.sid);
+
+            const compatible =
+            participants.length > 0 && 
+            responses.length > 0; 
+            survey.timestampsEnabled === true;
+    
+            return {
+              ...survey,
+              compatible, 
+            };
+          })
+        );
+    
+        updateSurveyList(surveysWithCompatibility);
+      } catch (error) {
+        console.error("Failed to refresh surveys:", error);
+      }
     }
 
     async function refreshSurvey(surveyId: number): Promise<void> {

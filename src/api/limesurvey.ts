@@ -44,8 +44,30 @@ export class LimesurveyApi {
   }
 
   async listSurveys(): Promise<SurveyModel[]> {
-    return this.call("list_surveys");
+
+    const surveys = await this.call<SurveyModel[]>("list_surveys");
+  
+    const surveysWithCompatibility = await Promise.all(
+      surveys.map(async (survey) => {
+        const participants = await this.getParticipants(survey.sid); 
+        const responses = await this.getResponses(survey.sid); 
+  
+        const compatible =
+          participants.length > 0 && 
+          responses.length > 0 &&
+          survey.participantBased === true &&  
+          survey.timestampsEnabled === true; 
+          
+        return {
+          ...survey,
+          compatible, 
+        };
+      })
+    );
+  
+    return surveysWithCompatibility;
   }
+  
 
   async exportStatistics(sid: number): Promise<Blob> {
     const b64Content = await this.call<string>("export_statistics", true, sid);
