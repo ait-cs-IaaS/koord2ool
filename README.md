@@ -90,7 +90,8 @@ If you want to be able to allow users to update their responses, set the followi
 in "Participants settings":
 
 - "Allow multiple responses or update responses with one access code" should be ON, and
-- "Enable participant-based response persistence" should be ON as well.
+- "Enable participant-based response persistence" should be ON as well, and 
+- Set "Closed-access mode" in the "Survey participants" menu.
 
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.

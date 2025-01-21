@@ -198,6 +198,13 @@ export class LimesurveyApi {
       throw error;
     }
 
+    if ( response.data == "" ) {
+      const error = new Error("Could not get Sessionkey, check is JSON-RPC is enabled");
+      store.error = error;
+      console.error("Could not get Sessionkey, check if JSON-RPC is enabled");
+      throw error;
+    }
+
     const { result, error } = response.data;
 
     if (error) {
