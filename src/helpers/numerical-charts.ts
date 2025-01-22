@@ -1,4 +1,4 @@
-import { ChartData, FinancialDataPoint, ChartOptions } from "chart.js";
+import { ChartData, FinancialDataPoint } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { FilteredResponse, HLResponse } from "../types/response.model";
 import { getQuestionText } from "../helpers/chartFunctions";
