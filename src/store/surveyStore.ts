@@ -196,12 +196,17 @@ export const useSurveyStore = defineStore(
     }
 
     async function refreshSurvey(surveyId: number): Promise<void> {
+      resetSurvey();
       if (!(surveyId in surveys.value)) {
         await refreshSurveys();
       }
-
-      resetSurvey();
+    
       selectedSurveyID.value = surveyId;
+      
+      responses.value[surveyId] = [];
+      questions.value[surveyId] = {};
+      participants.value[surveyId] = [];
+      
       await Promise.all([
         refreshQuestions(surveyId),
         refreshResponses(surveyId),
@@ -306,6 +311,15 @@ export const useSurveyStore = defineStore(
     function resetSurvey() {
       tokenMap.value = {};
       responseRange.value = [0, new Date().getTime()];
+      questionKeys.value = [];
+      questionKeysWithSubquestions.value = [];
+      if (selectedSurveyID.value !== undefined) {
+        delete responses.value[selectedSurveyID.value];
+        delete questions.value[selectedSurveyID.value];
+        delete participants.value[selectedSurveyID.value];
+      }
+      selectedSurveyID.value = undefined;
+      minMaxFromDataset.value = {};
     }
 
     function reset() {
