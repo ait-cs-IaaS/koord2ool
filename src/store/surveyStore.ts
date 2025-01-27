@@ -77,16 +77,13 @@ export const useSurveyStore = defineStore(
     });
 
     const getSettings = computed(() => settings.value);
-    const surveyLinks = computed(() => {
-      const surveyIds: number[] = Object.keys(surveys.value).map(Number);
-      return surveyIds.sort().map((surveyId) => {
-        const title = surveys.value[surveyId].surveyls_title;
-        return {
-          key: surveyId,
-          label: `${surveyId} - ${title}`,
-          to: `/survey/${surveyId}`,
-        };
-      });
+    const surveyLinks = computed<Array<{ key: number; label: string; to: string; compatible: boolean }>>(() => {
+      return Object.values(surveys.value).map((survey) => ({
+        key: survey.sid,
+        label: `${survey.sid} - ${survey.surveyls_title}`,
+        to: `/survey/${survey.sid}`,
+        compatible: survey.compatible ?? false
+      }));
     });
 
     const questionCount = computed(() => {
