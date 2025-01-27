@@ -5,10 +5,8 @@ import { getQuestionText } from "../helpers/chartFunctions";
 
 function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
   const aggregatedData: { [key: string]: HLResponse } = {};
-  
   data.forEach((item) => {
     const dateKey = item.time.toISOString().split("T")[0]; // Extract the date part
-    
     if (!aggregatedData[dateKey]) {
       aggregatedData[dateKey] = {
         token: item.token,
@@ -23,14 +21,12 @@ function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
       aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
     }
   });
-  
   return Object.values(aggregatedData);
 }
 
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
   const store = useSurveyStore();
   const minMax: { min: number; max: number } = { min: 0, max: 0 };
-  
   filteredResponses.forEach((item) => {
     const value = Number(item.answer);
     if (value < minMax.min) {
@@ -40,14 +36,12 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
       minMax.max = value;
     }
   });
-  
   store.setMinMax(minMax, questionKey);
 }
 
 export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
   const hldata = aggregateForHL(data);
   const datasets: FinancialDataPoint[] = [];
-  
   hldata.forEach((item) => {
     const point: FinancialDataPoint = {
       x: item.time.getTime(),
@@ -56,10 +50,8 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
       l: +Number(item.lowValue).toFixed(),
       c: +Number(item.highValue).toFixed(),
     };
-    
     datasets.push(point);
   });
-  
   return {
     datasets: [
       {
