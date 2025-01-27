@@ -200,13 +200,9 @@ export const useSurveyStore = defineStore(
       if (!(surveyId in surveys.value)) {
         await refreshSurveys();
       }
-    
-      selectedSurveyID.value = surveyId;
-      
-      responses.value[surveyId] = [];
-      questions.value[surveyId] = {};
-      participants.value[surveyId] = [];
-      
+
+      resetSurvey();
+
       await Promise.all([
         refreshQuestions(surveyId),
         refreshResponses(surveyId),
