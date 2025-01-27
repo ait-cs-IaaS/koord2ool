@@ -45,28 +45,23 @@ export class LimesurveyApi {
 
   async listSurveys(): Promise<SurveyModel[]> {
     const surveys = await this.call<SurveyModel[]>("list_surveys");
-    
+
     const surveysWithCompatibility = await Promise.all(
       surveys.map(async (survey) => {
         const properties = await this.getSurveyProperties(survey.sid);
         const responses = await this.getResponses(survey.sid);
-        
-        const compatible = Boolean(
-          properties.anonymized === "N" &&    // Anonymized responses OFF
-          properties.datestamp === "Y" &&     // Date stamp ON
-          responses.length > 0                // Has at least one response
-        );
-  
+
+        const compatible = Boolean(properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0);
+
         return {
           ...survey,
-          compatible
+          compatible,
         };
-      })
+      }),
     );
-  
+
     return surveysWithCompatibility;
   }
-
 
   async exportStatistics(sid: number): Promise<Blob> {
     const b64Content = await this.call<string>("export_statistics", true, sid);
@@ -95,9 +90,8 @@ export class LimesurveyApi {
   async getQuestionProperties(qid: number): Promise<QuestionPropertyModel> {
     return this.call("get_question_properties", true, qid);
   }
-  async getSurveyProperties(sid: number): Promise<any> {
-    const result = await this.call('get_survey_properties', true, sid);
-    return result;
+  async getSurveyProperties(sid: number): Promise<{ anonymized: string; datestamp: string }> {
+    return this.call("get_survey_properties", true, sid);
   }
 
   async getResponses(sid: number, headingType = "code"): Promise<ResponseModel[]> {
@@ -223,7 +217,7 @@ export class LimesurveyApi {
       throw error;
     }
 
-    if ( response.data == "" ) {
+    if (response.data == "") {
       const error = new Error("Could not get Sessionkey, check is JSON-RPC is enabled");
       store.error = error;
       console.error("Could not get Sessionkey, check if JSON-RPC is enabled");

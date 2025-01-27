@@ -82,7 +82,7 @@ export const useSurveyStore = defineStore(
         key: survey.sid,
         label: `${survey.sid} - ${survey.surveyls_title}`,
         to: `/survey/${survey.sid}`,
-        compatible: survey.compatible ?? false
+        compatible: survey.compatible ?? false,
       }));
     });
 
