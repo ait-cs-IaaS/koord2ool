@@ -44,7 +44,7 @@ services:
       - db
 
   db:
-    image: postgres:13
+    image: postgres:17
     restart: always
     volumes:
       - db-data:/var/lib/postgresql
