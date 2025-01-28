@@ -96,6 +96,7 @@ export default defineComponent({
         store.reset();
         await store.refreshSurvey(newVal);
       },
+      { immediate: true }
     );
 
     return {
