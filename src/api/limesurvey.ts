@@ -3,6 +3,7 @@ import { ResponseModel } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel, ParticipantError } from "../types/participant.model";
+import { checkQuestionCompatibility } from "../helpers/questionMapping";
 import router from "../router";
 import axios from "axios";
 import { useMainStore } from "../store/mainStore";
@@ -50,9 +51,14 @@ export class LimesurveyApi {
       surveys.map(async (survey) => {
         const properties = await this.getSurveyProperties(survey.sid);
         const responses = await this.getResponses(survey.sid);
-
-        const compatible = Boolean(properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0);
-
+        const questions = await this.getQuestionProperties(survey.sid);
+        
+        const compatible = Boolean(
+          properties.anonymized === "N" && 
+          properties.datestamp === "Y" && 
+          responses.length > 0 &&
+          checkQuestionCompatibility(questions) 
+        );     
         return {
           ...survey,
           compatible,
@@ -87,8 +93,8 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getQuestionProperties(qid: number): Promise<QuestionPropertyModel> {
-    return this.call("get_question_properties", true, qid);
+  async getQuestionProperties(sid: number): Promise<QuestionPropertyModel[]> {
+    return await this.call<QuestionPropertyModel[]>("get_question_properties", true, sid);
   }
   async getSurveyProperties(sid: number): Promise<{ anonymized: string; datestamp: string }> {
     return this.call("get_survey_properties", true, sid);
