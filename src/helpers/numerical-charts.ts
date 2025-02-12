@@ -16,7 +16,7 @@ function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
       };
     } else {
       const currentValue = Number(item.answer);
-      
+
       aggregatedData[dateKey].lowValue = Math.min(Number(aggregatedData[dateKey].lowValue), currentValue);
       aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
     }
