@@ -36,7 +36,7 @@
             <candlestick-chart :chartjs-data="numericalChartData" :question-key="questionKey" />
           </div>
           <div v-else class="py-4">
-            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" />
+            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
         </v-col>
       </v-row>
@@ -60,7 +60,7 @@ export default defineComponent({
     CandlestickChart,
   },
   props: {
-    questionKey: { type: String, default: "" },
+    questionKey: { type: String,  required: true },
   },
   setup(props) {
     const store = useSurveyStore();
@@ -99,5 +99,9 @@ export default defineComponent({
 <style scoped>
 .chartrow {
   border-bottom: 1px solid #e0e0e0;
+}
+
+.line-col {
+  min-height: 350px;
 }
 </style>
