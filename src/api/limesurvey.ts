@@ -51,13 +51,14 @@ export class LimesurveyApi {
       surveys.map(async (survey) => {
         const properties = await this.getSurveyProperties(survey.sid);
         const responses = await this.getResponses(survey.sid);
-        const questions = await this.getQuestionProperties(survey.sid);
+        const questions = await this.getQuestionProperties(survey.sid);    
+        const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
         
         const compatible = Boolean(
           properties.anonymized === "N" && 
           properties.datestamp === "Y" && 
           responses.length > 0 &&
-          checkQuestionCompatibility(questions) 
+          questionCompatible
         );     
         return {
           ...survey,
@@ -96,8 +97,12 @@ export class LimesurveyApi {
   async getQuestionProperties(sid: number): Promise<QuestionPropertyModel[]> {
     return await this.call<QuestionPropertyModel[]>("get_question_properties", true, sid);
   }
-  async getSurveyProperties(sid: number): Promise<{ anonymized: string; datestamp: string }> {
-    return this.call("get_survey_properties", true, sid);
+  async getSurveyProperties(sid: number): Promise<any> {
+    console.log("getSurveyProperties CALLED FOR SID:", sid);  // Just to check if the function is triggered
+
+    const rawResponse = await this.call("get_survey_properties", true, sid);  // null will fetch all properties by default
+    console.log("RAW RESPONSE FROM getSurveyProperties FOR SID", sid, ":", rawResponse);
+    return rawResponse;
   }
 
   async getResponses(sid: number, headingType = "code"): Promise<ResponseModel[]> {

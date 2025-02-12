@@ -32,7 +32,8 @@ export function isQuestionTypeSupported(question_type: string): boolean {
   return question_type in SupportedQuestionTypes;
 }
 
-export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel>): boolean {
-  if (!Array.isArray(questions)) return false;
-  return questions.every(q => isQuestionTypeSupported(q.type));
+export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {
+  if (!Array.isArray(questions)) return true; 
+  if (questions.length === 0) return true;    
+  return questions.every(q => 'type' in q && isQuestionTypeSupported(q.type));
 }
