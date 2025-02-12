@@ -1,4 +1,5 @@
 import { SurveyModel } from "../types/survey.model";
+import { SurveyProperties } from "../types/survey_properties.model";
 import { ResponseModel } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
@@ -97,12 +98,8 @@ export class LimesurveyApi {
   async getQuestionProperties(sid: number): Promise<QuestionPropertyModel[]> {
     return await this.call<QuestionPropertyModel[]>("get_question_properties", true, sid);
   }
-  async getSurveyProperties(sid: number): Promise<any> {
-    console.log("getSurveyProperties CALLED FOR SID:", sid);  // Just to check if the function is triggered
-
-    const rawResponse = await this.call("get_survey_properties", true, sid);  // null will fetch all properties by default
-    console.log("RAW RESPONSE FROM getSurveyProperties FOR SID", sid, ":", rawResponse);
-    return rawResponse;
+  async getSurveyProperties(sid: number): Promise<SurveyProperties> {
+    return this.call("get_survey_properties", true, sid);
   }
 
   async getResponses(sid: number, headingType = "code"): Promise<ResponseModel[]> {
