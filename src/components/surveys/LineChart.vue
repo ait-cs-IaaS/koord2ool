@@ -19,9 +19,8 @@ import {
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
 import { lineChartOptions, areaChartOptions } from "./line-options";
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref, computed, onMounted } from "vue";
 import "chartjs-adapter-moment";
-import { onMounted } from "vue";
 import { nextTick } from "vue";
 import { renderAreaChart } from "../../helpers/questionMapping";
 
@@ -37,7 +36,14 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       required: true,
     },
-    questionType: { type: String, default: "" },
+    questionType: { 
+      type: String, 
+      default: "" 
+    },
+    questionKey: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
     const chartOptions = computed(() => {
@@ -49,7 +55,9 @@ export default defineComponent({
     const renderChart = ref(false);
 
     const chartStyle = {
+      position: 'relative',
       width: "100%",
+      height: "300px" 
     };
 
     onMounted(async () => {
