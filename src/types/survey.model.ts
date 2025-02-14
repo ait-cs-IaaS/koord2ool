@@ -18,6 +18,8 @@ export interface SurveyModel {
 
   questions?: Record<string, QuestionModel>;
 
+  compatible?: boolean;
+
   /**
    * This is a catch-all property for past, present, or future use.
    * It may or may not actually exist, and its type is intrinsically unknown.

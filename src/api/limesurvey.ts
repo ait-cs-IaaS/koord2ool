@@ -1,8 +1,10 @@
 import { SurveyModel } from "../types/survey.model";
+import { SurveyProperties } from "../types/survey_properties.model";
 import { ResponseModel } from "../types/response.model";
 import { QuestionModel } from "../types/question.model";
 import { QuestionPropertyModel } from "../types/question_property.model";
 import { ParticipantModel, ParticipantError } from "../types/participant.model";
+import { checkQuestionCompatibility } from "../helpers/questionMapping";
 import router from "../router";
 import axios from "axios";
 import { useMainStore } from "../store/mainStore";
@@ -44,7 +46,29 @@ export class LimesurveyApi {
   }
 
   async listSurveys(): Promise<SurveyModel[]> {
-    return this.call("list_surveys");
+    const surveys = await this.call<SurveyModel[]>("list_surveys");
+
+    const surveysWithCompatibility = await Promise.all(
+      surveys.map(async (survey) => {
+        const properties = await this.getSurveyProperties(survey.sid);
+        const responses = await this.getResponses(survey.sid);
+        const questions = await this.getQuestionProperties(survey.sid);    
+        const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
+        
+        const compatible = Boolean(
+          properties.anonymized === "N" && 
+          properties.datestamp === "Y" && 
+          responses.length > 0 &&
+          questionCompatible
+        );     
+        return {
+          ...survey,
+          compatible,
+        };
+      }),
+    );
+
+    return surveysWithCompatibility;
   }
 
   async exportStatistics(sid: number): Promise<Blob> {
@@ -71,8 +95,11 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getQuestionProperties(qid: number): Promise<QuestionPropertyModel> {
-    return this.call("get_question_properties", true, qid);
+  async getQuestionProperties(sid: number): Promise<QuestionPropertyModel[]> {
+    return await this.call<QuestionPropertyModel[]>("get_question_properties", true, sid);
+  }
+  async getSurveyProperties(sid: number): Promise<SurveyProperties> {
+    return this.call("get_survey_properties", true, sid);
   }
 
   async getResponses(sid: number, headingType = "code"): Promise<ResponseModel[]> {
@@ -198,7 +225,7 @@ export class LimesurveyApi {
       throw error;
     }
 
-    if ( response.data == "" ) {
+    if (response.data == "") {
       const error = new Error("Could not get Sessionkey, check is JSON-RPC is enabled");
       store.error = error;
       console.error("Could not get Sessionkey, check if JSON-RPC is enabled");

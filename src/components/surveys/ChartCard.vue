@@ -4,10 +4,16 @@
       <v-row class="chartrow">
         <v-col cols="12" lg="4">
           <v-card-title>
-            <span class="question-id">{{ questionKey }} – </span>
-            <span class="question-title">{{ questionText }}</span>
+            <v-tooltip location="top">
+              <template v-slot:activator="{ props }">
+                <span v-bind="props">
+                  <span class="question-id">{{ questionKey }} – </span>
+                  <span class="question-title">{{ questionText }}</span>
+                </span>
+              </template>
+              <span>Question type: {{ questionType }}</span>
+            </v-tooltip>
           </v-card-title>
-          
           <v-card-text class="mb-0">
             <p v-for="(answer, index) in counters" :key="index">
               <span>
