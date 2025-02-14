@@ -41,8 +41,6 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   let lastResponses = getLastResponses(addExpiredEntries(store.getFilteredResponses(questionKey)));
 
   lastResponses = filterNA(lastResponses);
-  console.debug("Filtered responses for key:", questionKey, lastResponses);
-  
   lastResponses.forEach((response) => {
     if (multiplechoice && typeof response.answer === "object") {
       const answers = response.answer as Record<string, string>;

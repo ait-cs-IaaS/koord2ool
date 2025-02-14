@@ -4,7 +4,7 @@ import { useSurveyStore } from "../store/surveyStore";
 
 const keyToColorMap: Record<string, string> = {};
 
-export function getBorderColor(key:string) : string{
+export function getBorderColor(key: string): string {
   if (!keyToColorMap[key]) {
     const index = Object.keys(keyToColorMap).length % chartColors.length;
     keyToColorMap[key] = chartColors[index];
