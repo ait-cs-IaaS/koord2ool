@@ -64,19 +64,25 @@ export default defineComponent({
     });
 
     const counters = computed(() => {
+      console.debug('Computing counters for:', props.questionKey);
       return countResponsesFor(props.questionKey);
     });
 
     const questionType = computed(() => {
+      console.debug('Computing question type for:', props.questionKey);
       return store.getQuestionType(props.questionKey);
     });
 
     const chartjsdata = computed(() => {
+      console.debug('Computing chart data for:', props.questionKey);
       return createTimelineFor(props.questionKey);
     });
 
     const numericalChartData = computed(() => {
-      return createNumericChartData(props.questionKey);
+      console.debug('Computing numerical chart data, timeFormat:', store.settings.timeFormat);
+      const data = createNumericChartData(props.questionKey);
+      console.debug('Received numerical chart data:', data);
+      return data;
     });
 
     return {

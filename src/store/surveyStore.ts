@@ -264,20 +264,36 @@ export const useSurveyStore = defineStore(
     async function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
       if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
+        // Clear the arrays before populating
+        questionKeys.value = [];
+        questionKeysWithSubquestions.value = [];
+        
         for (let question of rawQuestions) {
+          // Only add to questionKeys if it's a parent question
           if (question.parent_qid === 0) {
-            questionKeys.value.push(question.title);
+            // Avoid duplicate entries
+            if (!questionKeys.value.includes(question.title)) {
+              questionKeys.value.push(question.title);
+            }
           }
+          
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
             question = await refreshQuestionProperties(question);
             if (question.available_answers !== undefined) {
-              questionKeysWithSubquestions.value.push(...Object.keys(question.available_answers));
+              // Avoid duplicate entries
+              const newKeys = Object.keys(question.available_answers)
+                .filter(key => !questionKeysWithSubquestions.value.includes(key));
+              questionKeysWithSubquestions.value.push(...newKeys);
             }
           } else if (question.parent_qid === 0) {
-            questionKeysWithSubquestions.value.push(question.title);
+            // Avoid duplicate entries
+            if (!questionKeysWithSubquestions.value.includes(question.title)) {
+              questionKeysWithSubquestions.value.push(question.title);
+            }
           }
           asRecord[question.title] = question;
         }
+        
         questions.value[sid] = asRecord;
         surveys.value[sid].questions = asRecord;
       } else {
