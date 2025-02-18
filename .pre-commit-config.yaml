@@ -3,16 +3,10 @@ repos:
   - repo: local
     hooks:
       - id: eslint
-        name: lint
+        name: lint and format
         language: node
-        entry: pnpm run lint
-        files: ^src/
-        types_or: [javascript, jsx, ts, tsx, vue]
-      - id: prettier
-        name: format
-        language: node
-        entry: pnpm run format
-        files: ^src/
+        entry: pnpm run lint_and_format
+        files: .
         types_or: [javascript, jsx, ts, tsx, vue]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

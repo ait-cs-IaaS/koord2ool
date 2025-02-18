@@ -40,76 +40,78 @@ export default defineComponent({
 
     const minmax = store.minMaxFromDataset[props.questionKey];
 
-    const chartOptions = computed((): ChartOptions<"candlestick"> => ({
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: "day",
+    const chartOptions = computed(
+      (): ChartOptions<"candlestick"> => ({
+        scales: {
+          x: {
+            type: "time",
+            time: {
+              unit: "day",
+            },
+            title: {
+              display: true,
+              text: "Date",
+              font: {
+                size: 14,
+                weight: "bold",
+              },
+            },
+            ticks: {
+              font: {
+                size: 12,
+              },
+            },
           },
-          title: {
-            display: true,
-            text: "Date",
-            font: {
-              size: 14,
-              weight: 'bold'
-            }
-          },
-          ticks: {
-            font: {
-              size: 12
-            }
-          }
-        },
-        y: {
-          min: minmax?.min || 0,
-          max: minmax?.max || 100,
-          title: {
-            display: true,
-            text: "Value",
-            font: {
-              size: 14,
-              weight: 'bold'
-            }
-          },
-          ticks: {
-            font: {
-              size: 12
-            }
-          }
-        },
-      },
-      plugins: {
-        title: {
-          display: false,
-          text: getQuestionText(props.questionKey),
-          padding: 20,
-          font: {
-            size: 16,
-            weight: 'bold'
-          }
-        },
-        tooltip: {
-          intersect: false,
-          mode: "index",
-          titleFont: {
-            size: 13
-          },
-          bodyFont: {
-            size: 13
-          },
-          callbacks: {
-            label(ctx) {
-              const point = ctx.parsed as FinancialDataPoint;
-              if (point.o === point.c) {
-                return `${point.o}`;
-              }
-              return `low: ${point.o} high: ${point.c}`;
+          y: {
+            min: minmax?.min || 0,
+            max: minmax?.max || 100,
+            title: {
+              display: true,
+              text: "Value",
+              font: {
+                size: 14,
+                weight: "bold",
+              },
+            },
+            ticks: {
+              font: {
+                size: 12,
+              },
             },
           },
         },
-      },
-    }));
+        plugins: {
+          title: {
+            display: false,
+            text: getQuestionText(props.questionKey),
+            padding: 20,
+            font: {
+              size: 16,
+              weight: "bold",
+            },
+          },
+          tooltip: {
+            intersect: false,
+            mode: "index",
+            titleFont: {
+              size: 13,
+            },
+            bodyFont: {
+              size: 13,
+            },
+            callbacks: {
+              label(ctx) {
+                const point = ctx.parsed as FinancialDataPoint;
+                if (point.o === point.c) {
+                  return `${point.o}`;
+                }
+                return `low: ${point.o} high: ${point.c}`;
+              },
+            },
+          },
+        },
+      }),
+    );
 
     onMounted(async () => {
       await nextTick();

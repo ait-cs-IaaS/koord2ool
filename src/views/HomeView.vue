@@ -4,7 +4,7 @@
       <v-col>
         <h1>
           Not logged in yet
-          <v-icon icon="person" class="ml-4 text-primary"></v-icon>
+          <v-icon icon="person" class="ml-4 text-primary" />
         </h1>
         <p class="lead mt-5">Welcome to the KoordTool.</p>
         <p>You can use this tool to visualize survey responses.</p>
@@ -19,7 +19,7 @@
       <v-col>
         <h1>
           Logged in as {{ username }}
-          <v-icon icon="person-check" class="ml-4 text-success"></v-icon>
+          <v-icon icon="person-check" class="ml-4 text-success" />
         </h1>
         <p class="lead mt-5">Welcome to the KoordTool.</p>
         <p>You can use this tool to visualize survey responses.</p>

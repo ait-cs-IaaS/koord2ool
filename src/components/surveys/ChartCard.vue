@@ -5,7 +5,7 @@
         <v-col cols="12" lg="4">
           <v-card-title>
             <v-tooltip location="top">
-              <template v-slot:activator="{ props }">
+              <template #activator="{ props }">
                 <span v-bind="props">
                   <span class="question-id">{{ questionKey }} – </span>
                   <span class="question-title">{{ questionText }}</span>
@@ -60,7 +60,7 @@ export default defineComponent({
     CandlestickChart,
   },
   props: {
-    questionKey: { type: String,  required: true },
+    questionKey: { type: String, required: true },
   },
   setup(props) {
     const store = useSurveyStore();

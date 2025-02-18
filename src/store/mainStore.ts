@@ -88,7 +88,7 @@ export const useMainStore = defineStore(
   },
   {
     persist: {
-      paths: ["limesurvey"],
+      pick: ["limesurvey"],
     },
   },
 );

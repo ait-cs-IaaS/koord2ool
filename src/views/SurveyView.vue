@@ -23,16 +23,22 @@
           <v-col> showing {{ responseCount }} answer(s) </v-col>
         </v-row>
         <v-row>
-          <v-col cols="2">Number of questions</v-col>
-          <v-col cols="2">{{ questionCount }}</v-col>
+          <v-col cols="2"> Number of questions </v-col>
+          <v-col cols="2">
+            {{ questionCount }}
+          </v-col>
         </v-row>
         <v-row v-if="survey?.startdate !== null">
-          <v-col cols="2">Start</v-col>
-          <v-col cols="2">{{ survey?.startdate }}</v-col>
+          <v-col cols="2"> Start </v-col>
+          <v-col cols="2">
+            {{ survey?.startdate }}
+          </v-col>
         </v-row>
         <v-row v-if="survey?.expires !== null">
-          <v-col cols="2">Expires</v-col>
-          <v-col cols="2">{{ survey?.expires }}</v-col>
+          <v-col cols="2"> Expires </v-col>
+          <v-col cols="2">
+            {{ survey?.expires }}
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
@@ -41,7 +47,7 @@
         <v-btn text="Refresh" @click="refreshSurvey(surveyId)" />
         <survey-component />
       </v-col>
-      <v-alert v-else type="error">No responses yet.</v-alert>
+      <v-alert v-else type="error"> No responses yet. </v-alert>
     </v-row>
   </v-container>
 </template>
@@ -96,7 +102,7 @@ export default defineComponent({
         store.reset();
         await store.refreshSurvey(newVal);
       },
-      { immediate: true }
+      { immediate: true },
     );
 
     return {

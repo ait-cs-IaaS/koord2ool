@@ -359,7 +359,7 @@ export const useSurveyStore = defineStore(
   },
   {
     persist: {
-      paths: ["settings", "surveys"],
+      pick: ["settings", "surveys"],
     },
   },
 );
