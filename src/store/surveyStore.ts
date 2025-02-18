@@ -262,7 +262,7 @@ export const useSurveyStore = defineStore(
         // Clear the arrays before populating
         questionKeys.value = [];
         questionKeysWithSubquestions.value = [];
-        
+
         for (let question of rawQuestions) {
           // Only add to questionKeys if it's a parent question
           if (question.parent_qid === 0) {
@@ -271,13 +271,12 @@ export const useSurveyStore = defineStore(
               questionKeys.value.push(question.title);
             }
           }
-          
+
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
             question = await refreshQuestionProperties(question);
             if (question.available_answers !== undefined) {
               // Avoid duplicate entries
-              const newKeys = Object.keys(question.available_answers)
-                .filter(key => !questionKeysWithSubquestions.value.includes(key));
+              const newKeys = Object.keys(question.available_answers).filter((key) => !questionKeysWithSubquestions.value.includes(key));
               questionKeysWithSubquestions.value.push(...newKeys);
             }
           } else if (question.parent_qid === 0) {
@@ -288,7 +287,7 @@ export const useSurveyStore = defineStore(
           }
           asRecord[question.title] = question;
         }
-        
+
         questions.value[sid] = asRecord;
         surveys.value[sid].questions = asRecord;
       } else {
@@ -375,7 +374,7 @@ export const useSurveyStore = defineStore(
   },
   {
     persist: {
-      paths: ["settings", "surveys"],
+      pick: ["settings", "surveys"],
     },
   },
 );

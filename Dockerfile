@@ -5,7 +5,7 @@ ENV NODE_ENV development
 ENV NODE_OPTIONS --openssl-legacy-provider
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
 RUN pnpm install --frozen-lockfile &&\

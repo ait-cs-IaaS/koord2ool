@@ -52,15 +52,12 @@ export class LimesurveyApi {
       surveys.map(async (survey) => {
         const properties = await this.getSurveyProperties(survey.sid);
         const responses = await this.getResponses(survey.sid);
-        const questions = await this.getQuestionProperties(survey.sid);    
+        const questions = await this.getQuestionProperties(survey.sid);
         const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
-        
+
         const compatible = Boolean(
-          properties.anonymized === "N" && 
-          properties.datestamp === "Y" && 
-          responses.length > 0 &&
-          questionCompatible
-        );     
+          properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
+        );
         return {
           ...survey,
           compatible,
@@ -95,8 +92,8 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getQuestionProperties(sid: number): Promise<QuestionPropertyModel[]> {
-    return await this.call<QuestionPropertyModel[]>("get_question_properties", true, sid);
+  async getQuestionProperties(sid: number): Promise<QuestionPropertyModel> {
+    return await this.call<QuestionPropertyModel>("get_question_properties", true, sid);
   }
   async getSurveyProperties(sid: number): Promise<SurveyProperties> {
     return this.call("get_survey_properties", true, sid);

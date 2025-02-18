@@ -36,9 +36,9 @@ export default defineComponent({
       type: Object as () => ChartData<"line">,
       required: true,
     },
-    questionType: { 
-      type: String, 
-      default: "" 
+    questionType: {
+      type: String,
+      default: "",
     },
     questionKey: {
       type: String,
@@ -55,9 +55,9 @@ export default defineComponent({
     const renderChart = ref(false);
 
     const chartStyle = {
-      position: 'relative',
+      position: "relative",
       width: "100%",
-      height: "300px" 
+      height: "300px",
     };
 
     onMounted(async () => {

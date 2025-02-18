@@ -8,7 +8,7 @@ export function getBorderColor(key: string): string {
   if (!keyToColorMap[key]) {
     const index = Object.keys(keyToColorMap).length % chartColors.length;
     keyToColorMap[key] = chartColors[index];
-  } 
+  }
   return keyToColorMap[key];
 }
 

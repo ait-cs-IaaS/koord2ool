@@ -9,7 +9,6 @@ import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed, watch } from "vue";
 import "chartjs-adapter-moment";
 import { useSurveyStore } from "../../store/surveyStore";
-import { getQuestionText } from "../../helpers/chartFunctions";
 
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
@@ -36,71 +35,74 @@ export default defineComponent({
 
     const chartStyle = {
       width: "100%",
-      height: "350px",  // Add explicit height
+      height: "350px", // Add explicit height
     };
 
     // Watch for changes in chartjsData
-    watch(() => props.chartjsData, (newData) => {
-      console.debug('Chart data updated:', newData);
-    }, { deep: true });
+    watch(
+      () => props.chartjsData,
+      (newData) => {
+        console.debug("Chart data updated:", newData);
+      },
+      { deep: true },
+    );
 
     const minmax = computed(() => store.minMaxFromDataset[props.questionKey]);
 
-    const chartOptions = computed((): ChartOptions<"candlestick"> => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: "day",
-            displayFormats: {
-              day: 'MMM D'
-            }
+    const chartOptions = computed(
+      (): ChartOptions<"candlestick"> => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            type: "time",
+            time: {
+              unit: "day",
+              displayFormats: {
+                day: "MMM D",
+              },
+            },
+            title: {
+              display: true,
+              text: "Date",
+            },
+            adapters: {
+              date: {
+                locale: "en",
+              },
+            },
           },
-          title: {
-            display: true,
-            text: "Date",
-          },
-          adapters: {
-            date: {
-              locale: 'en'
-            }
-          }
-        },
-        y: {
-          min: minmax.value?.min || 0,
-          max: minmax.value?.max || 200,
-          title: {
-            display: true,
-            text: "Value",
-          },
-        },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          intersect: false,
-          mode: "index",
-          callbacks: {
-            label(ctx) {
-              const point = ctx.parsed as FinancialDataPoint;
-              return [
-                `Low: ${point.l}`,
-                `High: ${point.h}`,
-              ];
+          y: {
+            min: minmax.value?.min || 0,
+            max: minmax.value?.max || 200,
+            title: {
+              display: true,
+              text: "Value",
             },
           },
         },
-      },
-    }));
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            intersect: false,
+            mode: "index",
+            callbacks: {
+              label(ctx) {
+                const point = ctx.parsed as FinancialDataPoint;
+                return [`Low: ${point.l}`, `High: ${point.h}`];
+              },
+            },
+          },
+        },
+      }),
+    );
 
     onMounted(async () => {
       await nextTick();
       renderChart.value = true;
-      console.debug('Chart mounted with data:', props.chartjsData);
+      console.debug("Chart mounted with data:", props.chartjsData);
     });
 
     return { chartStyle, renderChart, chartOptions };
