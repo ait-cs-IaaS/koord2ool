@@ -33,10 +33,25 @@
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
           <div v-if="questionType === 'numerical'" class="py-4">
-            <candlestick-chart :chartjs-data="numericalChartData" :question-key="questionKey" />
+            <histogram-chart 
+              v-if="store.settings.timeFormat === 'real'"
+              :chartjs-data="numericalChartData"
+              :question-type="questionType"
+              :question-key="questionKey"
+            />
+            <line-chart
+              v-else
+              :chartjs-data="numericalChartData"
+              :question-type="questionType"
+              :question-key="questionKey"
+            />
           </div>
           <div v-else class="py-4">
-            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
+            <line-chart 
+              :chartjs-data="chartjsdata" 
+              :question-type="questionType" 
+              :question-key="questionKey" 
+            />
           </div>
         </v-col>
       </v-row>
@@ -47,7 +62,7 @@
 <script lang="ts">
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
-import CandlestickChart from "./CandlestickChart.vue";
+import HistogramChart from "./HistogramChart.vue";
 import { computed, defineComponent } from "vue";
 import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData } from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
@@ -57,7 +72,7 @@ export default defineComponent({
   components: {
     LineChart,
     DoughnutChart,
-    CandlestickChart,
+    HistogramChart,
   },
   props: {
     questionKey: { type: String, required: true },
@@ -92,6 +107,7 @@ export default defineComponent({
     });
 
     return {
+      store,
       questionText,
       counters,
       numericalChartData,
