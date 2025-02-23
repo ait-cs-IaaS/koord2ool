@@ -2,7 +2,7 @@
   <v-card>
     <v-container fluid>
       <v-row class="chartrow">
-        <v-col cols="12" lg="4">
+        <v-col cols="12" lg="3">
           <v-card-title>
             <v-tooltip location="top">
               <template #activator="{ props }">
@@ -33,9 +33,12 @@
         </v-col>
         <v-col cols="12" lg="5" class="px-4 line-col">
           <div v-if="questionType === 'numerical'" class="py-4">
-            <histogram-chart 
+            <histogram-chart
               v-if="store.settings.timeFormat === 'real'"
-              :chartjs-data="numericalChartData"
+              :chartjs-data="{
+                labels: numericalChartData.labels,
+                datasets: numericalChartData.datasets
+              }"
               :question-type="questionType"
               :question-key="questionKey"
             />
@@ -64,8 +67,22 @@ import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import HistogramChart from "./HistogramChart.vue";
 import { computed, defineComponent } from "vue";
-import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData } from "../../helpers/chartFunctions";
+import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData, } from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
+import type { ChartData } from 'chart.js';
+
+interface ChartDataset {
+  label: string;
+  data: number[];
+  backgroundColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+}
+
+interface ExtendedChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
 
 export default defineComponent({
   name: "ChartCard",
@@ -99,11 +116,11 @@ export default defineComponent({
       return createTimelineFor(props.questionKey);
     });
 
-    const numericalChartData = computed(() => {
+    const numericalChartData = computed<ExtendedChartData>(() => {
       console.debug("Computing numerical chart data, timeFormat:", store.settings.timeFormat);
       const data = createNumericChartData(props.questionKey);
       console.debug("Received numerical chart data:", data);
-      return data;
+      return data as ExtendedChartData;
     });
 
     return {
@@ -124,6 +141,10 @@ export default defineComponent({
 }
 
 .line-col {
-  min-height: 350px;
+  min-height: 600px;
+}
+
+.doughnut-col {
+  min-height: 200px;
 }
 </style>
