@@ -7,8 +7,7 @@ import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
-import { ParticipantModel } from "../types/participant.model"; // Add this import
-
+import { ParticipantModel } from "../types/participant.model";
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
   return data.filter((item) => item.answer !== "N/A" || store.settings.displayNA);
@@ -112,7 +111,6 @@ export function doughnutChartData(responseCounts: responseCount[]): ChartData<"d
 
 export function getQuestion(qid: number): QuestionModel | undefined {
   const store = useSurveyStore();
-  // Explicitly type the questions array and use proper type casting
   const questions = Object.values(store.getQuestions) as QuestionModel[];
   return questions.find((question) => question.qid === qid);
 }

@@ -35,10 +35,9 @@ export default defineComponent({
 
     const chartStyle = {
       width: "100%",
-      height: "350px", // Add explicit height
+      height: "350px", 
     };
 
-    // Watch for changes in chartjsData
     watch(
       () => props.chartjsData,
       (newData) => {
