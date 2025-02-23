@@ -1,8 +1,58 @@
 services:
-  koordtool:
-    image: ghcr.io/ait-cs-iaas/koord2ool:latest
-    environment:
-      - LIMESURVEY_RPC_API=https://lime.cyberrange.rocks/index.php/admin/remotecontrol
-      # - BASE_URI=/koordtool/
+  entrypoint:
+    image: nginx
+    volumes:
+    - ./dev/nginx_vhost.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "8080:80"
+    - "${ENTRYPOINT_PORT:-8080}:80"
+    depends_on:
+    - koordtool
+    - limesurvey
+    restart: unless-stopped
+
+  koordtool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8082/index.php/admin/remotecontrol}
+      - VITE_APP_LIMESURVEY_PASSWORD=${AUTOLOGIN_PASSWORD}
+      - VITE_APP_LIMESURVEY_LOGIN=${AUTOLOGIN_USER}
+    ports:
+      - "${KOORDTOOL_PORT:-8081}:80"
+
+  limesurvey:
+    image: martialblog/limesurvey:latest
+    restart: always
+    environment:
+      - DB_TYPE=pgsql
+      - DB_PORT=5432
+      - DB_HOST=db
+      - DB_PASSWORD=${LIME_ADMIN_PASSWORD:-example}
+      - DB_NAME=limesurvey
+      - DB_USERNAME=limesurvey
+      - ADMIN_USER=admin
+      - ADMIN_NAME=Admin
+      - ADMIN_PASSWORD=${LIME_ADMIN_PASSWORD:-example}
+      - ADMIN_EMAIL=${LIME_ADMIN_EMAIL:-admin@example.com}
+      - PUBLIC_URL=${LIME_PUBLIC_URL:-localhost:8080}
+    volumes:
+      - limesurvey:/var/www/html/upload/surveys
+    ports:
+      - ${LIME_PORT:-8082}:8080
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=limesurvey
+      - POSTGRES_DB=limesurvey
+      - POSTGRES_PASSWORD=${LIME_ADMIN_PASSWORD:-example}
+
+volumes:
+  limesurvey:
+  db-data:
