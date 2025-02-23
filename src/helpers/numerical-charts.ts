@@ -27,20 +27,35 @@ export function getHistogramData(data: FilteredResponse[]) {
     bins[binIndex].y++;
   });
 
-  return bins;
+  return {
+    labels: bins.map(bin => `${(bin.x - binWidth/2).toFixed(1)} - ${(bin.x + binWidth/2).toFixed(1)}`),
+    datasets: [{
+      data: bins.map(bin => bin.y),
+      backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 1
+    }]
+  };
 }
 
 export function getAverageLineChart(data: FilteredResponse[]) {
-  return data.reduce((acc: {x: number, y: number}[], item) => {
-    const value = Number(item.answer);
-    if (!isNaN(value)) {
-      acc.push({
-        x: item.time.getTime(),
-        y: value
-      });
-    }
-    return acc;
-  }, []).sort((a, b) => a.x - b.x);
+  const timePoints = data
+    .map(item => ({
+      x: item.time.getTime(),
+      y: Number(item.answer)
+    }))
+    .filter(point => !isNaN(point.y))
+    .sort((a, b) => a.x - b.x);
+
+  return {
+    datasets: [{
+      data: timePoints,
+      borderColor: 'rgb(75, 192, 192)',
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      fill: true,
+      tension: 0.1
+    }]
+  };
 }
 
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {

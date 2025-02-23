@@ -211,7 +211,9 @@ export function createNumericChartData(questionKey: string) {
     const timePoints = filteredResponses.map(response => ({
       x: response.time.getTime(),
       y: Number(response.answer)
-    })).sort((a, b) => a.x - b.x);
+    }))
+    .filter(point => !isNaN(point.y))
+    .sort((a, b) => a.x - b.x);
 
     return {
       datasets: [{
