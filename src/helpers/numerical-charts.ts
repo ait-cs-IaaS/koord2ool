@@ -1,4 +1,3 @@
-import { getQuestionText } from "../helpers/chartFunctions";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 

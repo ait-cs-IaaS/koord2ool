@@ -166,7 +166,6 @@ export default defineComponent({
     };
 
     return {
-      chartjsData: props.chartjsData,
       chartOptions
     };
   }
