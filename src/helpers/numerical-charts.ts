@@ -1,7 +1,7 @@
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 
-export function getHistogramData(data: FilteredResponse[], questionKey: string) {
+export function getHistogramData(data: FilteredResponse[]) {
   const values = data
     .map(item => Number(item.answer))
     .filter(value => !isNaN(value));
@@ -30,7 +30,7 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string) 
   return bins;
 }
 
-export function getAverageLineChart(data: FilteredResponse[], questionKey: string) {
+export function getAverageLineChart(data: FilteredResponse[]) {
   return data.reduce((acc: {x: number, y: number}[], item) => {
     const value = Number(item.answer);
     if (!isNaN(value)) {

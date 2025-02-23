@@ -1,11 +1,10 @@
-// HistogramChart.vue
 <template>
   <div class="chart-container">
     <Bar
-      v-if="chartjsData"
+      v-if="data"
       :data="{
-        labels: chartjsData.labels,
-        datasets: chartjsData.datasets.map(dataset => ({
+        labels: data.labels,
+        datasets: data.datasets.map(dataset => ({
           ...dataset,
           type: 'bar' as const
         }))
@@ -16,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 import { Bar } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -69,6 +68,8 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const data = computed(() => props.chartjsData);
+
     const chartOptions: ChartOptions<'bar'> = {
       responsive: true,
       maintainAspectRatio: false,
@@ -166,7 +167,8 @@ export default defineComponent({
     };
 
     return {
-      chartOptions
+      chartOptions,
+      data
     };
   }
 });

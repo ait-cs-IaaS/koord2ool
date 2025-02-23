@@ -69,7 +69,6 @@ import HistogramChart from "./HistogramChart.vue";
 import { computed, defineComponent } from "vue";
 import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData, } from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
-import type { ChartData } from 'chart.js';
 
 interface ChartDataset {
   label: string;
