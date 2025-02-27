@@ -146,4 +146,20 @@ export default defineComponent({
 .doughnut-col {
   min-height: 200px;
 }
+
+.question-title {
+  white-space: normal; 
+  word-break: break-word; 
+  overflow: visible;
+  display: inline-block;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+.v-card-title {
+  display: block;
+  overflow: visible;
+  white-space: normal;
+  padding-right: 16px;
+}
 </style>
