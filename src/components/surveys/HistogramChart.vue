@@ -1,21 +1,14 @@
 <template>
   <div class="chart-container">
-    <Bar
-      v-if="data"
-      :data="{
-        labels: data.labels,
-        datasets: data.datasets.map(dataset => ({
-          ...dataset,
-          type: 'bar' as const
-        }))
-      }"
-      :options="chartOptions"
-    />
+    <div v-if="!chartjsData || !chartjsData.datasets || chartjsData.datasets.length === 0" class="no-data">
+      No data available for histogram
+    </div>
+    <Bar v-else :data="chartjsData" :options="chartOptions" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed, ref, watch } from 'vue';
 import { Bar } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -37,25 +30,12 @@ ChartJS.register(
   LinearScale
 );
 
-interface Dataset {
-  data: number[];
-  label: string;
-  backgroundColor?: string;
-  borderColor?: string;
-  borderWidth?: number;
-}
-
-interface BarChartData {
-  labels: string[];
-  datasets: Dataset[];
-}
-
 export default defineComponent({
   name: 'HistogramChart',
   components: { Bar },
   props: {
     chartjsData: {
-      type: Object as () => BarChartData,
+      type: Object,
       required: true
     },
     questionType: {
@@ -68,107 +48,167 @@ export default defineComponent({
     }
   },
   setup(props) {
-    const data = computed(() => props.chartjsData);
+    const totalResponses = computed(() => {
+      if (!props.chartjsData || 
+          !props.chartjsData.datasets || 
+          props.chartjsData.datasets.length === 0) {
+        return 0;
+      }
+      return props.chartjsData.datasets[0].data.reduce(
+        (a: number, b: number) => a + b, 0
+      );
+    });
+
+    const maxCount = computed(() => {
+      if (!props.chartjsData || 
+          !props.chartjsData.datasets || 
+          props.chartjsData.datasets.length === 0) {
+        return 10;
+      }
+      
+      const max = Math.max(...props.chartjsData.datasets[0].data as number[]);
+      return Math.ceil(max * 1.2);
+    });
+
+    const chartTitle = computed(() => {
+      if (!props.chartjsData || !props.chartjsData.title) {
+        return "Value Distribution";
+      }
+      return props.chartjsData.title;
+    });
+
+    const chartSubtitle = computed(() => {
+      return props.chartjsData.subtitle || "";
+    });
+
+    const formatYAxisTick = function(this: any, tickValue: string | number, index: number, ticks: any[]): string | number | null | undefined {
+      const value = Number(tickValue);
+      return Math.floor(value) === value ? value.toString() : "";
+    };
 
     const chartOptions: ChartOptions<'bar'> = {
       responsive: true,
       maintainAspectRatio: false,
-      layout: {
-        padding: {
-          left: 30,
-          right: 30,
-          top: 30,
-          bottom: 30
-        }
-      },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            padding: 25,
-            font: {
-              size: 16,
-              weight: 'bold'
-            }
-          }
-        },
-        tooltip: {
-          padding: 15,
-          titleFont: {
+        title: {
+          display: true,
+          text: [chartTitle.value, chartSubtitle.value],
+          font: {
             size: 16,
             weight: 'bold'
           },
-          bodyFont: {
-            size: 16
+          padding: {
+            top: 10,
+            bottom: 20
           }
+        },
+        legend: {
+          display: false 
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              
+              return `Value: ${items[0].label}`;
+            },
+            label: (item) => {
+              const datasetIndex = item.datasetIndex;
+              const index = item.dataIndex;
+              const originalData = props.chartjsData.datasets[datasetIndex].originalData?.[index];
+              
+              if (originalData && originalData.percentage) {
+                return [
+                  `Count: ${originalData.count} of ${totalResponses.value} responses`,
+                  `Percentage: ${originalData.percentage}%`
+                ];
+              }
+              
+              const count = item.parsed.y;
+              const percentage = totalResponses.value > 0 
+                ? ((count / totalResponses.value) * 100).toFixed(1) 
+                : '0';
+              
+              return [
+                `Count: ${count} of ${totalResponses.value} responses`,
+                `Percentage: ${percentage}%`
+              ];
+            }
+          },
+          titleFont: {
+            weight: 'bold',
+            size: 14
+          },
+          bodyFont: {
+            size: 13
+          },
+          padding: 10,
+          boxPadding: 5
         }
       },
       scales: {
         y: {
-          beginAtZero: true,
-          border: {
+          title: {
             display: true,
-            width: 1
+            text: 'Number of Responses',
+            font: {
+              weight: 'bold',
+              size: 14
+            },
+            padding: {
+              bottom: 10
+            }
+          },
+          beginAtZero: true,
+          max: maxCount.value,
+          ticks: {
+            stepSize: 1,
+            precision: 0, 
+            callback: formatYAxisTick,
+            font: {
+              size: 12
+            }
           },
           grid: {
             color: 'rgba(0, 0, 0, 0.1)'
-          },
-          title: {
-            display: true,
-            text: 'Frequency',
-            font: {
-              size: 18,
-              weight: 'bold'
-            },
-            padding: {
-              top: 20,
-              bottom: 20
-            }
-          },
-          ticks: {
-            padding: 12,
-            font: {
-              size: 14,
-              weight: 'bold'
-            }
           }
         },
         x: {
-          grid: {
-            display: false
-          },
-          border: {
-            display: true,
-            width: 1
-          },
           title: {
             display: true,
             text: 'Values',
             font: {
-              size: 18,
-              weight: 'bold'
+              weight: 'bold',
+              size: 14
             },
             padding: {
-              top: 20,
-              bottom: 20
+              top: 10
             }
           },
           ticks: {
-            maxRotation: 45,
-            minRotation: 45,
-            padding: 12,
             font: {
-              size: 14,
-              weight: 'bold'
-            }
+              size: 12
+            },
+            maxRotation: 0,
+            autoSkip: false
+          },
+          grid: {
+            display: false
           }
+        }
+      },
+      layout: {
+        padding: {
+          top: 10,
+          right: 20,
+          bottom: 20,
+          left: 20
         }
       }
     };
 
     return {
       chartOptions,
-      data
+      totalResponses
     };
   }
 });
@@ -177,9 +217,22 @@ export default defineComponent({
 <style scoped>
 .chart-container {
   position: relative;
-  height: 600px !important;
+  height: 400px;
   width: 100%;
-  padding: 30px;
-  margin: 20px 0;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #ffffff;
+  border-radius: 8px;
+}
+
+.no-data {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 16px;
+  color: #666;
+  background-color: #f9f9f9;
+  border-radius: 8px;
 }
 </style>

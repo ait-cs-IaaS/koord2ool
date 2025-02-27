@@ -1,40 +1,56 @@
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
+import { getQuestionText } from "./chartFunctions";
 
-export function getHistogramData(data: FilteredResponse[]) {
-  const values = data
-    .map(item => Number(item.answer))
-    .filter(value => !isNaN(value));
 
-  const binCount = 10;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const binWidth = (max - min) / binCount;
-
-  const bins = Array.from({ length: binCount }, (_, i) => {
-    const binStart = min + (i * binWidth);
+export function getHistogramData(data: FilteredResponse[], questionKey: string) {  
+  const valueData = data.map(item => ({
+    value: Number(item.answer),
+    timestamp: item.time,
+    token: item.token
+  }))
+  .filter(item => !isNaN(item.value));
+    
+  if (valueData.length === 0) {
     return {
-      x: binStart + (binWidth / 2),
-      y: 0
+       labels: [],
+      datasets: [],
+      title: "No numerical data available"
+    };
+  }
+  
+  const values = valueData.map(item => item.value);
+
+  const uniqueTokens = new Set(valueData.map(item => item.token)).size;  
+  const uniqueValues = [...new Set(values)].sort((a, b) => a - b);
+  const valueCounts = uniqueValues.map(value => {
+    const count = values.filter(v => v === value).length;
+    return {
+      value: value,
+      count: count,
+      label: value.toString(),
+      percentage: ((count / values.length) * 100).toFixed(1)
     };
   });
-
-  values.forEach(value => {
-    const binIndex = Math.min(
-      Math.floor((value - min) / binWidth),
-      binCount - 1
-    );
-    bins[binIndex].y++;
-  });
-
+    
+  const questionText = getQuestionText(questionKey);
+  const shortTitle = questionText.length > 40 ? 
+    questionText.substring(0, 40) + '...' : 
+    questionText;
   return {
-    labels: bins.map(bin => `${(bin.x - binWidth/2).toFixed(1)} - ${(bin.x + binWidth/2).toFixed(1)}`),
+    labels: valueCounts.map(item => item.label),
     datasets: [{
-      data: bins.map(bin => bin.y),
+      data: valueCounts.map(item => item.count),
       backgroundColor: 'rgba(75, 192, 192, 0.6)',
       borderColor: 'rgba(75, 192, 192, 1)',
-      borderWidth: 1
-    }]
+      borderWidth: 1,
+      label: `Responses (${values.length} total)`,
+      barPercentage: 0.9,
+      categoryPercentage: 0.8,
+      originalData: valueCounts
+    }],
+    title: shortTitle,
+    subtitle: `${uniqueTokens} participants, ${values.length} responses`
   };
 }
 

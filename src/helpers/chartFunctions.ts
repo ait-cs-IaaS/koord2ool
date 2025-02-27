@@ -2,12 +2,13 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { setMinMaxFromDataset } from "./numerical-charts";
+import { setMinMaxFromDataset, getHistogramData } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
 import { ParticipantModel } from "../types/participant.model";
+
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
   return data.filter((item) => item.answer !== "N/A" || store.settings.displayNA);
@@ -153,9 +154,8 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
   return aggregatedData;
 }
 
-export function createNumericChartData(questionKey: string) {
+export function createNumericChartData(questionKey: string): ChartData<"bar" | "line"> {
   const store = useSurveyStore();
-  console.debug('Creating numeric chart for:', questionKey);
 
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
@@ -163,68 +163,18 @@ export function createNumericChartData(questionKey: string) {
   }
 
   const question_type = store.getQuestionType(questionKey);
-  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+  const allResponses = filterNA(store.getFilteredResponses(questionKey));
+  const filteredResponses = store.settings.onlyActive 
+    ? getLastResponses(allResponses) 
+    : allResponses;
+
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
     setMinMaxFromDataset(filteredResponses, questionKey);
     
-    if (store.settings.timeFormat === 'real') {
-      const values = filteredResponses
-        .map(item => Number(item.answer))
-        .filter(value => !isNaN(value));
-
-      const binCount = 10;
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const binWidth = (max - min) / binCount;
-
-      const bins = Array.from({ length: binCount }, (_, i) => {
-        const start = min + (i * binWidth);
-        const end = start + binWidth;
-        return {
-          label: `${start.toFixed(1)} - ${end.toFixed(1)}`,
-          count: 0
-        };
-      });
-
-      values.forEach(value => {
-        const binIndex = Math.min(
-          Math.floor((value - min) / binWidth),
-          binCount - 1
-        );
-        bins[binIndex].count++;
-      });
-
-      return {
-        labels: bins.map(bin => bin.label),
-        datasets: [{
-          data: bins.map(bin => bin.count),
-          backgroundColor: 'rgba(75, 192, 192, 0.6)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-          label: getQuestionText(questionKey)
-        }]
-      };
-    }
-    
-    const timePoints = filteredResponses.map(response => ({
-      x: response.time.getTime(),
-      y: Number(response.answer)
-    }))
-    .filter(point => !isNaN(point.y))
-    .sort((a, b) => a.x - b.x);
-
-    return {
-      datasets: [{
-        data: timePoints,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        fill: true,
-        tension: 0.1,
-        label: getQuestionText(questionKey)
-      }]
-    };
+    const chartData = getHistogramData(filteredResponses, questionKey);
+    return chartData;
   }
 
   return { datasets: [] };
