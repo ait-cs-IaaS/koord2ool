@@ -2,7 +2,7 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { setMinMaxFromDataset, getHistogramData } from "./numerical-charts";
+import { setMinMaxFromDataset, getHistogramData, getAverageLineChart } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
@@ -173,8 +173,11 @@ export function createNumericChartData(questionKey: string): ChartData<"bar" | "
   if (isNumericalQuestion(question_type)) {
     setMinMaxFromDataset(filteredResponses, questionKey);
     
-    const chartData = getHistogramData(filteredResponses, questionKey);
-    return chartData;
+    if (store.settings.timeFormat === "stepped") {
+      return getAverageLineChart(filteredResponses, questionKey);
+    } else {
+      return getHistogramData(filteredResponses, questionKey);
+    }
   }
 
   return { datasets: [] };
