@@ -1,9 +1,9 @@
 <template>
-  <v-card>
-    <v-container fluid>
-      <v-row class="chartrow">
-        <v-col cols="12" lg="3">
-          <v-card-title>
+  <v-card class="chart-card mb-6">
+    <v-container fluid class="pa-4">
+      <v-row class="chartrow align-stretch">
+        <v-col cols="12" lg="3" class="d-flex flex-column">
+          <v-card-title class="px-3 py-2">
             <v-tooltip location="top">
               <template #activator="{ props }">
                 <span v-bind="props">
@@ -14,25 +14,30 @@
               <span>Question type: {{ questionType }}</span>
             </v-tooltip>
           </v-card-title>
-          <v-card-text class="mb-0">
-            <p v-for="(answer, index) in counters" :key="index">
+          <v-card-text class="mb-0 flex-grow-1 d-flex flex-column justify-center">
+            <p v-for="(answer, index) in counters" :key="index" class="py-1">
               <span>
                 {{ answer["name"] }}
                 <strong>({{ answer["value"] }})</strong>
               </span>
             </p>
+            <p v-if="counters.length === 0" class="text-center text-medium-emphasis">
+              No response data available
+            </p>
           </v-card-text>
         </v-col>
-        <v-col cols="12" lg="3" class="doughnut-col">
-          <div v-if="counters.length > 0" class="px-2 py-4">
+        
+        <v-col cols="12" lg="3" class="doughnut-col d-flex align-center justify-center">
+          <div v-if="counters.length > 0" class="px-3 py-3 chart-container">
             <doughnut-chart :counters="counters" />
           </div>
-          <div v-else class="py-4">
+          <div v-else class="py-3 d-flex align-center justify-center">
             <p class="text-center">No data available</p>
           </div>
         </v-col>
-        <v-col cols="12" lg="5" class="px-4 line-col">
-          <div v-if="questionType === 'numerical'" class="py-4">
+        
+        <v-col cols="12" lg="6" class="line-col px-4">
+          <div v-if="questionType === 'numerical'" class="chart-container py-2">
             <histogram-chart
               v-if="store.settings.timeFormat === 'real'"
               :chartjs-data="{
@@ -49,7 +54,7 @@
               :question-key="questionKey"
             />
           </div>
-          <div v-else class="py-4">
+          <div v-else class="chart-container py-2">
             <line-chart 
               :chartjs-data="chartjsdata" 
               :question-type="questionType" 
@@ -135,16 +140,20 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.chart-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
 .chartrow {
   border-bottom: 1px solid #e0e0e0;
 }
 
-.line-col {
-  min-height: 600px;
-}
-
-.doughnut-col {
-  min-height: 200px;
+.chart-container {
+  width: 100%;
+  height: 320px;
+  position: relative;
 }
 
 .question-title {
@@ -161,5 +170,23 @@ export default defineComponent({
   overflow: visible;
   white-space: normal;
   padding-right: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1263px) {
+  .chart-container {
+    height: 280px;
+  }
+}
+
+@media (max-width: 959px) {
+  .doughnut-col, .line-col {
+    padding-top: 8px !important;
+    padding-bottom: 24px !important;
+  }
+  
+  .chart-card {
+    margin-bottom: 32px;
+  }
 }
 </style>
