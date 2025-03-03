@@ -164,19 +164,16 @@ export function createNumericChartData(questionKey: string): ChartData<"bar" | "
 
   const question_type = store.getQuestionType(questionKey);
   const allResponses = filterNA(store.getFilteredResponses(questionKey));
-  const filteredResponses = store.settings.onlyActive 
-    ? getLastResponses(allResponses) 
-    : allResponses;
 
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
-    setMinMaxFromDataset(filteredResponses, questionKey);
+    setMinMaxFromDataset(allResponses, questionKey);
     
     if (store.settings.timeFormat === "stepped") {
-      return getAverageLineChart(filteredResponses, questionKey);
+      return getAverageLineChart(allResponses, questionKey);
     } else {
-      return getHistogramData(filteredResponses, questionKey);
+      return getHistogramData(allResponses, questionKey);
     }
   }
 
