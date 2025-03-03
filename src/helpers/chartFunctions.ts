@@ -60,11 +60,13 @@ export function countResponsesFor(questionKey: string): responseCount[] {
 
 export function createActiveNumericalData(questionKey: string): ChartData<"bar"> {
   const store = useSurveyStore();
-  const filteredResponses = store.getFilteredResponses(questionKey);
-  const filteredResponsesNA = filterNA(filteredResponses);
+  const allResponses = store.getFilteredResponses(questionKey);
+  const filteredResponsesNA = filterNA(allResponses);
+  const activeResponses = store.settings.onlyActive 
+    ? getLastResponses(filteredResponsesNA) 
+    : filteredResponsesNA;
 
-  return getHistogramData(filteredResponsesNA, questionKey);
-  // TODO: Implement this function
+  return getHistogramData(activeResponses, questionKey);
 }
 
 export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {

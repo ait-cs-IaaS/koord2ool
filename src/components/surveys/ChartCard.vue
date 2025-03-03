@@ -2,48 +2,28 @@
   <v-card class="chart-card mb-6">
     <v-container fluid class="pa-4">
       <v-row class="chartrow align-stretch">
-        <v-col cols="12" lg="3" class="d-flex flex-column">
-          <v-card-title class="px-3 py-2">
-            <v-tooltip location="top">
-              <template #activator="{ props }">
-                <span v-bind="props">
-                  <span class="question-id">{{ questionKey }} – </span>
-                  <span class="question-title">{{ questionText }}</span>
-                </span>
-              </template>
-              <span>Question type: {{ questionType }}</span>
-            </v-tooltip>
+        <v-col cols="12" class="px-3 py-1">
+          <v-card-title>
+            <span class="question-id">{{ questionKey }} – </span>
+            <span class="question-title">{{ questionText }}</span>
           </v-card-title>
-          <v-card-text class="mb-0 flex-grow-1 d-flex flex-column justify-center">
-            <p v-for="(answer, index) in counters" :key="index" class="py-1">
-              <span>
-                {{ answer["name"] }}
-                <strong>({{ answer["value"] }})</strong>
-              </span>
-            </p>
-            <p v-if="counters.length === 0" class="text-center text-medium-emphasis">No response data available</p>
-          </v-card-text>
         </v-col>
 
-        <v-col cols="12" lg="3" class="doughnut-col d-flex align-center justify-center">
-          <div v-if="questionType === 'numerical'" class="chart-container py-2">
+        <v-col cols="12" class="d-flex flex-wrap">
+          <div v-if="questionType === 'numerical'" class="chart-container histogram-chart px-2">
             <histogram-chart
               v-if="store.settings.timeFormat === 'real'"
-              :chartjs-data="onlyActiveNumericalData"
+              :chartjs-data="chartData"
               :question-type="questionType"
               :question-key="questionKey"
             />
           </div>
-          <div v-else-if="counters.length > 0" class="px-3 py-3 chart-container">
-            <doughnut-chart :counters="counters" />
+          <div v-else class="chart-container doughnut-chart px-2">
+            <doughnut-chart v-if="counters.length > 0" :counters="counters" />
+            <div v-else class="no-data">No data available</div>
           </div>
-          <div v-else class="py-3 d-flex align-center justify-center">
-            <p class="text-center">No data available</p>
-          </div>
-        </v-col>
 
-        <v-col cols="12" lg="6" class="line-col px-4">
-          <div class="chart-container py-2">
+          <div class="chart-container line-chart px-2">
             <line-chart :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
         </v-col>
@@ -92,9 +72,13 @@ export default defineComponent({
       return createTimelineFor(props.questionKey);
     });
 
-    const onlyActiveNumericalData = computed(() => {
-      console.debug("Computing only active numerical data for:", props.questionKey);
-      return createActiveNumericalData(props.questionKey);
+    const chartData = computed(() => {
+      try {
+        return createActiveNumericalData(props.questionKey);
+      } catch (e) {
+        console.error("Error preparing chart data:", e);
+        return { labels: [], datasets: [] };
+      }
     });
 
     return {
@@ -103,7 +87,7 @@ export default defineComponent({
       counters,
       chartjsdata,
       questionType,
-      onlyActiveNumericalData,
+      chartData
     };
   },
 });
@@ -116,14 +100,30 @@ export default defineComponent({
   border-radius: 8px;
 }
 
-.chartrow {
-  border-bottom: 1px solid #e0e0e0;
-}
-
 .chart-container {
-  width: 100%;
   height: 320px;
   position: relative;
+}
+
+.histogram-chart {
+  width: 40%;
+}
+
+.line-chart {
+  width: 60%;
+}
+
+.doughnut-chart {
+  width: 40%;
+}
+
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 16px;
+  color: #666;
 }
 
 .question-title {
@@ -132,17 +132,8 @@ export default defineComponent({
   overflow: visible;
   display: inline-block;
   line-height: 1.4;
-  max-width: 100%;
 }
 
-.v-card-title {
-  display: block;
-  overflow: visible;
-  white-space: normal;
-  padding-right: 16px;
-}
-
-/* Responsive adjustments */
 @media (max-width: 1263px) {
   .chart-container {
     height: 280px;
@@ -150,14 +141,9 @@ export default defineComponent({
 }
 
 @media (max-width: 959px) {
-  .doughnut-col,
-  .line-col {
-    padding-top: 8px !important;
-    padding-bottom: 24px !important;
-  }
-
-  .chart-card {
-    margin-bottom: 32px;
+  .histogram-chart, .doughnut-chart, .line-chart {
+    width: 100%;
+    margin-bottom: 20px;
   }
 }
 </style>

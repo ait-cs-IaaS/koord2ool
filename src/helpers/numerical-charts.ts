@@ -1,8 +1,31 @@
-import { ChartData } from "chart.js";
+import { ChartData, ChartDataset } from "chart.js";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 import { getQuestionText } from "./chartFunctions";
 import { initializeUserLastResponse, sortResponsesByTime, ChartDataEntry, initializeChartData } from "./shared-chartFunctions";
+
+interface HistogramBin {
+  value: number;
+  count: number;
+  label: string;
+  percentage: string;
+}
+
+interface HistogramChartData {
+  labels: string[];
+  datasets: Array<{
+    data: number[];
+    backgroundColor: string;
+    borderColor: string;
+    borderWidth: number;
+    label: string;
+    barPercentage: number;
+    categoryPercentage: number;
+    originalData?: HistogramBin[];
+  }>;
+  title: string;
+  subtitle: string;
+}
 
 export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartDataEntry[] {
   const store = useSurveyStore();
@@ -20,34 +43,67 @@ export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartD
   return generateContinuousChartData(sortedResponses, uniqueBuckets, userLastResponse, buckets, chartData);
 }
 
-function bucketsFromResponses(data: FilteredResponse[], max_buckets: number = 5): string[] {
-  // assume that the answer is a number and create max_buckets equal size buckets based on the range of the answers
 
-  const values = data.map((item) => Number(item.answer)).filter((item) => !isNaN(item));
+function bucketsFromResponses(data: FilteredResponse[], maxBins: number = 5): string[] {
+  const values = data
+    .map((item) => Number(item.answer))
+    .filter((item) => !isNaN(item))
+    .map(val => Math.round(val));
+  
   if (values.length === 0) {
     return [];
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  values.sort((a, b) => a - b);
+  
+  const min = values[0];
+  const max = values[values.length - 1];
 
   if (min === max) {
-    return Array(max_buckets).fill(`${min}`);
+    return [min.toString()];
   }
 
-  const totalCount = max - min + 1;
-  const bucketSize = Math.ceil(totalCount / max_buckets);
-
-  const buckets: string[] = [];
-
-  for (let i = 0; i < max_buckets; i++) {
-    const bucketMin = min + i * bucketSize;
-    let bucketMax = i === 4 ? max : bucketMin + bucketSize - 1;
-    bucketMax = Math.min(bucketMax, max);
-    buckets.push(`${bucketMin} - ${bucketMax}`);
+  const uniqueValues = [...new Set(values)];
+  if (uniqueValues.length <= maxBins) {
+    return uniqueValues
+      .sort((a, b) => a - b)
+      .map(val => val.toString());
   }
-
-  return buckets;
+  
+  const binLabels = [];
+  const itemsPerBin = Math.ceil(values.length / maxBins);
+  
+  for (let i = 0; i < maxBins; i++) {
+    const startIdx = i * itemsPerBin;
+    if (startIdx >= values.length) break;
+    
+    const endIdx = Math.min((i + 1) * itemsPerBin - 1, values.length - 1);
+    const binStart = values[startIdx];
+    const binEnd = values[endIdx];
+    
+    if (endIdx < startIdx) continue;
+    
+    if (binStart === binEnd) {
+      binLabels.push(binStart.toString());
+    } else {
+      binLabels.push(`${binStart} - ${binEnd}`);
+    }
+  }
+  
+  if (binLabels.length === 0) {
+    const binWidth = Math.ceil((max - min) / maxBins);
+    
+    for (let i = 0; i < maxBins; i++) {
+      const binStart = min + i * binWidth;
+      const binEnd = (i === maxBins - 1) ? max : min + (i + 1) * binWidth - 1;
+      
+      if (binStart > max) break;
+      
+      binLabels.push(`${binStart} - ${binEnd}`);
+    }
+  }
+  
+  return binLabels;
 }
 
 function generateSteppedChartData(
@@ -67,7 +123,7 @@ function generateSteppedChartData(
       (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 60 * 1000),
     );
 
-    getBucketsinRange(responsesInRange, userLastResponse, buckets);
+    getBucketsInRange(responsesInRange, uniqueBuckets, buckets);
     addBucketsToChartData(currentTime, uniqueBuckets, buckets, chartData);
 
     currentTime.setHours(currentTime.getHours() + step);
@@ -85,31 +141,88 @@ function initializeBuckets(uniqueBuckets: string[]): Record<string, number> {
   return buckets;
 }
 
-function getBucketsinRange(
+function parseBinLabel(label: string): { min: number; max: number } | null {
+  if (label.includes(" - ")) {
+    const parts = label.split(" - ");
+    if (parts.length === 2) {
+      const min = parseInt(parts[0]);
+      const max = parseInt(parts[1]);
+      if (!isNaN(min) && !isNaN(max)) {
+        return { min, max };
+      }
+    }
+  } else {
+    const value = parseInt(label);
+    if (!isNaN(value)) {
+      return { min: value, max: value };
+    }
+  }
+  return null;
+}
+
+function getBucketsInRange(
   responsesInRange: FilteredResponse[],
-  userLastResponse: { [token: string]: string },
+  uniqueBuckets: string[],
   buckets: Record<string, number>,
-) {
+): void {
+  Object.keys(buckets).forEach(key => {
+    buckets[key] = 0;
+  });
+  
   responsesInRange.forEach((response) => {
-    const answer = Number(response.answer);
-    if (isNaN(answer)) {
+    const value = Number(response.answer);
+    if (isNaN(value)) {
       return;
     }
-
-    const bucket = getBucket(answer, userLastResponse[response.token]);
-    buckets[bucket]++;
+    
+    const roundedValue = Math.round(value);
+    
+    let found = false;
+    
+    for (const bucket of uniqueBuckets) {
+      const parsed = parseBinLabel(bucket);
+      if (parsed && roundedValue >= parsed.min && roundedValue <= parsed.max) {
+        buckets[bucket]++;
+        found = true;
+        break;
+      }
+    }
+    
+    if (!found && uniqueBuckets.length > 0) {
+      let closestBucket = uniqueBuckets[0];
+      let minDistance = Infinity;
+      
+      for (const bucket of uniqueBuckets) {
+        const parsed = parseBinLabel(bucket);
+        if (!parsed) continue;
+        
+        const bucketValue = parsed.min === parsed.max 
+          ? parsed.min 
+          : (parsed.min + parsed.max) / 2;
+        
+        const distance = Math.abs(roundedValue - bucketValue);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestBucket = bucket;
+        }
+      }
+      
+      buckets[closestBucket]++;
+    }
   });
 }
 
-function getBucket(answer: number, lastResponse: string): string {
-  const bucket = lastResponse ? lastResponse : answer.toString();
-  return bucket;
-}
-
-function addBucketsToChartData(currentTime: Date, uniqueBuckets: string[], buckets: Record<string, number>, chartData: ChartDataEntry[]) {
-  return uniqueBuckets.forEach((bucket) => {
+function addBucketsToChartData(
+  currentTime: Date, 
+  uniqueBuckets: string[], 
+  buckets: Record<string, number>, 
+  chartData: ChartDataEntry[]
+): void {
+  uniqueBuckets.forEach((bucket) => {
     const entry = chartData.find((entry) => entry.name === bucket);
-    entry?.data.push([currentTime.getTime(), buckets[bucket]]);
+    if (entry) {
+      entry.data.push([currentTime.getTime(), buckets[bucket]]);
+    }
   });
 }
 
@@ -120,17 +233,33 @@ function generateContinuousChartData(
   buckets: Record<string, number>,
   chartData: ChartDataEntry[],
 ): ChartDataEntry[] {
-  // TODO: IMPLEMENT
-
-  const currentTime = new Date(responses[0].time.getTime());
-
-  getBucketsinRange(responses, userLastResponse, buckets);
-  addBucketsToChartData(currentTime, uniqueBuckets, buckets, chartData);
-
+  if (responses.length === 0) {
+    return chartData;
+  }
+  
+  let currentResponses: FilteredResponse[] = [];
+  let lastTimestamp = new Date(0);
+  
+  responses.forEach((response) => {
+    if (response.time.getTime() !== lastTimestamp.getTime() && currentResponses.length > 0) {
+      getBucketsInRange(currentResponses, uniqueBuckets, buckets);
+      addBucketsToChartData(lastTimestamp, uniqueBuckets, buckets, chartData);
+      currentResponses = [];
+    }
+    
+    currentResponses.push(response);
+    lastTimestamp = response.time;
+  });
+  
+  if (currentResponses.length > 0) {
+    getBucketsInRange(currentResponses, uniqueBuckets, buckets);
+    addBucketsToChartData(lastTimestamp, uniqueBuckets, buckets, chartData);
+  }
+  
   return chartData;
 }
 
-export function getHistogramData(data: FilteredResponse[], questionKey: string) {
+export function getHistogramData(data: FilteredResponse[], questionKey: string): HistogramChartData {
   const valueData = data
     .map((item) => ({
       value: Number(item.answer),
@@ -144,19 +273,30 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string) 
       labels: [],
       datasets: [],
       title: "No numerical data available",
+      subtitle: "",
     };
   }
 
   const values = valueData.map((item) => item.value);
-
   const uniqueTokens = new Set(valueData.map((item) => item.token)).size;
-  const uniqueValues = [...new Set(values)].sort((a, b) => a - b);
-  const valueCounts = uniqueValues.map((value) => {
-    const count = values.filter((v) => v === value).length;
+  
+  const binLabels = bucketsFromResponses(data);
+  
+  const binCounts = binLabels.map(label => {
+    let count = 0;
+    const roundedValues = values.map(val => Math.round(val));
+    const parsedBin = parseBinLabel(label);
+    
+    if (parsedBin) {
+      count = roundedValues.filter(val => 
+        val >= parsedBin.min && val <= parsedBin.max
+      ).length;
+    }
+    
     return {
-      value: value,
+      value: parsedBin ? parsedBin.min : 0,
       count: count,
-      label: value.toString(),
+      label: label,
       percentage: ((count / values.length) * 100).toFixed(1),
     };
   });
@@ -164,17 +304,17 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string) 
   const questionText = getQuestionText(questionKey);
   const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
   return {
-    labels: valueCounts.map((item) => item.label),
+    labels: binCounts.map((item) => item.label),
     datasets: [
       {
-        data: valueCounts.map((item) => item.count),
+        data: binCounts.map((item) => item.count),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
         label: `Responses (${values.length} total)`,
         barPercentage: 0.9,
         categoryPercentage: 0.8,
-        originalData: valueCounts,
+        originalData: binCounts,
       },
     ],
     title: shortTitle,
@@ -249,16 +389,14 @@ export function getAverageLineChart(data: FilteredResponse[], questionKey?: stri
     };
   }
 
-  // Format data for hover tooltips
   const timePoints = aggregatedPoints.map((point) => ({
     x: point.timestamp,
-    y: Number(point.average.toFixed(2)),
+    y: Math.round(point.average), 
     count: point.count,
     participants: point.uniqueParticipants,
-    tooltip: `${new Date(point.timestamp).toLocaleString()}\nAverage: ${point.average.toFixed(2)}\nResponses: ${point.count}\nParticipants: ${point.uniqueParticipants}`,
+    tooltip: `${new Date(point.timestamp).toLocaleString()}\nAverage: ${Math.round(point.average)}\nResponses: ${point.count}\nParticipants: ${point.uniqueParticipants}`,
   }));
 
-  // const totalParticipants = new Set(data.map((item) => item.token)).size;
   const labelText = questionKey ? `${getQuestionText(questionKey)} (${stepHours}h intervals)` : `Average (${stepHours}h intervals)`;
 
   return {
