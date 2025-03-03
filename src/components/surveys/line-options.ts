@@ -61,7 +61,7 @@ export const areaChartOptions: ChartOptions<"line"> = {
   plugins: {
     title: {
       display: true,
-      text: "", 
+      text: "",
       padding: 20,
       font: {
         size: fontConfig.titleSize,

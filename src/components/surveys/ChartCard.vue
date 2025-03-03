@@ -21,45 +21,30 @@
                 <strong>({{ answer["value"] }})</strong>
               </span>
             </p>
-            <p v-if="counters.length === 0" class="text-center text-medium-emphasis">
-              No response data available
-            </p>
+            <p v-if="counters.length === 0" class="text-center text-medium-emphasis">No response data available</p>
           </v-card-text>
         </v-col>
-        
+
         <v-col cols="12" lg="3" class="doughnut-col d-flex align-center justify-center">
-          <div v-if="counters.length > 0" class="px-3 py-3 chart-container">
+          <div v-if="questionType === 'numerical'" class="chart-container py-2">
+            <histogram-chart
+              v-if="store.settings.timeFormat === 'real'"
+              :chartjs-data="onlyActiveNumericalData"
+              :question-type="questionType"
+              :question-key="questionKey"
+            />
+          </div>
+          <div v-else-if="counters.length > 0" class="px-3 py-3 chart-container">
             <doughnut-chart :counters="counters" />
           </div>
           <div v-else class="py-3 d-flex align-center justify-center">
             <p class="text-center">No data available</p>
           </div>
         </v-col>
-        
+
         <v-col cols="12" lg="6" class="line-col px-4">
-          <div v-if="questionType === 'numerical'" class="chart-container py-2">
-            <histogram-chart
-              v-if="store.settings.timeFormat === 'real'"
-              :chartjs-data="{
-                labels: numericalChartData.labels,
-                datasets: numericalChartData.datasets
-              }"
-              :question-type="questionType"
-              :question-key="questionKey"
-            />
-            <line-chart
-              v-else
-              :chartjs-data="numericalChartData"
-              :question-type="questionType"
-              :question-key="questionKey"
-            />
-          </div>
-          <div v-else class="chart-container py-2">
-            <line-chart 
-              :chartjs-data="chartjsdata" 
-              :question-type="questionType" 
-              :question-key="questionKey" 
-            />
+          <div class="chart-container py-2">
+            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
         </v-col>
       </v-row>
@@ -72,21 +57,8 @@ import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import HistogramChart from "./HistogramChart.vue";
 import { computed, defineComponent } from "vue";
-import { getQuestionText, countResponsesFor, createTimelineFor, createNumericChartData, } from "../../helpers/chartFunctions";
+import { getQuestionText, countResponsesFor, createTimelineFor, createActiveNumericalData } from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
-
-interface ChartDataset {
-  label: string;
-  data: number[];
-  backgroundColor?: string;
-  borderColor?: string;
-  borderWidth?: number;
-}
-
-interface ExtendedChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
 
 export default defineComponent({
   name: "ChartCard",
@@ -120,20 +92,18 @@ export default defineComponent({
       return createTimelineFor(props.questionKey);
     });
 
-    const numericalChartData = computed<ExtendedChartData>(() => {
-      console.debug("Computing numerical chart data, timeFormat:", store.settings.timeFormat);
-      const data = createNumericChartData(props.questionKey);
-      console.debug("Received numerical chart data:", data);
-      return data as ExtendedChartData;
+    const onlyActiveNumericalData = computed(() => {
+      console.debug("Computing only active numerical data for:", props.questionKey);
+      return createActiveNumericalData(props.questionKey);
     });
 
     return {
       store,
       questionText,
       counters,
-      numericalChartData,
       chartjsdata,
       questionType,
+      onlyActiveNumericalData,
     };
   },
 });
@@ -157,8 +127,8 @@ export default defineComponent({
 }
 
 .question-title {
-  white-space: normal; 
-  word-break: break-word; 
+  white-space: normal;
+  word-break: break-word;
   overflow: visible;
   display: inline-block;
   line-height: 1.4;
@@ -180,11 +150,12 @@ export default defineComponent({
 }
 
 @media (max-width: 959px) {
-  .doughnut-col, .line-col {
+  .doughnut-col,
+  .line-col {
     padding-top: 8px !important;
     padding-bottom: 24px !important;
   }
-  
+
   .chart-card {
     margin-bottom: 32px;
   }

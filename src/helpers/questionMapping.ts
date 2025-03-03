@@ -1,16 +1,30 @@
 import type { QuestionPropertyModel } from "../types/question_property.model";
 
-type ChartType = "line" | "candlestick" | "area" | null;
+type ChartType = "line" | "area" | "doughnut" | "histogram" | null;
 
 const QUESTION_TYPE_MAPPING: Record<string, ChartType> = {
   yesno: "line",
   list_dropdown: "line",
   bootstrap_dropdown: "line",
   listradio: "line",
-  numerical: "candlestick",
+  numerical: "area",
   multipleshorttext: "area",
   multiplechoice: "area",
 } as const;
+
+const QUESTION_TYPE_ACTIVE_CHART_MAPPING: Record<string, ChartType> = {
+  yesno: "doughnut",
+  list_dropdown: "doughnut",
+  bootstrap_dropdown: "doughnut",
+  listradio: "doughnut",
+  numerical: "histogram",
+  multipleshorttext: "doughnut",
+  multiplechoice: "doughnut",
+} as const;
+
+export function getActiveChartType(question_type: string): ChartType {
+  return QUESTION_TYPE_ACTIVE_CHART_MAPPING[question_type] || null;
+}
 
 export function getChartType(question_type: string): ChartType {
   return QUESTION_TYPE_MAPPING[question_type] || null;
@@ -25,7 +39,7 @@ export function isYesNoQuestion(question_type: string): boolean {
 }
 
 export function isNumericalQuestion(question_type: string): boolean {
-  return getChartType(question_type) === "candlestick";
+  return getChartType(question_type) === "histogram";
 }
 
 export function isMultipleChoiceQuestion(question_type: string): boolean {

@@ -2,7 +2,7 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { setMinMaxFromDataset, getHistogramData, getAverageLineChart } from "./numerical-charts";
+import { getHistogramData, getAverageLineChart } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
@@ -56,6 +56,15 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   });
 
   return responseCounts;
+}
+
+export function createActiveNumericalData(questionKey: string): ChartData<"line"> {
+  const store = useSurveyStore();
+  const filteredResponses = store.getFilteredResponses(questionKey);
+  const filteredResponsesNA = filterNA(filteredResponses);
+
+  return getHistogramData(filteredResponsesNA, questionKey);
+  // TODO: Implement this function
 }
 
 export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
@@ -154,31 +163,6 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
   return aggregatedData;
 }
 
-export function createNumericChartData(questionKey: string): ChartData<"bar" | "line"> {
-  const store = useSurveyStore();
-
-  if (store.selectedSurveyID === undefined) {
-    console.error("No survey selected");
-    return { datasets: [] };
-  }
-
-  const question_type = store.getQuestionType(questionKey);
-  const allResponses = filterNA(store.getFilteredResponses(questionKey));
-
-  store.updateTokenMap(store.selectedSurveyID);
-
-  if (isNumericalQuestion(question_type)) {
-    setMinMaxFromDataset(allResponses, questionKey);
-    
-    if (store.settings.timeFormat === "stepped") {
-      return getAverageLineChart(allResponses, questionKey);
-    } else {
-      return getHistogramData(allResponses, questionKey);
-    }
-  }
-
-  return { datasets: [] };
-}
 export function createTimelineFor(questionKey: string): ChartData<"line"> {
   const store = useSurveyStore();
   if (store.selectedSurveyID === undefined) {
@@ -200,6 +184,14 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
 
   if (isMultipleChoiceQuestion(question_type)) {
     return transformChartData(parseDataForAreaChart(filteredResponses));
+  }
+
+  if (isNumericalQuestion(question_type)) {
+    const filteredResponsesNA = filterNA(filteredResponses);
+    if (store.settings.timeFormat === "stepped") {
+      return getAverageLineChart(filteredResponsesNA, questionKey);
+    }
+    return getHistogramData(filteredResponsesNA, questionKey);
   }
 
   return parseDataForFreeTextChart(filteredResponses);
