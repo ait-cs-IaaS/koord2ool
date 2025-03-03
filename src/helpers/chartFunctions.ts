@@ -58,7 +58,7 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   return responseCounts;
 }
 
-export function createActiveNumericalData(questionKey: string): ChartData<"line"> {
+export function createActiveNumericalData(questionKey: string): ChartData<"bar"> {
   const store = useSurveyStore();
   const filteredResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(filteredResponses);

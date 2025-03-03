@@ -2,6 +2,133 @@ import { ChartData } from "chart.js";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 import { getQuestionText } from "./chartFunctions";
+import { initializeUserLastResponse, sortResponsesByTime, ChartDataEntry, initializeChartData } from "./shared-chartFunctions";
+
+export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartDataEntry[] {
+  const store = useSurveyStore();
+
+  const uniqueBuckets = bucketsFromResponses(responses);
+  const userLastResponse = initializeUserLastResponse(responses);
+  const buckets = initializeBuckets(uniqueBuckets);
+  const chartData = initializeChartData(uniqueBuckets);
+  const sortedResponses = sortResponsesByTime(responses);
+
+  if (store.settings.timeFormat === "stepped") {
+    return generateSteppedChartData(sortedResponses, uniqueBuckets, userLastResponse, buckets, chartData);
+  }
+
+  return generateContinuousChartData(sortedResponses, uniqueBuckets, userLastResponse, buckets, chartData);
+}
+
+function bucketsFromResponses(data: FilteredResponse[], max_buckets: number = 5): string[] {
+  // assume that the answer is a number and create max_buckets equal size buckets based on the range of the answers
+
+  const values = data.map((item) => Number(item.answer)).filter((item) => !isNaN(item));
+  if (values.length === 0) {
+    return [];
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  if (min === max) {
+    return Array(max_buckets).fill(`${min}`);
+  }
+
+  const totalCount = max - min + 1;
+  const bucketSize = Math.ceil(totalCount / max_buckets);
+
+  const buckets: string[] = [];
+
+  for (let i = 0; i < max_buckets; i++) {
+    const bucketMin = min + i * bucketSize;
+    let bucketMax = i === 4 ? max : bucketMin + bucketSize - 1;
+    bucketMax = Math.min(bucketMax, max);
+    buckets.push(`${bucketMin} - ${bucketMax}`);
+  }
+
+  return buckets;
+}
+
+function generateSteppedChartData(
+  responses: FilteredResponse[],
+  uniqueBuckets: string[],
+  userLastResponse: { [token: string]: string },
+  buckets: Record<string, number>,
+  chartData: ChartDataEntry[],
+): ChartDataEntry[] {
+  const store = useSurveyStore();
+  const { step } = store.settings;
+  const { fromDate, untilDate } = store;
+  const currentTime = new Date(fromDate.getTime());
+
+  while (currentTime <= untilDate) {
+    const responsesInRange = responses.filter(
+      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 60 * 1000),
+    );
+
+    getBucketsinRange(responsesInRange, userLastResponse, buckets);
+    addBucketsToChartData(currentTime, uniqueBuckets, buckets, chartData);
+
+    currentTime.setHours(currentTime.getHours() + step);
+  }
+
+  return chartData;
+}
+
+function initializeBuckets(uniqueBuckets: string[]): Record<string, number> {
+  const buckets: Record<string, number> = {};
+  uniqueBuckets.forEach((bucket) => {
+    buckets[bucket] = 0;
+  });
+
+  return buckets;
+}
+
+function getBucketsinRange(
+  responsesInRange: FilteredResponse[],
+  userLastResponse: { [token: string]: string },
+  buckets: Record<string, number>,
+) {
+  responsesInRange.forEach((response) => {
+    const answer = Number(response.answer);
+    if (isNaN(answer)) {
+      return;
+    }
+
+    const bucket = getBucket(answer, userLastResponse[response.token]);
+    buckets[bucket]++;
+  });
+}
+
+function getBucket(answer: number, lastResponse: string): string {
+  const bucket = lastResponse ? lastResponse : answer.toString();
+  return bucket;
+}
+
+function addBucketsToChartData(currentTime: Date, uniqueBuckets: string[], buckets: Record<string, number>, chartData: ChartDataEntry[]) {
+  return uniqueBuckets.forEach((bucket) => {
+    const entry = chartData.find((entry) => entry.name === bucket);
+    entry?.data.push([currentTime.getTime(), buckets[bucket]]);
+  });
+}
+
+function generateContinuousChartData(
+  responses: FilteredResponse[],
+  uniqueBuckets: string[],
+  userLastResponse: { [token: string]: string },
+  buckets: Record<string, number>,
+  chartData: ChartDataEntry[],
+): ChartDataEntry[] {
+  // TODO: IMPLEMENT
+
+  const currentTime = new Date(responses[0].time.getTime());
+
+  getBucketsinRange(responses, userLastResponse, buckets);
+  addBucketsToChartData(currentTime, uniqueBuckets, buckets, chartData);
+
+  return chartData;
+}
 
 export function getHistogramData(data: FilteredResponse[], questionKey: string) {
   const valueData = data

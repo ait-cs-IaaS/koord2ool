@@ -46,10 +46,6 @@ export function isMultipleChoiceQuestion(question_type: string): boolean {
   return getChartType(question_type) === "area";
 }
 
-export function renderAreaChart(question_type: string): boolean {
-  return getChartType(question_type) === "area";
-}
-
 export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {
   if (!Array.isArray(questions)) return true;
   if (questions.length === 0) return true;

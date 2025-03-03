@@ -22,7 +22,7 @@ import { lineChartOptions, areaChartOptions } from "./line-options";
 import { defineComponent, ref, computed, onMounted } from "vue";
 import "chartjs-adapter-moment";
 import { nextTick } from "vue";
-import { renderAreaChart } from "../../helpers/questionMapping";
+import { getActiveChartType } from "../../helpers/questionMapping";
 import { useSurveyStore } from "../../store/surveyStore";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, TimeScale, TimeSeriesScale, Filler, Title, Tooltip, Legend);
@@ -49,20 +49,9 @@ export default defineComponent({
   setup(props) {
     const store = useSurveyStore();
     const renderChart = ref(false);
-    const isSteppedTimeChart = computed(() => {
-      return (
-        store.settings.timeFormat === "stepped" &&
-        props.chartjsData.datasets &&
-        props.chartjsData.datasets.length > 0 &&
-        props.chartjsData.datasets[0].data &&
-        props.chartjsData.datasets[0].data.length > 0 &&
-        typeof props.chartjsData.datasets[0].data[0] === "object" &&
-        "tooltip" in (props.chartjsData.datasets[0].data[0] as any)
-      );
-    });
 
     const baseOptions = computed(() => {
-      if (renderAreaChart(props.questionType)) {
+      if (getActiveChartType(props.questionType) === "area") {
         return areaChartOptions;
       }
       return lineChartOptions;
@@ -71,7 +60,7 @@ export default defineComponent({
     const enhancedOptions = computed(() => {
       const options = JSON.parse(JSON.stringify(baseOptions.value));
 
-      if (isSteppedTimeChart.value) {
+      if (store.settings.timeFormat === "stepped") {
         if (options.plugins && options.plugins.tooltip && options.plugins.tooltip.callbacks) {
           const originalCallbacks = options.plugins.tooltip.callbacks || {};
           options.plugins.tooltip.callbacks = {
