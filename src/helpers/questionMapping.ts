@@ -39,7 +39,7 @@ export function isYesNoQuestion(question_type: string): boolean {
 }
 
 export function isNumericalQuestion(question_type: string): boolean {
-  return getChartType(question_type) === "histogram";
+  return question_type === "numerical";
 }
 
 export function isMultipleChoiceQuestion(question_type: string): boolean {
