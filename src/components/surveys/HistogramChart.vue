@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent, computed } from "vue";
 import { Bar } from "vue-chartjs";
 import {
@@ -14,17 +14,24 @@ import {
   Legend,
   BarElement,
   CategoryScale,
-  LinearScale
+  LinearScale,
+  ChartOptions,
+  ChartData
 } from "chart.js";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+
+interface HistogramChartData extends ChartData<"bar"> {
+  title?: string;
+  subtitle?: string;
+}
 
 export default defineComponent({
   name: "HistogramChart",
   components: { Bar },
   props: {
     chartjsData: {
-      type: Object,
+      type: Object as () => HistogramChartData,
       required: true
     },
     questionType: {
@@ -53,7 +60,7 @@ export default defineComponent({
         return 0;
       }
       
-      return props.chartjsData.datasets[0].data.reduce((sum, value) => sum + (Number(value) || 0), 0);
+      return props.chartjsData.datasets[0].data.reduce((sum: number, value: any) => sum + (Number(value) || 0), 0);
     });
 
     const chartOptions = computed(() => {
@@ -132,7 +139,7 @@ export default defineComponent({
             }
           }
         }
-      };
+      } as ChartOptions<"bar">;
     });
 
     return {

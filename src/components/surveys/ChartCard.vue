@@ -1,18 +1,16 @@
 <template>
   <v-card class="chart-card mb-6">
-    <v-container fluid class="pa-4">
+    <v-container fluid class="pa-3">
       <v-row class="chartrow align-stretch">
-        <v-col cols="12" class="px-3 py-1">
-          <v-card-title>
+        <v-col cols="12" class="px-3 py-2">
+          <v-card-title class="px-0 py-1">
             <span class="question-id">{{ questionKey }} – </span>
             <span class="question-title">{{ questionText }}</span>
           </v-card-title>
         </v-col>
-
-        <v-col cols="12" class="d-flex flex-wrap">
+        <v-col cols="12" class="d-flex flex-wrap pt-0 pb-3">
           <div v-if="questionType === 'numerical'" class="chart-container histogram-chart px-2">
             <histogram-chart
-              v-if="store.settings.timeFormat === 'real'"
               :chartjs-data="chartData"
               :question-type="questionType"
               :question-key="questionKey"
@@ -24,6 +22,17 @@
           </div>
 
           <div class="chart-container line-chart px-2">
+            <candlestick-chart 
+              v-if="questionType === 'numerical'"
+              :chartjs-data="numericChartData" 
+              :question-key="questionKey" 
+            />
+            <line-chart 
+              v-else
+              :chartjs-data="chartjsdata" 
+              :question-type="questionType" 
+              :question-key="questionKey" 
+            />
             <candlestick-chart 
               v-if="questionType === 'numerical'"
               :chartjs-data="numericChartData" 
@@ -86,7 +95,10 @@ export default defineComponent({
 
     const chartData = computed(() => {
       try {
-        return createActiveNumericalData(props.questionKey);
+        console.debug("Computing histogram data for:", props.questionKey);
+        const data = createActiveNumericalData(props.questionKey);
+        console.debug("Histogram data generated:", data);
+        return data;
       } catch (e) {
         console.error("Error preparing chart data:", e);
         return { labels: [], datasets: [] };
@@ -175,7 +187,7 @@ export default defineComponent({
 
 @media (max-width: 1263px) {
   .chart-container {
-    height: 300px;
+    height: 280px;
   }
 }
 
@@ -183,10 +195,6 @@ export default defineComponent({
   .histogram-chart, .doughnut-chart, .line-chart {
     width: 100%;
     margin-bottom: 20px;
-  }
-  
-  .chart-container {
-    height: 280px;
   }
 }
 </style>
