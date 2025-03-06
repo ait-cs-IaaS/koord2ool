@@ -167,21 +167,32 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
 export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
   const store = useSurveyStore();
+  console.log("Creating numeric chart data for:", questionKey);
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
     return { datasets: [] };
   }
 
   const question_type = store.getQuestionType(questionKey);
+  console.log("Question type:", question_type);
 
   const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+  console.log("Filtered responses count:", filteredResponses.length);
+  console.log("Sample response:", filteredResponses.length > 0 ? filteredResponses[0] : "None");
 
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
+    console.log("Setting min/max for dataset");
     setMinMaxFromDataset(filteredResponses, questionKey);
-    return getOHLC(filteredResponses, questionKey);
+    
+    const ohlcData = getOHLC(filteredResponses, questionKey);
+    console.log("OHLC data points:", ohlcData.datasets[0]?.data?.length || 0);
+    console.log("Sample OHLC data point:", ohlcData.datasets[0]?.data?.[0] || "None");
+    return ohlcData;
   }
+  
+  console.log("Not a numerical question, returning empty dataset");
   return { datasets: [] };
 }
 
