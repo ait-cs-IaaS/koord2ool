@@ -1,4 +1,4 @@
-import { ChartData, ChartDataset } from 'chart.js';
+import { ChartData } from 'chart.js';
 
 export interface HistogramBin {
   value: number;

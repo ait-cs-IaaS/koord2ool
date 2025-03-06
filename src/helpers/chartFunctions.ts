@@ -2,7 +2,7 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { getHistogramData, getAverageLineChart } from "./numerical-charts";
+import { getHistogramData, getAverageLineChart, setMinMaxFromDataset, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
@@ -163,6 +163,26 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
   console.debug(`Aggregated ${data.length} responses to ${aggregatedData.length}`);
   return aggregatedData;
+}
+
+export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
+  const store = useSurveyStore();
+  if (store.selectedSurveyID === undefined) {
+    console.error("No survey selected");
+    return { datasets: [] };
+  }
+
+  const question_type = store.getQuestionType(questionKey);
+
+  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+
+  store.updateTokenMap(store.selectedSurveyID);
+
+  if (isNumericalQuestion(question_type)) {
+    setMinMaxFromDataset(filteredResponses, questionKey);
+    return getOHLC(filteredResponses, questionKey);
+  }
+  return { datasets: [] };
 }
 
 export function createTimelineFor(questionKey: string): ChartData<"line"> {

@@ -1,5 +1,5 @@
-import { ChartData, ChartDataset } from "chart.js";
-import { FilteredResponse } from "../types/response.model";
+import { ChartData, FinancialDataPoint } from "chart.js";
+import { FilteredResponse, HLResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 import { getQuestionText } from "./chartFunctions";
 import { initializeUserLastResponse, sortResponsesByTime, ChartDataEntry, initializeChartData } from "./shared-chartFunctions";
@@ -25,6 +25,81 @@ interface HistogramChartData {
   }>;
   title: string;
   subtitle: string;
+}
+
+function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
+  const aggregatedData: { [key: string]: HLResponse } = {};
+  data.forEach((item) => {
+    const dateKey = item.time.toISOString().split("T")[0]; 
+    if (!aggregatedData[dateKey]) {
+      aggregatedData[dateKey] = {
+        token: item.token,
+        time: new Date(dateKey),
+        lowValue: Number(item.answer),
+        highValue: Number(item.answer),
+      };
+    } else {
+      const currentValue = Number(item.answer);
+      aggregatedData[dateKey].lowValue = Math.min(Number(aggregatedData[dateKey].lowValue), currentValue);
+      aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
+    }
+  });
+  return Object.values(aggregatedData);
+}
+
+export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
+  const store = useSurveyStore();
+  const minMax: { min: number; max: number } = { min: Infinity, max: -Infinity };
+  
+  filteredResponses.forEach((item) => {
+    const value = Number(item.answer);
+    if (!isNaN(value)) {
+      if (value < minMax.min) {
+        minMax.min = value;
+      }
+      if (value > minMax.max) {
+        minMax.max = value;
+      }
+    }
+  });
+  
+  if (minMax.min === Infinity){
+    minMax.min = 0;
+  } 
+  if (minMax.max === -Infinity) {
+    minMax.max = 100;
+  }
+  
+  const padding = Math.max(1, (minMax.max - minMax.min) * 0.1);
+  minMax.min -= padding;
+  minMax.max += padding;
+  
+  store.setMinMax(minMax, questionKey);
+}
+
+export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
+  const hldata = aggregateForHL(data);
+  const datasets: FinancialDataPoint[] = [];
+  
+  hldata.forEach((item) => {
+    const point: FinancialDataPoint = {
+      x: item.time.getTime(),
+      o: +Number(item.lowValue).toFixed(),
+      h: +Number(item.highValue).toFixed(),
+      l: +Number(item.lowValue).toFixed(),
+      c: +Number(item.highValue).toFixed(),
+    };
+    datasets.push(point);
+  });
+  
+  return {
+    datasets: [
+      {
+        label: getQuestionText(questionKey),
+        data: datasets,
+      },
+    ],
+  };
 }
 
 export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartDataEntry[] {
@@ -75,14 +150,17 @@ function bucketsFromResponses(data: FilteredResponse[], maxBins: number = 5): st
   
   for (let i = 0; i < maxBins; i++) {
     const startIdx = i * itemsPerBin;
-    if (startIdx >= values.length) break;
+    if (startIdx >= values.length){
+      break;
+    } 
     
     const endIdx = Math.min((i + 1) * itemsPerBin - 1, values.length - 1);
     const binStart = values[startIdx];
     const binEnd = values[endIdx];
     
-    if (endIdx < startIdx) continue;
-    
+    if (endIdx < startIdx) {
+      continue;
+    }
     if (binStart === binEnd) {
       binLabels.push(binStart.toString());
     } else {
@@ -97,7 +175,9 @@ function bucketsFromResponses(data: FilteredResponse[], maxBins: number = 5): st
       const binStart = min + i * binWidth;
       const binEnd = (i === maxBins - 1) ? max : min + (i + 1) * binWidth - 1;
       
-      if (binStart > max) break;
+      if (binStart > max){
+        break;
+      } 
       
       binLabels.push(`${binStart} - ${binEnd}`);
     }
@@ -194,7 +274,9 @@ function getBucketsInRange(
       
       for (const bucket of uniqueBuckets) {
         const parsed = parseBinLabel(bucket);
-        if (!parsed) continue;
+        if (!parsed){
+          continue;
+        }
         
         const bucketValue = parsed.min === parsed.max 
           ? parsed.min 
@@ -331,7 +413,9 @@ function aggregateDataByTimeStep(
   count: number;
   uniqueParticipants: number;
 }> {
-  if (data.length === 0) return [];
+  if (data.length === 0){
+    return [];
+  } 
 
   const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
   const stepMilliseconds = stepHours * 60 * 60 * 1000;
@@ -346,7 +430,9 @@ function aggregateDataByTimeStep(
 
   sortedData.forEach((response) => {
     const value = Number(response.answer);
-    if (isNaN(value)) return;
+    if (isNaN(value)){
+      return;
+    } 
 
     const timestamp = response.time.getTime();
     const roundedTimestamp = Math.floor(timestamp / stepMilliseconds) * stepMilliseconds;

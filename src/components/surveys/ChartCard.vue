@@ -24,7 +24,17 @@
           </div>
 
           <div class="chart-container line-chart px-2">
-            <line-chart :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
+            <candlestick-chart 
+              v-if="questionType === 'numerical'"
+              :chartjs-data="numericChartData" 
+              :question-key="questionKey" 
+            />
+            <line-chart 
+              v-else
+              :chartjs-data="chartjsdata" 
+              :question-type="questionType" 
+              :question-key="questionKey" 
+            />
           </div>
         </v-col>
       </v-row>
@@ -36,8 +46,9 @@
 import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import HistogramChart from "./HistogramChart.vue";
+import CandlestickChart from "./CandlestickChart.vue";
 import { computed, defineComponent } from "vue";
-import { getQuestionText, countResponsesFor, createTimelineFor, createActiveNumericalData } from "../../helpers/chartFunctions";
+import { getQuestionText, countResponsesFor, createTimelineFor, createActiveNumericalData, createNumericChartData } from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
 
 export default defineComponent({
@@ -46,6 +57,7 @@ export default defineComponent({
     LineChart,
     DoughnutChart,
     HistogramChart,
+    CandlestickChart,
   },
   props: {
     questionKey: { type: String, required: true },
@@ -80,6 +92,16 @@ export default defineComponent({
         return { labels: [], datasets: [] };
       }
     });
+    
+    const numericChartData = computed(() => {
+      try {
+        console.debug("Computing candlestick data for:", props.questionKey);
+        return createNumericChartData(props.questionKey);
+      } catch (e) {
+        console.error("Error preparing candlestick data:", e);
+        return { datasets: [] };
+      }
+    });
 
     return {
       store,
@@ -87,7 +109,8 @@ export default defineComponent({
       counters,
       chartjsdata,
       questionType,
-      chartData
+      chartData,
+      numericChartData
     };
   },
 });
@@ -106,15 +129,18 @@ export default defineComponent({
 }
 
 .histogram-chart {
-  width: 40%;
+  width: 39%;
+  margin-right: 1%;
 }
 
 .line-chart {
-  width: 60%;
+  width: 59%;
 }
 
 .doughnut-chart {
-  width: 40%;
+  width: 39%;
+  margin-right: 1%;
+  margin-left: 1%;
 }
 
 .no-data {
@@ -122,7 +148,7 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 16px;
+  font-size: 14px;
   color: #666;
 }
 
@@ -131,12 +157,25 @@ export default defineComponent({
   word-break: break-word;
   overflow: visible;
   display: inline-block;
-  line-height: 1.4;
+  line-height: 1.3;
+  font-size: 16px;
+}
+
+.question-id {
+  font-size: 16px;
+}
+
+.v-card-title {
+  display: block;
+  overflow: visible;
+  white-space: normal;
+  font-size: 16px;
+  line-height: 1.3;
 }
 
 @media (max-width: 1263px) {
   .chart-container {
-    height: 280px;
+    height: 300px;
   }
 }
 
@@ -144,6 +183,10 @@ export default defineComponent({
   .histogram-chart, .doughnut-chart, .line-chart {
     width: 100%;
     margin-bottom: 20px;
+  }
+  
+  .chart-container {
+    height: 280px;
   }
 }
 </style>

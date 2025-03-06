@@ -16,6 +16,7 @@ import {
   TimeScale,
   TimeSeriesScale,
   Filler,
+  TooltipItem,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
 import { lineChartOptions, areaChartOptions } from "./line-options";
@@ -65,8 +66,8 @@ export default defineComponent({
           const originalCallbacks = options.plugins.tooltip.callbacks || {};
           options.plugins.tooltip.callbacks = {
             ...originalCallbacks,
-            label: (context: any) => {
-              const dataPoint = context.raw;
+            label: (context: TooltipItem<"line">) => {
+              const dataPoint = context.raw as { tooltip?: string };
               if (dataPoint && dataPoint.tooltip) {
                 return dataPoint.tooltip.split("\n");
               }
