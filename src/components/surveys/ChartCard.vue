@@ -10,11 +10,7 @@
         </v-col>
         <v-col cols="12" class="d-flex flex-wrap pt-0 pb-3">
           <div v-if="questionType === 'numerical'" class="chart-container histogram-chart px-2">
-            <histogram-chart
-              :chartjs-data="chartData"
-              :question-type="questionType"
-              :question-key="questionKey"
-            />
+            <histogram-chart :chartjs-data="chartData" :question-type="questionType" :question-key="questionKey" />
           </div>
           <div v-else class="chart-container doughnut-chart px-2">
             <doughnut-chart v-if="counters.length > 0" :counters="counters" />
@@ -22,28 +18,10 @@
           </div>
 
           <div class="chart-container line-chart px-2">
-            <candlestick-chart 
-              v-if="questionType === 'numerical'"
-              :chartjs-data="numericChartData" 
-              :question-key="questionKey" 
-            />
-            <line-chart 
-              v-else
-              :chartjs-data="chartjsdata" 
-              :question-type="questionType" 
-              :question-key="questionKey" 
-            />
-            <candlestick-chart 
-              v-if="questionType === 'numerical'"
-              :chartjs-data="numericChartData" 
-              :question-key="questionKey" 
-            />
-            <line-chart 
-              v-else
-              :chartjs-data="chartjsdata" 
-              :question-type="questionType" 
-              :question-key="questionKey" 
-            />
+            <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
+            <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
+            <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
+            <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
         </v-col>
       </v-row>
@@ -57,7 +35,13 @@ import DoughnutChart from "./DoughnutChart.vue";
 import HistogramChart from "./HistogramChart.vue";
 import CandlestickChart from "./CandlestickChart.vue";
 import { computed, defineComponent } from "vue";
-import { getQuestionText, countResponsesFor, createTimelineFor, createActiveNumericalData, createNumericChartData } from "../../helpers/chartFunctions";
+import {
+  getQuestionText,
+  countResponsesFor,
+  createTimelineFor,
+  createActiveNumericalData,
+  createNumericChartData,
+} from "../../helpers/chartFunctions";
 import { useSurveyStore } from "../../store/surveyStore";
 
 export default defineComponent({
@@ -104,7 +88,7 @@ export default defineComponent({
         return { labels: [], datasets: [] };
       }
     });
-    
+
     const numericChartData = computed(() => {
       try {
         console.debug("Computing candlestick data for:", props.questionKey);
@@ -122,7 +106,7 @@ export default defineComponent({
       chartjsdata,
       questionType,
       chartData,
-      numericChartData
+      numericChartData,
     };
   },
 });
@@ -192,7 +176,9 @@ export default defineComponent({
 }
 
 @media (max-width: 959px) {
-  .histogram-chart, .doughnut-chart, .line-chart {
+  .histogram-chart,
+  .doughnut-chart,
+  .line-chart {
     width: 100%;
     margin-bottom: 20px;
   }

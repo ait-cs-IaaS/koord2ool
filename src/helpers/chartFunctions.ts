@@ -62,9 +62,7 @@ export function createActiveNumericalData(questionKey: string): ChartData<"bar">
   const store = useSurveyStore();
   const allResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(allResponses);
-  const activeResponses = store.settings.onlyActive 
-    ? getLastResponses(filteredResponsesNA) 
-    : filteredResponsesNA;
+  const activeResponses = store.settings.onlyActive ? getLastResponses(filteredResponsesNA) : filteredResponsesNA;
 
   return getHistogramData(activeResponses, questionKey);
 }
@@ -168,7 +166,7 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
   const store = useSurveyStore();
   console.debug("Creating numeric chart data for:", questionKey);
-  
+
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
     return { datasets: [] };
@@ -186,14 +184,14 @@ export function createNumericChartData(questionKey: string): ChartData<"candlest
   if (isNumericalQuestion(question_type)) {
     console.debug("Setting min/max for dataset");
     setMinMaxFromDataset(filteredResponses, questionKey);
-    
+
     const ohlcData = getOHLC(filteredResponses, questionKey);
     console.debug("OHLC data points:", ohlcData.datasets[0]?.data?.length || 0);
     console.debug("Sample OHLC data point:", ohlcData.datasets[0]?.data?.[0] || "None");
-    
+
     return ohlcData;
   }
-  
+
   console.debug("Not a numerical question, returning empty dataset");
   return { datasets: [] };
 }

@@ -1,4 +1,4 @@
-import { ChartData } from 'chart.js';
+import { ChartData } from "chart.js";
 
 export interface HistogramBin {
   value: number;
@@ -25,26 +25,26 @@ export interface HistogramChartData {
   subtitle?: string;
 }
 
-export type StrictChartData = ChartData<'bar', number[], string>;
+export type StrictChartData = ChartData<"bar", number[], string>;
 
 export function toChartJsData(data: HistogramChartData): StrictChartData {
   return {
     labels: data.labels,
-    datasets: data.datasets.map(ds => ({
+    datasets: data.datasets.map((ds) => ({
       data: ds.data,
       backgroundColor: ds.backgroundColor,
       borderColor: ds.borderColor,
       borderWidth: ds.borderWidth,
       label: ds.label,
       barPercentage: ds.barPercentage,
-      categoryPercentage: ds.categoryPercentage
-    }))
+      categoryPercentage: ds.categoryPercentage,
+    })),
   };
 }
 
 export const defaultHistogramData: HistogramChartData = {
   labels: [],
   datasets: [],
-  title: 'No data available',
-  subtitle: ''
+  title: "No data available",
+  subtitle: "",
 };

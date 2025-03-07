@@ -7,17 +7,7 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { Bar } from "vue-chartjs";
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  ChartOptions,
-  ChartData
-} from "chart.js";
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartOptions, ChartData } from "chart.js";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
@@ -32,62 +22,70 @@ export default defineComponent({
   props: {
     chartjsData: {
       type: Object as () => HistogramChartData,
-      required: true
+      required: true,
     },
     questionType: {
       type: String,
-      required: true
+      required: true,
     },
     questionKey: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   setup(props) {
-    const chartData = computed(() => {
+    const chartData = computed((): ChartData<"bar"> => {
       if (!props.chartjsData || !props.chartjsData.datasets) {
         return { labels: [], datasets: [] };
       }
-      
+
       return {
         labels: props.chartjsData.labels || [],
-        datasets: props.chartjsData.datasets
+        datasets: props.chartjsData.datasets,
       };
     });
 
-    const totalResponses = computed(() => {
+    const totalResponses = computed((): number => {
       if (!props.chartjsData || !props.chartjsData.datasets || !props.chartjsData.datasets[0]) {
         return 0;
       }
-      
-      return props.chartjsData.datasets[0].data.reduce((sum: number, value: any) => sum + (Number(value) || 0), 0);
+
+      return props.chartjsData.datasets[0].data.reduce((sum: number, value: unknown) => {
+        if (Array.isArray(value)) {
+          return sum + value.reduce((a, b) => a + b, 0);
+        } else if (typeof value === "number") {
+          return sum + value;
+        } else {
+          return sum;
+        }
+      }, 0);
     });
 
-    const chartOptions = computed(() => {
+    const chartOptions = computed((): ChartOptions<"bar"> => {
       return {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           title: {
-            display: props.chartjsData.title ? true : false,
+            display: !!props.chartjsData.title,
             text: props.chartjsData.title || "",
             font: {
               size: 14,
-              weight: "bold"
-            }
+              weight: "bold",
+            },
           },
           subtitle: {
-            display: props.chartjsData.subtitle ? true : false,
+            display: !!props.chartjsData.subtitle,
             text: props.chartjsData.subtitle || "",
             font: {
-              size: 12
+              size: 12,
             },
             padding: {
-              bottom: 10
-            }
+              bottom: 10,
+            },
           },
           legend: {
-            display: false
+            display: false,
           },
           tooltip: {
             callbacks: {
@@ -96,17 +94,12 @@ export default defineComponent({
               },
               label(context) {
                 const count = context.parsed.y;
-                const percentage = totalResponses.value > 0 
-                  ? ((count / totalResponses.value) * 100).toFixed(1) 
-                  : "0";
-                
-                return [
-                  `Count: ${count} out of ${totalResponses.value}`,
-                  `Percentage: ${percentage}%`
-                ];
-              }
-            }
-          }
+                const percentage = totalResponses.value > 0 ? ((count / totalResponses.value) * 100).toFixed(1) : "0";
+
+                return [`Count: ${count} out of ${totalResponses.value}`, `Percentage: ${percentage}%`];
+              },
+            },
+          },
         },
         scales: {
           y: {
@@ -116,12 +109,12 @@ export default defineComponent({
               text: "Number of Responses",
               font: {
                 weight: "bold",
-                size: 12
-              }
+                size: 12,
+              },
             },
             ticks: {
-              precision: 0
-            }
+              precision: 0,
+            },
           },
           x: {
             title: {
@@ -129,24 +122,24 @@ export default defineComponent({
               text: "Values",
               font: {
                 weight: "bold",
-                size: 12
-              }
+                size: 12,
+              },
             },
             ticks: {
               font: {
-                size: 10
+                size: 10,
               },
-            }
-          }
-        }
+            },
+          },
+        },
       } as ChartOptions<"bar">;
     });
 
     return {
       chartData,
-      chartOptions
+      chartOptions,
     };
-  }
+  },
 });
 </script>
 
