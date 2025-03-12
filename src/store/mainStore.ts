@@ -30,16 +30,15 @@ export const useMainStore = defineStore(
         error.value = new Error("LimeSurvey RPC endpoint unconfigured. Please set the VITE_APP_LIMESURVEY_API environment variable.");
         return "";
       }
-      
+
       try {
-        if (endpoint.startsWith('http')) {
+        if (endpoint.startsWith("http")) {
           const domain = new URL(endpoint);
           return `${domain.protocol}//${domain.hostname}`;
-        } 
-        else if (endpoint.startsWith('/')) {
+        } else if (endpoint.startsWith("/")) {
           return window.location.origin;
         }
-      } catch (e) {
+      } catch {
         error.value = new Error(`Invalid URL format: ${endpoint} expecting something like "https://example.com/admin/remotecontrol`);
       }
       return "";

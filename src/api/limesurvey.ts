@@ -48,34 +48,34 @@ export class LimesurveyApi {
   async listSurveys(): Promise<SurveyModel[]> {
     try {
       const surveys = await this.call<SurveyModel[]>("list_surveys");
-      
+
       if (!Array.isArray(surveys)) {
         console.error("Expected surveys to be an array but got:", surveys);
-        return []; 
+        return [];
       }
-      
+
       const surveysWithCompatibility = await Promise.all(
         surveys.map(async (survey) => {
           const properties = await this.getSurveyProperties(survey.sid);
           const responses = await this.getResponses(survey.sid);
           const questions = await this.getQuestionProperties(survey.sid);
           const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
-          
+
           const compatible = Boolean(
             properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
           );
-          
+
           return {
             ...survey,
             compatible,
           };
         }),
       );
-      
+
       return surveysWithCompatibility;
     } catch (error) {
       console.error("Error listing surveys:", error);
-      return []; 
+      return [];
     }
   }
 
@@ -203,7 +203,7 @@ export class LimesurveyApi {
     const store = useMainStore();
 
     let apiUrl = this.endpoint;
-    if (apiUrl.startsWith('/')) {
+    if (apiUrl.startsWith("/")) {
       apiUrl = window.location.origin + apiUrl;
     }
 

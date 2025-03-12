@@ -50,11 +50,10 @@ export function countResponsesFor(questionKey: string): responseCount[] {
         }
       });
     } else {
-      let answerValue = response.answer;
-      
+      const answerValue = response.answer;
+
       const answerStr = String(answerValue);
-      
-      
+
       countResponses(responseCounts, answerStr);
     }
   });
