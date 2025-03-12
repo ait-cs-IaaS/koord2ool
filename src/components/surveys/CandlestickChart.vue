@@ -71,6 +71,13 @@ export default defineComponent({
       console.debug("Min/max values for", props.questionKey, ":", result);
       return result;
     });
+    
+    const formatYAxisTick = (value: string | number, index: number, ticks: Array<{ value: number }>) => {
+      if (index === ticks.length - 1) {
+        return null;
+      }
+      return value;
+    };
 
     const chartOptions = computed((): CandlestickChartOptions => {
       const options: CandlestickChartOptions = {
@@ -131,6 +138,8 @@ export default defineComponent({
                 size: 9,
               },
               maxTicksLimit: 5,
+              callback: formatYAxisTick,
+              padding: 8,
             },
             grid: {
               color: "rgba(0, 0, 0, 0.05)",
@@ -172,7 +181,7 @@ export default defineComponent({
             left: 2,
             right: 10,
             top: 8,
-            bottom: 2,
+            bottom: 10,
           },
         },
       };
