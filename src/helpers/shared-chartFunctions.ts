@@ -4,6 +4,11 @@ import { useSurveyStore } from "../store/surveyStore";
 
 const keyToColorMap: Record<string, string> = {};
 
+export type ChartDataEntry = {
+  name: string;
+  data: [number, number][];
+};
+
 export function getBorderColor(key: string): string {
   if (!keyToColorMap[key]) {
     const index = Object.keys(keyToColorMap).length % chartColors.length;
@@ -51,4 +56,23 @@ export function addExpiredEntries(responses: FilteredResponse[]): FilteredRespon
     },
     [...responses],
   );
+}
+
+export function sortResponsesByTime(responses: FilteredResponse[]): FilteredResponse[] {
+  return [...responses].sort((a, b) => a.time.getTime() - b.time.getTime());
+}
+
+export function initializeUserLastResponse(responses: FilteredResponse[]): { [token: string]: string } {
+  return responses.map((r) => ({ [r.token]: "N/A" })).reduce((acc, curr) => ({ ...acc, ...curr }), {});
+}
+
+export function getTotalUsers(responses: FilteredResponse[]): number {
+  return new Set(responses.map((r) => r.token)).size;
+}
+
+export function initializeChartData(uniqueValues: string[]): ChartDataEntry[] {
+  return uniqueValues.map((value) => ({
+    name: value,
+    data: [],
+  }));
 }

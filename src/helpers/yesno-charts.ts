@@ -1,12 +1,14 @@
 import { ChartData } from "chart.js";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
-import { getBorderColor } from "./shared-chartFunctions";
-
-type ChartDataEntry = {
-  name: string;
-  data: [number, number][];
-};
+import {
+  getBorderColor,
+  initializeUserLastResponse,
+  getTotalUsers,
+  sortResponsesByTime,
+  ChartDataEntry,
+  initializeChartData,
+} from "./shared-chartFunctions";
 
 function valuesFromResponses(data: FilteredResponse[]): Array<string> {
   const store = useSurveyStore();
@@ -48,18 +50,6 @@ export function parseDataForAreaChart(responses: FilteredResponse[]) {
   return generateContinuousChartData(sortedResponses, uniqueValues, userLastResponse, counters, chartData);
 }
 
-function sortResponsesByTime(responses: FilteredResponse[]): FilteredResponse[] {
-  return [...responses].sort((a, b) => a.time.getTime() - b.time.getTime());
-}
-
-function initializeUserLastResponse(responses: FilteredResponse[]): { [token: string]: string } {
-  return responses.map((r) => ({ [r.token]: "N/A" })).reduce((acc, curr) => ({ ...acc, ...curr }), {});
-}
-
-function getTotalUsers(responses: FilteredResponse[]): number {
-  return new Set(responses.map((r) => r.token)).size;
-}
-
 function initializeCounters(uniqueValues: string[], totalUsers: number): Record<string, number> {
   return uniqueValues.reduce(
     (acc, value) => {
@@ -68,13 +58,6 @@ function initializeCounters(uniqueValues: string[], totalUsers: number): Record<
     },
     {} as Record<string, number>,
   );
-}
-
-function initializeChartData(uniqueValues: string[]): ChartDataEntry[] {
-  return uniqueValues.map((value) => ({
-    name: value,
-    data: [],
-  }));
 }
 
 function generateSteppedChartData(

@@ -8,12 +8,13 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     proxy: {
-      '/api/limesurvey': {
-        target: 'http://limesurvey:8080',
+      "/api/limesurvey": {
+        target: "http://limesurvey:8080",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/limesurvey/, '/index.php/admin/remotecontrol')
-      }
-    }
+        rewrite: (path) => path.replace(/^\/api\/limesurvey/, "/index.php/admin/remotecontrol"),
+      },
+    },
+    allowedHosts: true,
   },
   resolve: {
     alias: {
