@@ -10,11 +10,7 @@ import { Bar } from "vue-chartjs";
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartOptions, ChartData } from "chart.js";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
-
-interface HistogramChartData extends ChartData<"bar"> {
-  title?: string;
-  subtitle?: string;
-}
+import { HistogramChartData } from "../../helpers/chart-types";
 
 export default defineComponent({
   name: "HistogramChart",

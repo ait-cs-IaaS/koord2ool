@@ -18,7 +18,7 @@ export interface HistogramDataset {
   originalData?: HistogramBin[];
 }
 
-export interface HistogramChartData {
+export interface HistogramChartData extends ChartData<"bar"> {
   labels: string[];
   datasets: HistogramDataset[];
   title?: string;
@@ -48,3 +48,10 @@ export const defaultHistogramData: HistogramChartData = {
   title: "No data available",
   subtitle: "",
 };
+
+export interface TabularViewHeader {
+  title: string;
+  key: string;
+  align: "start" | "end";
+  sortable: boolean;
+}

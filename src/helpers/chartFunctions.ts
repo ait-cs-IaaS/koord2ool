@@ -8,6 +8,7 @@ import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
 import { ParticipantModel } from "../types/participant.model";
+import { HistogramChartData } from "./chart-types";
 
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
@@ -70,7 +71,7 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   return responseCounts;
 }
 
-export function createActiveNumericalData(questionKey: string): ChartData<"bar"> {
+export function createActiveNumericalData(questionKey: string): HistogramChartData {
   const store = useSurveyStore();
   const allResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(allResponses);

@@ -26,13 +26,7 @@ import { useSurveyStore } from "../../store/surveyStore";
 import { defineComponent, computed } from "vue";
 import { tableOptions } from "./options";
 import { getParticipant } from "../../helpers/chartFunctions";
-
-interface Header {
-  title: string;
-  key: string;
-  align: "start" | "end";
-  sortable: boolean;
-}
+import { TabularViewHeader } from "../../helpers/chart-types";
 
 export default defineComponent({
   name: "TabularComponent",
@@ -64,7 +58,7 @@ export default defineComponent({
       return qk;
     });
 
-    const headersFromKeys = computed<Header[]>(() => {
+    const headersFromKeys = computed<TabularViewHeader[]>(() => {
       return showKeys.value.map((key) => ({
         title: key,
         key: key,

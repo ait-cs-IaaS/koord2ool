@@ -1,8 +1,7 @@
 FROM node:22 AS builder
 ARG VITE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
 ARG BASE_URI='/__KOORD_BASEURI__/'
-ENV NODE_ENV development
-ENV NODE_OPTIONS --openssl-legacy-provider
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g corepack@latest && corepack enable

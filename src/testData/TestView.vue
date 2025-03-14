@@ -20,13 +20,18 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { defineComponent, onBeforeUnmount, ref } from "vue";
+<script setup lang="ts">
+import { onBeforeUnmount, ref } from "vue";
 import { Line as LineChart } from "vue-chartjs";
 import DisplayOptions from "../components/surveys/DisplayOptions.vue";
-import { chartData1 as series, chartDataYesNo } from "./chartFunctionsTestData";
+import { chartDataYesNo } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import { surveyList1, questionList1, responses1 } from "../testData/chartFunctionsTestData";
+import { areaChartOptions } from "../components/surveys/line-options";
+import { chartOptions } from "../components/surveys/options";
+import type { ChartData } from "chart.js";
+import { useSurveyStore } from "../store/surveyStore";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -39,53 +44,36 @@ import {
   TimeScale,
   TimeSeriesScale,
   Filler,
-  ChartData,
 } from "chart.js";
-import { useSurveyStore } from "../store/surveyStore";
-import { storeToRefs } from "pinia";
-import { areaChartOptions } from "../components/surveys/line-options";
-import { chartOptions } from "../components/surveys/options";
-
 import "chartjs-adapter-moment";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, TimeScale, TimeSeriesScale, Filler, Title, Tooltip, Legend);
 
-export default defineComponent({
-  name: "PidraKin",
-  components: {
-    LineChart,
-    DisplayOptions,
-  },
-  setup() {
-    const store = useSurveyStore();
-    const { responseRange } = storeToRefs(store);
-    store.updateSurveyList(surveyList1);
-    store.updateQuestions(surveyList1[0].sid, questionList1);
-    store.settings.expirationTime = 7;
-    store.responses[123456] = responses1;
-    store.responseRange = [new Date("2023-02-10").getTime(), new Date("2023-05-31").getTime()];
-    store.selectedSurveyID = 123456;
-    const testData = ref(createTimelineFor("G01Q01HO") as ChartData<"line">);
+// Initialize Store
+const store = useSurveyStore();
 
-    function reCalcTestData() {
-      testData.value = createTimelineFor("G01Q01HO") as ChartData<"line">;
-    }
+store.updateSurveyList(surveyList1);
+store.updateQuestions(surveyList1[0].sid, questionList1);
+store.settings.expirationTime = 7;
+store.responses[123456] = responses1;
+store.responseRange = [new Date("2023-02-10").getTime(), new Date("2023-05-31").getTime()];
+store.selectedSurveyID = 123456;
 
-    onBeforeUnmount(() => {
-      store.reset();
-    });
+// Reactive refs with explicit types
+const testData = ref<ChartData<"line">>(createTimelineFor("G01Q01HO"));
 
-    return {
-      testData,
-      responseRange,
-      series,
-      chartDataX: chartDataYesNo,
-      areaChartOptions,
-      chartOptions,
-      reCalcTestData,
-    };
-  },
+// Simplified recalculation
+const reCalcTestData = () => {
+  testData.value = createTimelineFor("G01Q01HO");
+};
+
+// Lifecycle hooks
+onBeforeUnmount(() => {
+  store.reset();
 });
+
+// Static imports assigned directly
+const chartDataX = chartDataYesNo;
 </script>
 
 <style src="@vueform/slider/themes/default.css"></style>
