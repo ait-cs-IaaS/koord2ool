@@ -46,26 +46,37 @@ export class LimesurveyApi {
   }
 
   async listSurveys(): Promise<SurveyModel[]> {
-    const surveys = await this.call<SurveyModel[]>("list_surveys");
+    try {
+      const surveys = await this.call<SurveyModel[]>("list_surveys");
 
-    const surveysWithCompatibility = await Promise.all(
-      surveys.map(async (survey) => {
-        const properties = await this.getSurveyProperties(survey.sid);
-        const responses = await this.getResponses(survey.sid);
-        const questions = await this.getQuestionProperties(survey.sid);
-        const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
+      if (!Array.isArray(surveys)) {
+        console.error("Expected surveys to be an array but got:", surveys);
+        return [];
+      }
 
-        const compatible = Boolean(
-          properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
-        );
-        return {
-          ...survey,
-          compatible,
-        };
-      }),
-    );
+      const surveysWithCompatibility = await Promise.all(
+        surveys.map(async (survey) => {
+          const properties = await this.getSurveyProperties(survey.sid);
+          const responses = await this.getResponses(survey.sid);
+          const questions = await this.getQuestionProperties(survey.sid);
+          const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
 
-    return surveysWithCompatibility;
+          const compatible = Boolean(
+            properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
+          );
+
+          return {
+            ...survey,
+            compatible,
+          };
+        }),
+      );
+
+      return surveysWithCompatibility;
+    } catch (error) {
+      console.error("Error listing surveys:", error);
+      return [];
+    }
   }
 
   async exportStatistics(sid: number): Promise<Blob> {
@@ -191,6 +202,11 @@ export class LimesurveyApi {
     console.debug(`Calling ${rpcMethod}`);
     const store = useMainStore();
 
+    let apiUrl = this.endpoint;
+    if (apiUrl.startsWith("/")) {
+      apiUrl = window.location.origin + apiUrl;
+    }
+
     if (authenticated) {
       this.requireAuth();
       params = [this.session, ...params];
@@ -198,7 +214,7 @@ export class LimesurveyApi {
 
     const response = await axios
       .post(
-        this.endpoint,
+        apiUrl,
         {
           method: rpcMethod,
           params,

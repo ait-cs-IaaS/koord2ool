@@ -35,10 +35,11 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   const store = useSurveyStore();
 
   const responseCounts: responseCount[] = [];
-  const multiplechoice = isMultipleChoiceQuestion(store.getQuestionType(questionKey));
+  const questionType = store.getQuestionType(questionKey);
+  const multiplechoice = isMultipleChoiceQuestion(questionType);
+  const isNumerical = isNumericalQuestion(questionType);
 
   let lastResponses = getLastResponses(addExpiredEntries(store.getFilteredResponses(questionKey)));
-
   lastResponses = filterNA(lastResponses);
   lastResponses.forEach((response) => {
     if (multiplechoice && typeof response.answer === "object") {
@@ -50,10 +51,21 @@ export function countResponsesFor(questionKey: string): responseCount[] {
         }
       });
     } else {
-      const answer = response.answer as string;
-      countResponses(responseCounts, answer);
+      const answerValue = response.answer;
+
+      const answerStr = String(answerValue);
+
+      countResponses(responseCounts, answerStr);
     }
   });
+
+  if (isNumerical && responseCounts.length > 0) {
+    responseCounts.sort((a, b) => {
+      const numA = Number(a.name);
+      const numB = Number(b.name);
+      return !isNaN(numA) && !isNaN(numB) ? numA - numB : a.name.localeCompare(b.name);
+    });
+  }
 
   return responseCounts;
 }

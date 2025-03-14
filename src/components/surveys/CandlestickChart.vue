@@ -71,7 +71,7 @@ export default defineComponent({
       console.debug("Min/max values for", props.questionKey, ":", result);
       return result;
     });
-    
+
     const formatYAxisTick = (value: string | number, index: number, ticks: Array<{ value: number }>) => {
       if (index === ticks.length - 1) {
         return null;

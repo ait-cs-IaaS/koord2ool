@@ -19,6 +19,7 @@ services:
     environment:
       - VITE_APP_LIMESURVEY_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
       - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
+      - VITE_APP_LIMESURVEY_API=/api/limesurvey/admin/remotecontrol
       - VITE_APP_LIMESURVEY_PASSWORD=${AUTOLOGIN_PASSWORD}
       - VITE_APP_LIMESURVEY_LOGIN=${AUTOLOGIN_USER}
     ports:
