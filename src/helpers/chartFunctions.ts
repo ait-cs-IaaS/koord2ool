@@ -2,11 +2,12 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { setMinMaxFromDataset, getOHLC } from "./numerical-charts";
+import { getHistogramData, getAverageLineChart, setMinMaxFromDataset, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
 import { QuestionModel } from "../types/question.model";
+import { ParticipantModel } from "../types/participant.model";
 
 function filterNA(data: FilteredResponse[]): FilteredResponse[] {
   const store = useSurveyStore();
@@ -55,6 +56,15 @@ export function countResponsesFor(questionKey: string): responseCount[] {
   });
 
   return responseCounts;
+}
+
+export function createActiveNumericalData(questionKey: string): ChartData<"bar"> {
+  const store = useSurveyStore();
+  const allResponses = store.getFilteredResponses(questionKey);
+  const filteredResponsesNA = filterNA(allResponses);
+  const activeResponses = store.settings.onlyActive ? getLastResponses(filteredResponsesNA) : filteredResponsesNA;
+
+  return getHistogramData(activeResponses, questionKey);
 }
 
 export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
@@ -109,22 +119,21 @@ export function doughnutChartData(responseCounts: responseCount[]): ChartData<"d
   };
 }
 
-export function getQuestionTitle(qid: number): string {
-  console.debug(`getQuestionTitle(${qid})`);
-  return getQuestion(qid)?.title || `${qid}`;
-}
-
 export function getQuestion(qid: number): QuestionModel | undefined {
   const store = useSurveyStore();
-
-  return Object.values(store.getQuestions).find((question) => question.qid === qid);
+  const questions = Object.values(store.getQuestions) as QuestionModel[];
+  return questions.find((question) => question.qid === qid);
 }
 
+export function getQuestionTitle(qid: number): string {
+  console.debug(`getQuestionTitle(${qid})`);
+  const question = getQuestion(qid);
+  return question?.title || `${qid}`;
+}
 export function getParticipant(token: string): string {
   const store = useSurveyStore();
 
-  // participant where participant.token === token
-  const participant = store.getParticipants.find((participant) => participant.token === token);
+  const participant = store.getParticipants.find((p: ParticipantModel) => p.token === token);
   return participant ? `${participant.participant_info.firstname} ${participant.participant_info.lastname}` : token;
 }
 
@@ -156,21 +165,34 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
 export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
   const store = useSurveyStore();
+  console.debug("Creating numeric chart data for:", questionKey);
+
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
     return { datasets: [] };
   }
 
   const question_type = store.getQuestionType(questionKey);
+  console.debug("Question type:", question_type);
 
   const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+  console.debug("Filtered responses count:", filteredResponses.length);
+  console.debug("Sample response:", filteredResponses.length > 0 ? JSON.stringify(filteredResponses[0]) : "None");
 
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
+    console.debug("Setting min/max for dataset");
     setMinMaxFromDataset(filteredResponses, questionKey);
-    return getOHLC(filteredResponses, questionKey);
+
+    const ohlcData = getOHLC(filteredResponses, questionKey);
+    console.debug("OHLC data points:", ohlcData.datasets[0]?.data?.length || 0);
+    console.debug("Sample OHLC data point:", ohlcData.datasets[0]?.data?.[0] || "None");
+
+    return ohlcData;
   }
+
+  console.debug("Not a numerical question, returning empty dataset");
   return { datasets: [] };
 }
 
@@ -195,6 +217,14 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
 
   if (isMultipleChoiceQuestion(question_type)) {
     return transformChartData(parseDataForAreaChart(filteredResponses));
+  }
+
+  if (isNumericalQuestion(question_type)) {
+    const filteredResponsesNA = filterNA(filteredResponses);
+    if (store.settings.timeFormat === "stepped") {
+      return getAverageLineChart(filteredResponsesNA, questionKey);
+    }
+    return getHistogramData(filteredResponsesNA, questionKey);
   }
 
   return parseDataForFreeTextChart(filteredResponses);

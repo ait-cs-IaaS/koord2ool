@@ -259,20 +259,30 @@ export const useSurveyStore = defineStore(
     async function updateQuestions(sid: number, rawQuestions: QuestionModel[]) {
       if (typeof surveys.value[sid] !== "undefined") {
         const asRecord: Record<string, QuestionModel> = {};
+        questionKeys.value = [];
+        questionKeysWithSubquestions.value = [];
+
         for (let question of rawQuestions) {
           if (question.parent_qid === 0) {
-            questionKeys.value.push(question.title);
+            if (!questionKeys.value.includes(question.title)) {
+              questionKeys.value.push(question.title);
+            }
           }
+
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
             question = await refreshQuestionProperties(question);
             if (question.available_answers !== undefined) {
-              questionKeysWithSubquestions.value.push(...Object.keys(question.available_answers));
+              const newKeys = Object.keys(question.available_answers).filter((key) => !questionKeysWithSubquestions.value.includes(key));
+              questionKeysWithSubquestions.value.push(...newKeys);
             }
           } else if (question.parent_qid === 0) {
-            questionKeysWithSubquestions.value.push(question.title);
+            if (!questionKeysWithSubquestions.value.includes(question.title)) {
+              questionKeysWithSubquestions.value.push(question.title);
+            }
           }
           asRecord[question.title] = question;
         }
+
         questions.value[sid] = asRecord;
         surveys.value[sid].questions = asRecord;
       } else {

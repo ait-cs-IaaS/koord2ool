@@ -524,52 +524,9 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
   },
 ];
 
-export const chartDataSetNumerical: ChartDataset<"candlestick">[] = [
+export const chartDataSetNumerical: ChartDataset<"bar">[] = [
   {
-    data: [
-      {
-        c: 15,
-        h: 15,
-        l: 15,
-        o: 15,
-        x: 1676937600000,
-      },
-      {
-        c: 20,
-        h: 20,
-        l: 18,
-        o: 18,
-        x: 1677024000000,
-      },
-      {
-        c: 22,
-        h: 22,
-        l: 19,
-        o: 19,
-        x: 1677110400000,
-      },
-      {
-        c: 17,
-        h: 17,
-        l: 17,
-        o: 17,
-        x: 1677196800000,
-      },
-      {
-        c: 16,
-        h: 16,
-        l: 16,
-        o: 16,
-        x: 1677888000000,
-      },
-      {
-        c: 21,
-        h: 21,
-        l: 21,
-        o: 21,
-        x: 1684886400000,
-      },
-    ],
+    data: [1, 2, 3, 4, 5, 6, 7, 8],
     label: "G01Q04TEMP",
   },
 ];
@@ -582,7 +539,7 @@ export const chartDataFreeText: ChartData<"line"> = {
   datasets: chartDataSetFreeText,
 };
 
-export const chartDataNumerical: ChartData<"candlestick"> = {
+export const chartDataNumerical: ChartData<"bar"> = {
   datasets: chartDataSetNumerical,
 };
 

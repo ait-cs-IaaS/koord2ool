@@ -8,7 +8,7 @@
     <v-row class="pt-3">
       <v-col cols="12" class="avoid-page-break px-1 py-1">
         <v-data-table :items="filteredRecords" :headers="headersFromKeys" no-data-text="There are no records to show">
-          <template #item.token="{ item }">
+          <template #[`item.token`]="{ item }">
             <span>
               {{ getParticipant(item.token) }}
             </span>
