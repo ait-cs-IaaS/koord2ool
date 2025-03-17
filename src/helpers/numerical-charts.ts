@@ -355,13 +355,20 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string):
 
   const binLabels = bucketsFromResponses(data);
 
-  const binCounts = binLabels.map((label) => {
+  const binCounts = binLabels.map((label, index) => {
     let count = 0;
     const roundedValues = values.map((val) => Math.round(val));
     const parsedBin = parseBinLabel(label);
 
     if (parsedBin) {
-      count = roundedValues.filter((val) => val >= parsedBin.min && val <= parsedBin.max).length;
+      const isLastBin = index === binLabels.length - 1;
+
+      count = roundedValues.filter((val) => {
+        if (parsedBin.min === parsedBin.max) {
+          return val === parsedBin.min;
+        }
+        return isLastBin ? val >= parsedBin.min && val <= parsedBin.max : val >= parsedBin.min && val < parsedBin.max;
+      }).length;
     }
 
     return {
@@ -374,6 +381,7 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string):
 
   const questionText = getQuestionText(questionKey);
   const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
+
   return {
     labels: binCounts.map((item) => item.label),
     datasets: [
