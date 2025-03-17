@@ -75,7 +75,7 @@ export function createActiveNumericalData(questionKey: string): HistogramChartDa
   const store = useSurveyStore();
   const allResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(allResponses);
-  const activeResponses = store.settings.onlyActive ? getLastResponses(filteredResponsesNA) : filteredResponsesNA;
+  const activeResponses = getLastResponses(filteredResponsesNA);
 
   return getHistogramData(activeResponses, questionKey);
 }
