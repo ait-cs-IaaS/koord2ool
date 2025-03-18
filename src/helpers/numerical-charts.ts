@@ -249,15 +249,36 @@ function getBucketsInRange(responsesInRange: FilteredResponse[], uniqueBuckets: 
     }
 
     const roundedValue = Math.round(value);
-
     let found = false;
 
-    for (const bucket of uniqueBuckets) {
+    for (let i = 0; i < uniqueBuckets.length; i++) {
+      const bucket = uniqueBuckets[i];
       const parsed = parseBinLabel(bucket);
-      if (parsed && roundedValue >= parsed.min && roundedValue <= parsed.max) {
-        buckets[bucket]++;
-        found = true;
-        break;
+
+      if (!parsed) continue;
+      if (parsed.min === parsed.max) {
+        if (roundedValue === parsed.min) {
+          buckets[bucket]++;
+          found = true;
+          break;
+        }
+      }
+      else {
+        if (i === uniqueBuckets.length - 1) {
+          if (roundedValue >= parsed.min && roundedValue <= parsed.max) {
+            buckets[bucket]++;
+            found = true;
+            break;
+          }
+        }
+        else {
+          const nextBucket = parseBinLabel(uniqueBuckets[i + 1]);
+          if (nextBucket && roundedValue >= parsed.min && roundedValue < nextBucket.min) {
+            buckets[bucket]++;
+            found = true;
+            break;
+          }
+        }
       }
     }
 
@@ -271,7 +292,9 @@ function getBucketsInRange(responsesInRange: FilteredResponse[], uniqueBuckets: 
           continue;
         }
 
-        const bucketValue = parsed.min === parsed.max ? parsed.min : (parsed.min + parsed.max) / 2;
+        const bucketValue = parsed.min === parsed.max ?
+          parsed.min :
+          (parsed.min + parsed.max) / 2;
 
         const distance = Math.abs(roundedValue - bucketValue);
         if (distance < minDistance) {
@@ -351,24 +374,35 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string):
   }
 
   const values = valueData.map((item) => item.value);
+  const roundedValues = values.map((val) => Math.round(val));
   const uniqueTokens = new Set(valueData.map((item) => item.token)).size;
 
   const binLabels = bucketsFromResponses(data);
 
+  // Calculate bin counts using a non-overlapping approach
   const binCounts = binLabels.map((label, index) => {
     let count = 0;
-    const roundedValues = values.map((val) => Math.round(val));
     const parsedBin = parseBinLabel(label);
 
     if (parsedBin) {
-      const isLastBin = index === binLabels.length - 1;
-
-      count = roundedValues.filter((val) => {
-        if (parsedBin.min === parsedBin.max) {
-          return val === parsedBin.min;
+      // For single value bins (when min equals max)
+      if (parsedBin.min === parsedBin.max) {
+        count = roundedValues.filter((val) => val === parsedBin.min).length;
+      }
+      // For range bins
+      else {
+        // If this is the last bin, include both min and max boundaries
+        if (index === binLabels.length - 1) {
+          count = roundedValues.filter((val) => val >= parsedBin.min && val <= parsedBin.max).length;
         }
-        return isLastBin ? val >= parsedBin.min && val <= parsedBin.max : val >= parsedBin.min && val < parsedBin.max;
-      }).length;
+        // For non-last bins, use the next bin's min as the exclusive upper bound
+        else {
+          const nextBin = parseBinLabel(binLabels[index + 1]);
+          if (nextBin) {
+            count = roundedValues.filter((val) => val >= parsedBin.min && val < nextBin.min).length;
+          }
+        }
+      }
     }
 
     return {
