@@ -1,6 +1,9 @@
 <template>
   <div class="chart-container">
-    <Bar :data="chartData" :options="chartOptions" />
+    <div v-if="!hasData" class="no-data-message">
+      <p>{{ noDataMessage }}</p>
+    </div>
+    <Bar v-else :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -30,8 +33,16 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const hasData = computed((): boolean => {
+      return props.chartjsData?.datasets?.[0]?.data?.length > 0;
+    });
+
+    const noDataMessage = computed((): string => {
+      return props.chartjsData?.title || "Not enough data to display histogram";
+    });
+
     const chartData = computed((): ChartData<"bar"> => {
-      if (!props.chartjsData || !props.chartjsData.datasets) {
+      if (!hasData.value) {
         return { labels: [], datasets: [] };
       }
 
@@ -42,7 +53,7 @@ export default defineComponent({
     });
 
     const totalResponses = computed((): number => {
-      if (!props.chartjsData || !props.chartjsData.datasets || !props.chartjsData.datasets[0]) {
+      if (!hasData.value) {
         return 0;
       }
 
@@ -134,6 +145,8 @@ export default defineComponent({
     return {
       chartData,
       chartOptions,
+      hasData,
+      noDataMessage,
     };
   },
 });
@@ -144,5 +157,14 @@ export default defineComponent({
   height: 100%;
   width: 100%;
   padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-data-message {
+  text-align: center;
+  color: #666;
+  font-style: italic;
 }
 </style>

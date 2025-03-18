@@ -262,16 +262,14 @@ function getBucketsInRange(responsesInRange: FilteredResponse[], uniqueBuckets: 
           found = true;
           break;
         }
-      }
-      else {
+      } else {
         if (i === uniqueBuckets.length - 1) {
           if (roundedValue >= parsed.min && roundedValue <= parsed.max) {
             buckets[bucket]++;
             found = true;
             break;
           }
-        }
-        else {
+        } else {
           const nextBucket = parseBinLabel(uniqueBuckets[i + 1]);
           if (nextBucket && roundedValue >= parsed.min && roundedValue < nextBucket.min) {
             buckets[bucket]++;
@@ -292,9 +290,7 @@ function getBucketsInRange(responsesInRange: FilteredResponse[], uniqueBuckets: 
           continue;
         }
 
-        const bucketValue = parsed.min === parsed.max ?
-          parsed.min :
-          (parsed.min + parsed.max) / 2;
+        const bucketValue = parsed.min === parsed.max ? parsed.min : (parsed.min + parsed.max) / 2;
 
         const distance = Math.abs(roundedValue - bucketValue);
         if (distance < minDistance) {
@@ -374,60 +370,34 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string):
   }
 
   const values = valueData.map((item) => item.value);
-  const roundedValues = values.map((val) => Math.round(val));
   const uniqueTokens = new Set(valueData.map((item) => item.token)).size;
 
-  const binLabels = bucketsFromResponses(data);
+  const bins = createOptimalBins(values);
 
-  // Calculate bin counts using a non-overlapping approach
-  const binCounts = binLabels.map((label, index) => {
-    let count = 0;
-    const parsedBin = parseBinLabel(label);
+  const binCounts = countValuesInBins(values, bins);
 
-    if (parsedBin) {
-      // For single value bins (when min equals max)
-      if (parsedBin.min === parsedBin.max) {
-        count = roundedValues.filter((val) => val === parsedBin.min).length;
-      }
-      // For range bins
-      else {
-        // If this is the last bin, include both min and max boundaries
-        if (index === binLabels.length - 1) {
-          count = roundedValues.filter((val) => val >= parsedBin.min && val <= parsedBin.max).length;
-        }
-        // For non-last bins, use the next bin's min as the exclusive upper bound
-        else {
-          const nextBin = parseBinLabel(binLabels[index + 1]);
-          if (nextBin) {
-            count = roundedValues.filter((val) => val >= parsedBin.min && val < nextBin.min).length;
-          }
-        }
-      }
-    }
-
-    return {
-      value: parsedBin ? parsedBin.min : 0,
-      count: count,
-      label: label,
-      percentage: ((count / values.length) * 100).toFixed(1),
-    };
-  });
+  const binData = bins.map((bin, index) => ({
+    value: bin.min,
+    count: binCounts[index],
+    label: bin.label,
+    percentage: ((binCounts[index] / values.length) * 100).toFixed(1),
+  }));
 
   const questionText = getQuestionText(questionKey);
   const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
 
   return {
-    labels: binCounts.map((item) => item.label),
+    labels: binData.map((item) => item.label),
     datasets: [
       {
-        data: binCounts.map((item) => item.count),
+        data: binData.map((item) => item.count),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
         label: `Responses (${values.length} total)`,
-        barPercentage: 0.9,
-        categoryPercentage: 0.8,
-        originalData: binCounts,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+        originalData: binData,
       },
     ],
     title: shortTitle,
@@ -493,7 +463,88 @@ function aggregateDataByTimeStep(
     })
     .sort((a, b) => a.timestamp - b.timestamp);
 }
+function calculateFDRule(values: number[]): number {
+  const sortedValues = [...values].sort((a, b) => a - b);
 
+  const q1Index = Math.floor(sortedValues.length * 0.25);
+  const q3Index = Math.floor(sortedValues.length * 0.75);
+  const q1 = sortedValues[q1Index];
+  const q3 = sortedValues[q3Index];
+  const iqr = q3 - q1 || 1;
+  // Apply Freedman-Diaconis rule
+  const binWidth = 2 * iqr * Math.pow(values.length, -1 / 3);
+
+  return Math.max(1, binWidth);
+}
+
+function countValuesInBins(values: number[], bins: { min: number; max: number }[]): number[] {
+  const counts = Array(bins.length).fill(0);
+
+  values.forEach((value) => {
+    for (let i = 0; i < bins.length; i++) {
+      const { min, max } = bins[i];
+      if (i === bins.length - 1) {
+        if (value >= min && value <= max) {
+          counts[i]++;
+          break;
+        }
+      } else if (value >= min && value < max) {
+        counts[i]++;
+        break;
+      }
+    }
+  });
+
+  return counts;
+}
+
+function createOptimalBins(values: number[], maxBins = 10): { min: number; max: number; label: string }[] {
+  if (values.length === 0) return [];
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  if (min === max) {
+    return [{ min, max, label: `${min}` }];
+  }
+
+  let binWidth = calculateFDRule(values);
+
+  if (values.length < 10) {
+    binWidth = Math.max(1, Math.ceil((max - min) / 5));
+  }
+  let numBins = Math.ceil((max - min) / binWidth);
+  if (numBins > maxBins) {
+    numBins = maxBins;
+    binWidth = (max - min) / numBins;
+  }
+
+  if (numBins < 2 && max - min > 1) {
+    numBins = Math.min(maxBins, Math.max(2, Math.ceil(values.length / 2)));
+    binWidth = (max - min) / numBins;
+  }
+
+  const bins = [];
+  for (let i = 0; i < numBins; i++) {
+    const binMin = min + i * binWidth;
+    const binMax = i === numBins - 1 ? max : min + (i + 1) * binWidth;
+    const isInteger = values.every((v) => Math.floor(v) === v);
+    const binMinFormatted = isInteger ? Math.floor(binMin) : binMin.toFixed(1);
+    let binMaxFormatted = isInteger ? Math.ceil(binMax) : binMax.toFixed(1);
+
+    if (i === numBins - 1) {
+      binMaxFormatted = isInteger ? Math.ceil(max) : max.toFixed(1);
+    }
+
+    bins.push({
+      min: binMin,
+      max: binMax,
+      label: `${binMinFormatted} - ${binMaxFormatted}`,
+    });
+  }
+
+  return bins;
+}
 export function getAverageLineChart(data: FilteredResponse[], questionKey?: string): ChartData<"line"> {
   const store = useSurveyStore();
   const stepHours = store.settings.step || 24;
