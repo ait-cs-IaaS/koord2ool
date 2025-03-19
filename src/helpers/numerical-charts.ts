@@ -27,21 +27,34 @@ interface HistogramChartData {
   subtitle: string;
 }
 
-function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
-  const aggregatedData: { [key: string]: HLResponse } = {};
+interface ExtendedFinancialDataPoint extends FinancialDataPoint {
+  m: number;
+}
+interface ExtendedHLResponse extends HLResponse {
+  values: number[];
+}
+
+function aggregateForHL(data: FilteredResponse[]): ExtendedHLResponse[] {
+  const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
+
   data.forEach((item) => {
     const dateKey = item.time.toISOString().split("T")[0];
+    const value = Number(item.answer);
+
+    if (isNaN(value)) return;
+
     if (!aggregatedData[dateKey]) {
       aggregatedData[dateKey] = {
         token: item.token,
         time: new Date(dateKey),
-        lowValue: Number(item.answer),
-        highValue: Number(item.answer),
+        lowValue: value,
+        highValue: value,
+        values: [value],
       };
     } else {
-      const currentValue = Number(item.answer);
-      aggregatedData[dateKey].lowValue = Math.min(Number(aggregatedData[dateKey].lowValue), currentValue);
-      aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
+      aggregatedData[dateKey].lowValue = Math.min(aggregatedData[dateKey].lowValue, value);
+      aggregatedData[dateKey].highValue = Math.max(aggregatedData[dateKey].highValue, value);
+      aggregatedData[dateKey].values.push(value);
     }
   });
   return Object.values(aggregatedData);
@@ -77,18 +90,39 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
   store.setMinMax(minMax, questionKey);
 }
 
+interface ExtendedFinancialDataPoint extends FinancialDataPoint {
+  m: number;
+}
+
 export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
   const hldata = aggregateForHL(data);
-  const datasets: FinancialDataPoint[] = [];
+  const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
-    const point: FinancialDataPoint = {
+    const values = [...item.values].sort((a, b) => a - b);
+    let median: number;
+    const mid = Math.floor(values.length / 2);
+
+    if (values.length === 0) {
+      median = (item.highValue + item.lowValue) / 2;
+    } else if (values.length % 2 === 0) {
+      median = (values[mid - 1] + values[mid]) / 2;
+    } else {
+      median = values[mid];
+    }
+
+    const open = item.values[0];
+    const close = item.values[item.values.length - 1];
+
+    const point: ExtendedFinancialDataPoint = {
       x: item.time.getTime(),
-      o: +Number(item.lowValue).toFixed(),
+      o: +Number(open).toFixed(),
       h: +Number(item.highValue).toFixed(),
       l: +Number(item.lowValue).toFixed(),
-      c: +Number(item.highValue).toFixed(),
+      c: +Number(close).toFixed(),
+      m: +Number(median).toFixed(),
     };
+
     datasets.push(point);
   });
 
@@ -101,7 +135,6 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
     ],
   };
 }
-
 export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartDataEntry[] {
   const store = useSurveyStore();
 
