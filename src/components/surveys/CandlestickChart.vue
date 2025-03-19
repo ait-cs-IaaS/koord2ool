@@ -1,17 +1,17 @@
 <template>
-  <candle-chart v-if="renderChart" :data="chartjsData" :style="chartStyle" :options="chartOptions" />
+  <candle-chart v-if="renderChart" :data="processedChartData" :style="chartStyle" :options="chartOptions" :plugins="medianPlugins" />
 </template>
 
 <script lang="ts">
-import { Chart as ChartJS, ChartOptions, ChartData, FinancialDataPoint } from "chart.js";
+import { Chart as ChartJS, ChartOptions, ChartData, FinancialDataPoint, TooltipItem, Plugin } from "chart.js";
 import { CandlestickController, CandlestickElement, OhlcController, OhlcElement } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed, watch } from "vue";
 import "chartjs-adapter-moment";
 import { useSurveyStore } from "../../store/surveyStore";
-ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
-
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
+
+ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
 
 type CandlestickChartOptions = ChartOptions<"candlestick"> & {
   elements?: {
@@ -21,8 +21,42 @@ type CandlestickChartOptions = ChartOptions<"candlestick"> & {
         down?: string;
         unchanged?: string;
       };
+      borderWidth?: number;
     };
   };
+};
+
+const medianLinesPlugin: Plugin = {
+  id: "medianLines",
+  afterDatasetsDraw: (chart) => {
+    const { ctx, chartArea, scales } = chart;
+    if (!scales.x || !scales.y || !chart.data.datasets[0]) return;
+
+    const dataset = chart.data.datasets[0];
+
+    ctx.save();
+    ctx.lineWidth = 1.5; 
+    ctx.strokeStyle = "rgba(0, 0, 0, 1)"; 
+    ctx.setLineDash([]); 
+
+    dataset.data.forEach((data: any) => {
+      if (!data || typeof data !== "object" || !("m" in data) || !("x" in data)) return;
+
+      const x = scales.x.getPixelForValue(data.x);
+      const y = scales.y.getPixelForValue(data.m);
+
+      if (x >= chartArea.left && x <= chartArea.right && y >= chartArea.top && y <= chartArea.bottom) {
+        const candleWidth = 8; 
+
+        ctx.beginPath();
+        ctx.moveTo(x - candleWidth / 2, y);
+        ctx.lineTo(x + candleWidth / 2, y);
+        ctx.stroke();
+      }
+    });
+
+    ctx.restore();
+  },
 };
 
 export default defineComponent({
@@ -48,18 +82,42 @@ export default defineComponent({
       height: "100%",
     };
 
+    const processedChartData = computed(() => {
+      if (!props.chartjsData || !props.chartjsData.datasets || props.chartjsData.datasets.length === 0) {
+        return props.chartjsData;
+      }
+
+      const newData = JSON.parse(JSON.stringify(props.chartjsData));
+
+      newData.datasets[0].data = newData.datasets[0].data.map((point: any) => {
+        if (point && typeof point === "object") {
+          const median = point.m;
+
+          return {
+            x: point.x,
+            o: point.o,
+            h: point.c, 
+            l: point.o, 
+            c: point.c,
+            m: median, 
+          };
+        }
+        return point;
+      });
+
+      return newData;
+    });
+
+    const medianPlugins = [medianLinesPlugin];
+
     watch(
       () => props.chartjsData,
       (newData) => {
         console.debug("Candlestick data updated:", newData);
-        if (newData && newData.datasets) {
-          console.debug("Dataset count:", newData.datasets.length);
-
-          if (newData.datasets.length > 0) {
-            const dataset = newData.datasets[0];
-            console.debug("Dataset label:", dataset.label);
-            console.debug("Data points count:", dataset.data?.length || 0);
-            console.debug("First 3 data points:", JSON.stringify(dataset.data?.slice(0, 3)));
+        if (newData?.datasets?.length) {
+          const dataset = newData.datasets[0];
+          if (dataset.data?.length > 0) {
+            console.debug("Sample data point:", dataset.data[0]);
           }
         }
       },
@@ -68,7 +126,6 @@ export default defineComponent({
 
     const minmax = computed(() => {
       const result = store.minMaxFromDataset?.[props.questionKey];
-      console.debug("Min/max values for", props.questionKey, ":", result);
       return result;
     });
 
@@ -80,9 +137,19 @@ export default defineComponent({
     };
 
     const chartOptions = computed((): CandlestickChartOptions => {
-      const options: CandlestickChartOptions = {
+      return {
         responsive: true,
         maintainAspectRatio: false,
+        elements: {
+          candlestick: {
+            color: {
+              up: "rgba(75, 192, 192, 1)",
+              down: "rgba(255, 99, 132, 1)",
+              unchanged: "rgba(50, 50, 50, 1)",
+            },
+            borderWidth: 1,
+          },
+        },
         scales: {
           x: {
             type: "time",
@@ -95,13 +162,8 @@ export default defineComponent({
             title: {
               display: true,
               text: "Date",
-              font: {
-                size: 10,
-                weight: "bold",
-              },
-              padding: {
-                top: 0,
-              },
+              font: { size: 10, weight: "bold" },
+              padding: { top: 0 },
             },
             adapters: {
               date: {
@@ -109,15 +171,11 @@ export default defineComponent({
               },
             },
             ticks: {
-              font: {
-                size: 9,
-              },
+              font: { size: 9 },
               maxRotation: 0,
               maxTicksLimit: 8,
             },
-            grid: {
-              display: false,
-            },
+            grid: { display: false },
           },
           y: {
             min: minmax.value?.min || 0,
@@ -125,25 +183,16 @@ export default defineComponent({
             title: {
               display: true,
               text: "Value",
-              font: {
-                size: 10,
-                weight: "bold",
-              },
-              padding: {
-                bottom: 0,
-              },
+              font: { size: 10, weight: "bold" },
+              padding: { bottom: 0 },
             },
             ticks: {
-              font: {
-                size: 9,
-              },
+              font: { size: 9 },
               maxTicksLimit: 5,
               callback: formatYAxisTick,
               padding: 8,
             },
-            grid: {
-              color: "rgba(0, 0, 0, 0.05)",
-            },
+            grid: { color: "rgba(0, 0, 0, 0.05)" },
           },
         },
         plugins: {
@@ -151,28 +200,26 @@ export default defineComponent({
             display: false,
           },
           tooltip: {
-            titleFont: {
-              size: 11,
-            },
-            bodyFont: {
-              size: 11,
-            },
+            titleFont: { size: 11 },
+            bodyFont: { size: 11 },
             intersect: false,
-            mode: "index",
+            mode: "index" as const,
             callbacks: {
-              label(ctx) {
-                const point = ctx.parsed as FinancialDataPoint;
-                return [`Low: ${point.l}`, `High: ${point.h}`, `Open: ${point.o}`, `Close: ${point.c}`];
+              label(ctx: TooltipItem<"candlestick">) {
+                const point = ctx.parsed as any;
+                const dataPoint = ctx.dataset.data[ctx.dataIndex] as any;
+                const hasMedian = dataPoint && typeof dataPoint === "object" && "m" in dataPoint;
+
+                const tooltipLabels = [];
+
+                if (hasMedian) {
+                  tooltipLabels.push(`Median: ${dataPoint.m}`);
+                }
+
+                tooltipLabels.push(`Open: ${point.o}`, `High: ${point.h}`, `Low: ${point.l}`, `Close: ${point.c}`);
+
+                return tooltipLabels;
               },
-            },
-          },
-        },
-        elements: {
-          candlestick: {
-            color: {
-              up: "rgba(75, 192, 192, 1)",
-              down: "rgba(255, 99, 132, 1)",
-              unchanged: "rgba(90, 90, 90, 1)",
             },
           },
         },
@@ -180,51 +227,23 @@ export default defineComponent({
           padding: {
             left: 2,
             right: 10,
-            top: 8,
+            top: 20,
             bottom: 10,
           },
         },
       };
-
-      console.debug(
-        "Candlestick chart options:",
-        JSON.stringify({
-          scales: {
-            x: options.scales?.x?.type,
-            y: { min: options.scales?.y?.min, max: options.scales?.y?.max },
-          },
-          plugins: Object.keys(options.plugins || {}),
-          elements: options.elements ? Object.keys(options.elements) : [],
-        }),
-      );
-
-      return options;
     });
 
     onMounted(async () => {
       try {
         await nextTick();
-        console.debug("About to render candlestick chart");
         renderChart.value = true;
-        console.debug("Candlestick chart render triggered");
-        console.debug(
-          "Chart mounted with data structure:",
-          JSON.stringify({
-            datasets: props.chartjsData.datasets
-              ? props.chartjsData.datasets.map((d) => ({
-                  label: d.label,
-                  dataLength: d.data?.length || 0,
-                  samplePoints: d.data?.slice(0, 2) || [],
-                }))
-              : [],
-          }),
-        );
       } catch (error) {
         console.error("Error rendering candlestick chart:", error);
       }
     });
 
-    return { chartStyle, renderChart, chartOptions };
+    return { chartStyle, renderChart, chartOptions, medianPlugins, processedChartData };
   },
 });
 </script>
