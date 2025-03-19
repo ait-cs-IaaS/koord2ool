@@ -538,7 +538,7 @@ function createOptimalBins(values: number[], maxBins = 10): { min: number; max: 
   const max = Math.max(...values);
 
   if (min === max) {
-    return [{ min, max, label: `${min}` }];
+    return [{ min, max, label: `${min.toFixed(2)} - ${max.toFixed(2)}` }];
   }
 
   let binWidth = calculateFDRule(values);
@@ -560,14 +560,10 @@ function createOptimalBins(values: number[], maxBins = 10): { min: number; max: 
   const bins = [];
   for (let i = 0; i < numBins; i++) {
     const binMin = min + i * binWidth;
-    const binMax = i === numBins - 1 ? max : min + (i + 1) * binWidth;
-    const isInteger = values.every((v) => Math.floor(v) === v);
-    const binMinFormatted = isInteger ? Math.floor(binMin) : binMin.toFixed(1);
-    let binMaxFormatted = isInteger ? Math.ceil(binMax) : binMax.toFixed(1);
+    const binMax = binMin + binWidth;
 
-    if (i === numBins - 1) {
-      binMaxFormatted = isInteger ? Math.ceil(max) : max.toFixed(1);
-    }
+    const binMinFormatted = binMin.toFixed(2);
+    const binMaxFormatted = (binMax - 0.01).toFixed(2);
 
     bins.push({
       min: binMin,
@@ -578,6 +574,7 @@ function createOptimalBins(values: number[], maxBins = 10): { min: number; max: 
 
   return bins;
 }
+
 export function getAverageLineChart(data: FilteredResponse[], questionKey?: string): ChartData<"line"> {
   const store = useSurveyStore();
   const stepHours = store.settings.step || 24;
