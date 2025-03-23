@@ -136,6 +136,8 @@ export default defineComponent({
               font: {
                 size: 10,
               },
+              minRotation: 0,
+              maxRotation: 0,
             },
           },
         },
