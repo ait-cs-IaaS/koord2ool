@@ -23,6 +23,12 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
   const { open, high, low, close, x, width, y } = this;
   const isFlat = open === high && high === low && low === close;
 
+  const options = this.options || {};
+  const valueChange = close - open;
+  const isPositive = valueChange >= 0;
+  
+  const customColors = options.color || {};
+
   if (isFlat) {
     ctx.save();
     ctx.strokeStyle = "rgba(75, 192, 192, 1)";
@@ -36,6 +42,9 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
     ctx.stroke();
     ctx.restore();
   } else {
+    if (customColors.up && customColors.down) {
+      this.options.color = isPositive ? customColors.up : customColors.down;
+    }
     originalDraw.call(this, ctx);
   }
 };
@@ -53,6 +62,12 @@ type CandlestickChartOptions = ChartOptions<"candlestick"> & {
   };
 };
 
+interface ExtendedFinancialDataPoint extends FinancialDataPoint {
+  m: number;        
+  a: number;       
+  count: number;    
+  tokens: string[]; 
+}
 
 const medianLinesPlugin: Plugin = {
   id: "medianLines",
@@ -87,40 +102,6 @@ const medianLinesPlugin: Plugin = {
   },
 };
 
-const activeCountColorPlugin: Plugin = {
-  id: "activeCountColor",
-  beforeDatasetsDraw: (chart) => {
-    const { chartArea, scales } = chart;
-    if (!scales.x || !scales.y || !chart.data.datasets[0]) return;
-
-    const dataset = chart.data.datasets[0];
-    
-    let maxCount = 0;
-    dataset.data.forEach((data: any) => {
-      if (data && typeof data === "object" && "count" in data) {
-        maxCount = Math.max(maxCount, data.count);
-      }
-    });
-    
-    if (maxCount === 0) return;
-    
-    dataset.data.forEach((data: any, index: number) => {
-      if (!data || typeof data !== "object" || !("count" in data)) return;
-      
-      const intensity = data.count / maxCount;
-      const alpha = 0.3 + (intensity * 0.7); 
-      const element = chart.getDatasetMeta(0).data[index];
-      if (element) {
-        element.options = element.options || {};
-        element.options.color = {
-          up: `rgba(75, 192, 192, ${alpha})`,
-          down: `rgba(255, 99, 132, ${alpha})`,
-          unchanged: `rgba(50, 50, 50, ${alpha})`
-        };
-      }
-    });
-  }
-};
 
 const averageLinePlugin: Plugin = {
   id: "averageLine",
@@ -155,6 +136,44 @@ const averageLinePlugin: Plugin = {
   },
 };
 
+const enhancedColorPlugin: Plugin = {
+  id: "enhancedColor",
+  beforeDatasetsDraw: (chart) => {
+    const { scales } = chart;
+    if (!scales.x || !scales.y || !chart.data.datasets[0]) return;
+
+    const dataset = chart.data.datasets[0];
+    
+    let maxCount = 0;
+    dataset.data.forEach((data: any) => {
+      if (data && typeof data === "object" && "count" in data) {
+        maxCount = Math.max(maxCount, data.count);
+      }
+    });
+    
+    if (maxCount === 0) return;
+    
+    dataset.data.forEach((data: any, index: number) => {
+      if (!data || typeof data !== "object" || !("count" in data)) return;
+      
+      const intensity = data.count / maxCount;
+      const alpha = 0.3 + (intensity * 0.7); 
+      
+      const valueChange = data.c - data.o;
+      
+      const element = chart.getDatasetMeta(0).data[index];
+      if (element) {
+        element.options = element.options || {};
+        element.options.color = {
+          up: `rgba(75, 192, 192, ${alpha})`,     
+          down: `rgba(255, 99, 132, ${alpha})`,   
+          unchanged: `rgba(150, 150, 150, ${alpha})` 
+        };
+      }
+    });
+  }
+};
+
 export default defineComponent({
   name: "CandleStickChartComponent",
   components: {
@@ -187,7 +206,7 @@ export default defineComponent({
       return newData;
     });
 
-    const chartPlugins = [medianLinesPlugin, averageLinePlugin, activeCountColorPlugin];
+    const chartPlugins = [medianLinesPlugin, averageLinePlugin, enhancedColorPlugin];
 
     watch(
       () => props.chartjsData,
@@ -208,17 +227,19 @@ export default defineComponent({
       return result;
     });
 
-    const formatYAxisTick = (value: string | number, index: number, ticks: Array<{ value: number }>) => {
-      if (index === ticks.length - 1) {
-        return null;
-      }
-      return value;
+    const formatYAxisTick = (value: string | number) => {
+      return Number(value).toFixed(1);
     };
 
     const formatTooltipTitle = (items: any[]) => {
       if (!items || items.length === 0) return '';
       const date = new Date(items[0].parsed.x);
-      return date.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+      });
     };
 
     const chartOptions = computed((): CandlestickChartOptions => {
@@ -230,7 +251,7 @@ export default defineComponent({
             color: {
               up: "rgba(75, 192, 192, 1)",
               down: "rgba(255, 99, 132, 1)",
-              unchanged: "rgba(50, 50, 50, 1)",
+              unchanged: "rgba(150, 150, 150, 1)",
             },
             borderWidth: 1,
           },
@@ -239,16 +260,17 @@ export default defineComponent({
           x: {
             type: "time",
             time: {
-              unit: "day",
+              unit: "month", 
               displayFormats: {
-                day: "MMM D",
+                month: "MMM YYYY"
               },
+              tooltipFormat: 'MMM D, YYYY'
             },
             title: {
               display: true,
               text: "Date",
-              font: { size: 10, weight: "bold" },
-              padding: { top: 0 },
+              font: { size: 12, weight: "bold" },
+              padding: { top: 5 },
             },
             adapters: {
               date: {
@@ -256,11 +278,12 @@ export default defineComponent({
               },
             },
             ticks: {
-              font: { size: 9 },
+              font: { size: 10 },
               maxRotation: 0,
-              maxTicksLimit: 8,
+              autoSkip: true,
+              maxTicksLimit: 6, 
             },
-            grid: { display: false },
+            grid: { display: true, color: "rgba(0,0,0,0.05)" },
           },
           y: {
             min: minmax.value?.min || 0,
@@ -268,12 +291,12 @@ export default defineComponent({
             title: {
               display: true,
               text: "Value",
-              font: { size: 10, weight: "bold" },
-              padding: { bottom: 0 },
+              font: { size: 12, weight: "bold" },
+              padding: { bottom: 5 },
             },
             ticks: {
-              font: { size: 9 },
-              maxTicksLimit: 5,
+              font: { size: 10 },
+              maxTicksLimit: 10,
               callback: formatYAxisTick,
               padding: 8,
             },
@@ -285,7 +308,7 @@ export default defineComponent({
             display: false,
           },
           tooltip: {
-            titleFont: { size: 11 },
+            titleFont: { size: 12 },
             bodyFont: { size: 11 },
             intersect: false,
             mode: "index" as const,
@@ -295,22 +318,32 @@ export default defineComponent({
               label(ctx: TooltipItem<"candlestick">) {
                 const point = ctx.parsed as any;
                 const dataPoint = ctx.dataset.data[ctx.dataIndex] as any;
+                
                 const tooltipLabels = [];
+                
+                const date = new Date(dataPoint.x);
+                tooltipLabels.push(`Date: ${date.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric'
+                })}`);
                 
                 tooltipLabels.push(`Active responses: ${dataPoint.count}`);
                 
                 if ('m' in dataPoint) {
-                  tooltipLabels.push(`Median: ${dataPoint.m}`);
+                  tooltipLabels.push(`Median: ${dataPoint.m.toFixed(2)}`);
                 }
                 
                 if ('a' in dataPoint) {
-                  tooltipLabels.push(`Average: ${dataPoint.a}`);
+                  tooltipLabels.push(`Average: ${dataPoint.a.toFixed(2)}`);
                 }
                 
                 tooltipLabels.push(
-                  `Range: ${point.l} - ${point.h}`,
-                  `First: ${point.o}`,
-                  `Last: ${point.c}`
+                  `Range: ${point.l.toFixed(2)} - ${point.h.toFixed(2)}`,
+                  `First: ${point.o.toFixed(2)}`,
+                  `Last: ${point.c.toFixed(2)}`,
+                  `Change: ${(point.c - point.o).toFixed(2)}`
                 );
                 
                 if (dataPoint.tokens && dataPoint.tokens.length > 0) {
@@ -335,8 +368,8 @@ export default defineComponent({
         },
         layout: {
           padding: {
-            left: 2,
-            right: 10,
+            left: 5,
+            right: 15,
             top: 20,
             bottom: 10,
           },
