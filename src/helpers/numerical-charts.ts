@@ -29,11 +29,17 @@ interface HistogramChartData {
 
 interface ExtendedFinancialDataPoint extends FinancialDataPoint {
   m: number;
-}
-interface ExtendedHLResponse extends HLResponse {
-  values: number[];
+  a: number;
+  count: number;
+  tokens: string[];
 }
 
+interface ExtendedHLResponse extends HLResponse {
+  values: number[];
+  average: number;
+  tokens: string[];
+}
+// legacy for now
 function aggregateForHL(data: FilteredResponse[]): ExtendedHLResponse[] {
   const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
 
@@ -50,13 +56,95 @@ function aggregateForHL(data: FilteredResponse[]): ExtendedHLResponse[] {
         lowValue: value,
         highValue: value,
         values: [value],
+        average: value,
+        tokens: [item.token]
       };
     } else {
       aggregatedData[dateKey].lowValue = Math.min(aggregatedData[dateKey].lowValue, value);
       aggregatedData[dateKey].highValue = Math.max(aggregatedData[dateKey].highValue, value);
       aggregatedData[dateKey].values.push(value);
+
+      const values = aggregatedData[dateKey].values;
+      aggregatedData[dateKey].average = values.reduce((sum, val) => sum + val, 0) / values.length;
+
+      if (!aggregatedData[dateKey].tokens.includes(item.token)) {
+        aggregatedData[dateKey].tokens.push(item.token);
+      }
     }
   });
+  return Object.values(aggregatedData);
+}
+
+function isResponseActive(response: FilteredResponse, targetDate: Date, expirationDays: number): boolean {
+  // A response is active if:
+  // 1. It was submitted at or before targetDate
+  // 2. It hasn't expired yet (response.time + expirationDays >= targetDate)
+  const expirationTime = new Date(response.time);
+  expirationTime.setDate(expirationTime.getDate() + expirationDays);
+
+  return response.time <= targetDate && expirationTime >= targetDate;
+}
+
+function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[] {
+  const store = useSurveyStore();
+  const expirationDays = store.settings.expirationTime;
+
+  if (data.length === 0) return [];
+
+  const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
+
+  const startDate = new Date(sortedData[0].time);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(sortedData[sortedData.length - 1].time);
+  endDate.setHours(23, 59, 59, 999);
+
+  const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split("T")[0];
+    const activeResponses: FilteredResponse[] = [];
+    const activeTokens: Set<string> = new Set();
+
+    for (const response of sortedData) {
+      if (response.time > currentDate) continue;
+
+      if (isResponseActive(response, currentDate, expirationDays)) {
+        const value = Number(response.answer);
+        if (!isNaN(value)) {
+          const existingIndex = activeResponses.findIndex(r => r.token === response.token);
+          if (existingIndex >= 0) {
+            if (response.time > activeResponses[existingIndex].time) {
+              activeResponses[existingIndex] = response;
+            }
+          } else {
+            activeResponses.push(response);
+            activeTokens.add(response.token);
+          }
+        }
+      }
+    }
+
+    if (activeResponses.length > 0) {
+      const values = activeResponses.map(r => Number(r.answer)).filter(v => !isNaN(v));
+
+      if (values.length > 0) {
+        aggregatedData[dateKey] = {
+          token: dateKey,
+          time: new Date(currentDate),
+          lowValue: Math.min(...values),
+          highValue: Math.max(...values),
+          values: values,
+          average: values.reduce((sum, val) => sum + val, 0) / values.length,
+          tokens: Array.from(activeTokens)
+        };
+      }
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
   return Object.values(aggregatedData);
 }
 
@@ -90,37 +178,36 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
   store.setMinMax(minMax, questionKey);
 }
 
-interface ExtendedFinancialDataPoint extends FinancialDataPoint {
-  m: number;
-}
-
 export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
-  const hldata = aggregateForHL(data);
+  const hldata = aggregateActiveResponses(data);
   const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
     const values = [...item.values].sort((a, b) => a - b);
-    let median: number;
     const mid = Math.floor(values.length / 2);
+    let median = 0;
 
     if (values.length === 0) {
-      median = (item.highValue + item.lowValue) / 2;
+      median = 0;
     } else if (values.length % 2 === 0) {
       median = (values[mid - 1] + values[mid]) / 2;
     } else {
       median = values[mid];
     }
 
-    const open = item.values[0];
-    const close = item.values[item.values.length - 1];
+    const open = values[0] || 0;
+    const close = values[values.length - 1] || 0;
 
     const point: ExtendedFinancialDataPoint = {
       x: item.time.getTime(),
-      o: +Number(open).toFixed(),
-      h: +Number(item.highValue).toFixed(),
-      l: +Number(item.lowValue).toFixed(),
-      c: +Number(close).toFixed(),
-      m: +Number(median).toFixed(),
+      o: +Number(open).toFixed(1),
+      h: +Number(item.highValue).toFixed(1),
+      l: +Number(item.lowValue).toFixed(1),
+      c: +Number(close).toFixed(1),
+      m: +Number(median).toFixed(1),
+      a: +Number(item.average).toFixed(1),
+      count: item.tokens.length,
+      tokens: item.tokens
     };
 
     datasets.push(point);
@@ -510,7 +597,7 @@ function calculateFDRule(values: number[]): number {
   return Math.max(1, binWidth);
 }
 
-function countValuesInBins(values: number[], bins: { min: number; max: number }[]): number[] {
+function countValuesInBins(values: number[], bins: { min: number; max: number; label: string }[]): number[] {
   const counts = Array(bins.length).fill(0);
 
   values.forEach((value) => {

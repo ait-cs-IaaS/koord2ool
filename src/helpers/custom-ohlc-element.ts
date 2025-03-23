@@ -1,7 +1,7 @@
 import * as FinancialElements from "chartjs-chart-financial";
 
 const CandlestickElementPrototype = (FinancialElements.CandlestickElement as any).prototype;
-const originalDraw = CandlestickElementPrototype.draw;
+const originalCandleDraw = CandlestickElementPrototype.draw;
 
 CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
   const { open, high, low, close, x, width, y } = this;
@@ -20,9 +20,26 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
     ctx.stroke();
     ctx.restore();
   } else {
-    originalDraw.call(this, ctx);
+    originalCandleDraw.call(this, ctx);
   }
 
 };
 
 const OhlcElementPrototype = (FinancialElements.OhlcElement as any).prototype;
+const originalOhlcDraw = OhlcElementPrototype.draw;
+
+OhlcElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
+  originalOhlcDraw.call(this, ctx);
+
+  const { x, open, high, low, close } = this;
+
+  if ((this as any).count !== undefined) {
+    const count = (this as any).count;
+    ctx.save();
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillText(`n=${count}`, x, this._yScale.getPixelForValue(high) - 10);
+    ctx.restore();
+  }
+};

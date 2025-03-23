@@ -1,5 +1,5 @@
 <template>
-  <candle-chart v-if="renderChart" :data="processedChartData" :style="chartStyle" :options="chartOptions" :plugins="medianPlugins" />
+  <candle-chart v-if="renderChart" :data="processedChartData" :style="chartStyle" :options="chartOptions" :plugins="chartPlugins" />
 </template>
 
 <script lang="ts">
@@ -9,9 +9,36 @@ import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed, watch } from "vue";
 import "chartjs-adapter-moment";
 import { useSurveyStore } from "../../store/surveyStore";
+import { getParticipant } from "../../helpers/chartFunctions";
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
 ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
+
+import * as FinancialElements from "chartjs-chart-financial";
+
+const CandlestickElementPrototype = (FinancialElements.CandlestickElement as any).prototype;
+const originalDraw = CandlestickElementPrototype.draw;
+
+CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
+  const { open, high, low, close, x, width, y } = this;
+  const isFlat = open === high && high === low && low === close;
+
+  if (isFlat) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(75, 192, 192, 1)";
+    ctx.fillStyle = "rgba(75, 192, 192, 0.2)";
+    ctx.lineWidth = 1.5;
+    const minHeight = 5;
+    const yTop = y - minHeight / 2;
+    ctx.beginPath();
+    ctx.rect(x - width / 2, yTop, width, minHeight);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    originalDraw.call(this, ctx);
+  }
+};
 
 type CandlestickChartOptions = ChartOptions<"candlestick"> & {
   elements?: {
@@ -25,6 +52,7 @@ type CandlestickChartOptions = ChartOptions<"candlestick"> & {
     };
   };
 };
+
 
 const medianLinesPlugin: Plugin = {
   id: "medianLines",
@@ -47,6 +75,74 @@ const medianLinesPlugin: Plugin = {
 
       if (x >= chartArea.left && x <= chartArea.right && y >= chartArea.top && y <= chartArea.bottom) {
         const candleWidth = 8; 
+
+        ctx.beginPath();
+        ctx.moveTo(x - candleWidth / 2, y);
+        ctx.lineTo(x + candleWidth / 2, y);
+        ctx.stroke();
+      }
+    });
+
+    ctx.restore();
+  },
+};
+
+const activeCountColorPlugin: Plugin = {
+  id: "activeCountColor",
+  beforeDatasetsDraw: (chart) => {
+    const { chartArea, scales } = chart;
+    if (!scales.x || !scales.y || !chart.data.datasets[0]) return;
+
+    const dataset = chart.data.datasets[0];
+    
+    let maxCount = 0;
+    dataset.data.forEach((data: any) => {
+      if (data && typeof data === "object" && "count" in data) {
+        maxCount = Math.max(maxCount, data.count);
+      }
+    });
+    
+    if (maxCount === 0) return;
+    
+    dataset.data.forEach((data: any, index: number) => {
+      if (!data || typeof data !== "object" || !("count" in data)) return;
+      
+      const intensity = data.count / maxCount;
+      const alpha = 0.3 + (intensity * 0.7); 
+      const element = chart.getDatasetMeta(0).data[index];
+      if (element) {
+        element.options = element.options || {};
+        element.options.color = {
+          up: `rgba(75, 192, 192, ${alpha})`,
+          down: `rgba(255, 99, 132, ${alpha})`,
+          unchanged: `rgba(50, 50, 50, ${alpha})`
+        };
+      }
+    });
+  }
+};
+
+const averageLinePlugin: Plugin = {
+  id: "averageLine",
+  afterDatasetsDraw: (chart) => {
+    const { ctx, chartArea, scales } = chart;
+    if (!scales.x || !scales.y || !chart.data.datasets[0]) return;
+
+    const dataset = chart.data.datasets[0];
+
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(75, 192, 192, 0.7)";
+    ctx.setLineDash([3, 3]);
+
+    dataset.data.forEach((data: any) => {
+      if (!data || typeof data !== "object" || !("a" in data) || !("x" in data)) return;
+
+      const x = scales.x.getPixelForValue(data.x);
+      const y = scales.y.getPixelForValue(data.a);
+
+      if (x >= chartArea.left && x <= chartArea.right && y >= chartArea.top && y <= chartArea.bottom) {
+        const candleWidth = 8;
 
         ctx.beginPath();
         ctx.moveTo(x - candleWidth / 2, y);
@@ -88,27 +184,10 @@ export default defineComponent({
       }
 
       const newData = JSON.parse(JSON.stringify(props.chartjsData));
-
-      newData.datasets[0].data = newData.datasets[0].data.map((point: any) => {
-        if (point && typeof point === "object") {
-          const median = point.m;
-
-          return {
-            x: point.x,
-            o: point.o,
-            h: point.c, 
-            l: point.o, 
-            c: point.c,
-            m: median, 
-          };
-        }
-        return point;
-      });
-
       return newData;
     });
 
-    const medianPlugins = [medianLinesPlugin];
+    const chartPlugins = [medianLinesPlugin, averageLinePlugin, activeCountColorPlugin];
 
     watch(
       () => props.chartjsData,
@@ -134,6 +213,12 @@ export default defineComponent({
         return null;
       }
       return value;
+    };
+
+    const formatTooltipTitle = (items: any[]) => {
+      if (!items || items.length === 0) return '';
+      const date = new Date(items[0].parsed.x);
+      return date.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     const chartOptions = computed((): CandlestickChartOptions => {
@@ -204,20 +289,45 @@ export default defineComponent({
             bodyFont: { size: 11 },
             intersect: false,
             mode: "index" as const,
+            displayColors: false,
             callbacks: {
+              title: formatTooltipTitle,
               label(ctx: TooltipItem<"candlestick">) {
                 const point = ctx.parsed as any;
                 const dataPoint = ctx.dataset.data[ctx.dataIndex] as any;
-                const hasMedian = dataPoint && typeof dataPoint === "object" && "m" in dataPoint;
-
                 const tooltipLabels = [];
-
-                if (hasMedian) {
+                
+                tooltipLabels.push(`Active responses: ${dataPoint.count}`);
+                
+                if ('m' in dataPoint) {
                   tooltipLabels.push(`Median: ${dataPoint.m}`);
                 }
-
-                tooltipLabels.push(`Open: ${point.o}`, `High: ${point.h}`, `Low: ${point.l}`, `Close: ${point.c}`);
-
+                
+                if ('a' in dataPoint) {
+                  tooltipLabels.push(`Average: ${dataPoint.a}`);
+                }
+                
+                tooltipLabels.push(
+                  `Range: ${point.l} - ${point.h}`,
+                  `First: ${point.o}`,
+                  `Last: ${point.c}`
+                );
+                
+                if (dataPoint.tokens && dataPoint.tokens.length > 0) {
+                  tooltipLabels.push('');
+                  tooltipLabels.push('Active participants:');
+                  const maxParticipantsToShow = 5;
+                  const participants = dataPoint.tokens.slice(0, maxParticipantsToShow).map((token: string) => {
+                    return getParticipant(token);
+                  });
+                  
+                  tooltipLabels.push(...participants);
+                  
+                  if (dataPoint.tokens.length > maxParticipantsToShow) {
+                    tooltipLabels.push(`...and ${dataPoint.tokens.length - maxParticipantsToShow} more`);
+                  }
+                }
+                
                 return tooltipLabels;
               },
             },
@@ -243,7 +353,7 @@ export default defineComponent({
       }
     });
 
-    return { chartStyle, renderChart, chartOptions, medianPlugins, processedChartData };
+    return { chartStyle, renderChart, chartOptions, chartPlugins, processedChartData };
   },
 });
 </script>
