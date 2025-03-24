@@ -39,46 +39,85 @@ interface ExtendedHLResponse extends HLResponse {
   average: number;
   tokens: string[];
 }
-// legacy for now
-function aggregateForHL(data: FilteredResponse[]): ExtendedHLResponse[] {
-  const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
 
-  data.forEach((item) => {
-    const dateKey = item.time.toISOString().split("T")[0];
-    const value = Number(item.answer);
+export function getActiveHistogramData(data: FilteredResponse[], questionKey: string): HistogramChartData {
+  const store = useSurveyStore();
+  const expirationDays = store.settings.expirationTime;
 
-    if (isNaN(value)) return;
+  if (data.length === 0) {
+    return {
+      labels: [],
+      datasets: [],
+      title: "No numerical data available",
+      subtitle: "",
+    };
+  }
 
-    if (!aggregatedData[dateKey]) {
-      aggregatedData[dateKey] = {
-        token: item.token,
-        time: new Date(dateKey),
-        lowValue: value,
-        highValue: value,
-        values: [value],
-        average: value,
-        tokens: [item.token]
-      };
-    } else {
-      aggregatedData[dateKey].lowValue = Math.min(aggregatedData[dateKey].lowValue, value);
-      aggregatedData[dateKey].highValue = Math.max(aggregatedData[dateKey].highValue, value);
-      aggregatedData[dateKey].values.push(value);
+  const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
 
-      const values = aggregatedData[dateKey].values;
-      aggregatedData[dateKey].average = values.reduce((sum, val) => sum + val, 0) / values.length;
+  const startDate = new Date(sortedData[0].time);
+  startDate.setHours(0, 0, 0, 0);
 
-      if (!aggregatedData[dateKey].tokens.includes(item.token)) {
-        aggregatedData[dateKey].tokens.push(item.token);
-      }
+  const endDate = store.untilDate || new Date(sortedData[sortedData.length - 1].time);
+  endDate.setHours(23, 59, 59, 999);
+
+  const latestResponsesByToken: Record<string, FilteredResponse> = {};
+
+  sortedData.forEach(response => {
+    if (!isResponseActive(response, endDate, expirationDays)) return;
+
+    const existing = latestResponsesByToken[response.token];
+    if (!existing || response.time > existing.time) {
+      latestResponsesByToken[response.token] = response;
     }
   });
-  return Object.values(aggregatedData);
-}
 
+  const values: number[] = [];
+  Object.values(latestResponsesByToken).forEach(resp => {
+    const v = Number(resp.answer);
+    if (!isNaN(v)) values.push(v);
+  });
+
+  if (values.length === 0) {
+    return {
+      labels: [],
+      datasets: [],
+      title: "No numerical data available",
+      subtitle: "",
+    };
+  }
+
+  const bins = createOptimalBins(values);
+  const binCounts = countValuesInBins(values, bins);
+  const binData = bins.map((bin, index) => ({
+    value: bin.min,
+    count: binCounts[index],
+    label: bin.label,
+    percentage: ((binCounts[index] / values.length) * 100).toFixed(1),
+  }));
+
+  const questionText = getQuestionText(questionKey);
+  const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
+
+  return {
+    labels: binData.map(b => b.label),
+    datasets: [
+      {
+        data: binData.map(b => b.count),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+        label: `Responses (${values.length} total)`,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+        originalData: binData,
+      }
+    ],
+    title: shortTitle,
+    subtitle: `${Object.keys(latestResponsesByToken).length} participants, ${values.length} responses`,
+  };
+}
 function isResponseActive(response: FilteredResponse, targetDate: Date, expirationDays: number): boolean {
-  // A response is active if:
-  // 1. It was submitted at or before targetDate
-  // 2. It hasn't expired yet (response.time + expirationDays >= targetDate)
   const expirationTime = new Date(response.time);
   expirationTime.setDate(expirationTime.getDate() + expirationDays);
 

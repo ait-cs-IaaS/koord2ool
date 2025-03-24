@@ -2,7 +2,7 @@ import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
 import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { getHistogramData, getAverageLineChart, setMinMaxFromDataset, getOHLC } from "./numerical-charts";
+import { getHistogramData, getAverageLineChart, setMinMaxFromDataset, getActiveHistogramData, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
@@ -75,9 +75,13 @@ export function createActiveNumericalData(questionKey: string): HistogramChartDa
   const store = useSurveyStore();
   const allResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(allResponses);
-  const activeResponses = getLastResponses(filteredResponsesNA);
 
-  return getHistogramData(activeResponses, questionKey);
+  if (store.settings.onlyActive) {
+    return getActiveHistogramData(filteredResponsesNA, questionKey);
+  }
+  else {
+    return getHistogramData(filteredResponsesNA, questionKey);
+  }
 }
 
 export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
@@ -161,7 +165,6 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
   const { step } = store.settings;
 
-  // if there are multiple responses from the same token withing step hours of time aggregate them
   data.forEach((item) => {
     const lastResponse = aggregatedData.find(
       (response) => response.token === item.token && response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
