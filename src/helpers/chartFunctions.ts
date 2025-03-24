@@ -78,8 +78,7 @@ export function createActiveNumericalData(questionKey: string): HistogramChartDa
 
   if (store.settings.onlyActive) {
     return getActiveHistogramData(filteredResponsesNA, questionKey);
-  }
-  else {
+  } else {
     return getHistogramData(filteredResponsesNA, questionKey);
   }
 }

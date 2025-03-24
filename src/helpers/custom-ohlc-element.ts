@@ -22,7 +22,6 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
   } else {
     originalCandleDraw.call(this, ctx);
   }
-
 };
 
 const OhlcElementPrototype = (FinancialElements.OhlcElement as any).prototype;
@@ -36,9 +35,9 @@ OhlcElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
   if ((this as any).count !== undefined) {
     const count = (this as any).count;
     ctx.save();
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
     ctx.fillText(`n=${count}`, x, this._yScale.getPixelForValue(high) - 10);
     ctx.restore();
   }

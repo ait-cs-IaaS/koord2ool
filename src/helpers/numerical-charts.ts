@@ -63,7 +63,7 @@ export function getActiveHistogramData(data: FilteredResponse[], questionKey: st
 
   const latestResponsesByToken: Record<string, FilteredResponse> = {};
 
-  sortedData.forEach(response => {
+  sortedData.forEach((response) => {
     if (!isResponseActive(response, endDate, expirationDays)) return;
 
     const existing = latestResponsesByToken[response.token];
@@ -73,7 +73,7 @@ export function getActiveHistogramData(data: FilteredResponse[], questionKey: st
   });
 
   const values: number[] = [];
-  Object.values(latestResponsesByToken).forEach(resp => {
+  Object.values(latestResponsesByToken).forEach((resp) => {
     const v = Number(resp.answer);
     if (!isNaN(v)) values.push(v);
   });
@@ -100,10 +100,10 @@ export function getActiveHistogramData(data: FilteredResponse[], questionKey: st
   const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
 
   return {
-    labels: binData.map(b => b.label),
+    labels: binData.map((b) => b.label),
     datasets: [
       {
-        data: binData.map(b => b.count),
+        data: binData.map((b) => b.count),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
@@ -111,7 +111,7 @@ export function getActiveHistogramData(data: FilteredResponse[], questionKey: st
         barPercentage: 0.95,
         categoryPercentage: 0.95,
         originalData: binData,
-      }
+      },
     ],
     title: shortTitle,
     subtitle: `${Object.keys(latestResponsesByToken).length} participants, ${values.length} responses`,
@@ -152,7 +152,7 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
       if (isResponseActive(response, currentDate, expirationDays)) {
         const value = Number(response.answer);
         if (!isNaN(value)) {
-          const existingIndex = activeResponses.findIndex(r => r.token === response.token);
+          const existingIndex = activeResponses.findIndex((r) => r.token === response.token);
           if (existingIndex >= 0) {
             if (response.time > activeResponses[existingIndex].time) {
               activeResponses[existingIndex] = response;
@@ -166,7 +166,7 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
     }
 
     if (activeResponses.length > 0) {
-      const values = activeResponses.map(r => Number(r.answer)).filter(v => !isNaN(v));
+      const values = activeResponses.map((r) => Number(r.answer)).filter((v) => !isNaN(v));
 
       if (values.length > 0) {
         aggregatedData[dateKey] = {
@@ -176,7 +176,7 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
           highValue: Math.max(...values),
           values: values,
           average: values.reduce((sum, val) => sum + val, 0) / values.length,
-          tokens: Array.from(activeTokens)
+          tokens: Array.from(activeTokens),
         };
       }
     }
@@ -246,7 +246,7 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
       m: +Number(median).toFixed(1),
       a: +Number(item.average).toFixed(1),
       count: item.tokens.length,
-      tokens: item.tokens
+      tokens: item.tokens,
     };
 
     datasets.push(point);
