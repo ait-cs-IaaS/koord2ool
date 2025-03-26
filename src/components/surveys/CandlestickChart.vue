@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { Chart as ChartJS, ChartOptions, ChartData, FinancialDataPoint, TooltipItem, Plugin } from "chart.js";
+import { Chart as ChartJS, ChartOptions, ChartData, TooltipItem, Plugin, FinancialDataPoint } from "chart.js";
 import { CandlestickController, CandlestickElement, OhlcController, OhlcElement } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed, watch } from "vue";
@@ -14,9 +14,20 @@ const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
 ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
 
-import * as FinancialElements from "chartjs-chart-financial";
+type CandlestickPoint = FinancialDataPoint & {
+  x: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  m?: number;
+  a?: number;
+  count?: number;
+  tokens?: string[];
+};
 
-const CandlestickElementPrototype = (FinancialElements.CandlestickElement as any).prototype;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CandlestickElementPrototype = (CandlestickElement as unknown as { prototype: any }).prototype;
 const originalDraw = CandlestickElementPrototype.draw;
 
 CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
@@ -24,8 +35,7 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
   const isFlat = open === high && high === low && low === close;
 
   const options = this.options || {};
-  const valueChange = close - open;
-  const isPositive = valueChange >= 0;
+  const isPositive = close - open >= 0;
 
   const customColors = options.color || {};
 
@@ -62,13 +72,6 @@ type CandlestickChartOptions = ChartOptions<"candlestick"> & {
   };
 };
 
-interface ExtendedFinancialDataPoint extends FinancialDataPoint {
-  m: number;
-  a: number;
-  count: number;
-  tokens: string[];
-}
-
 const medianLinesPlugin: Plugin = {
   id: "medianLines",
   afterDatasetsDraw: (chart) => {
@@ -82,8 +85,9 @@ const medianLinesPlugin: Plugin = {
     ctx.strokeStyle = "rgba(0, 0, 0, 1)";
     ctx.setLineDash([]);
 
-    dataset.data.forEach((data: any) => {
-      if (!data || typeof data !== "object" || !("m" in data) || !("x" in data)) return;
+    dataset.data.forEach((d) => {
+      const data = d as CandlestickPoint;
+      if (!data || data.m === undefined || data.x === undefined) return;
 
       const x = scales.x.getPixelForValue(data.x);
       const y = scales.y.getPixelForValue(data.m);
@@ -115,15 +119,15 @@ const averageLinePlugin: Plugin = {
     ctx.strokeStyle = "rgba(75, 192, 192, 0.7)";
     ctx.setLineDash([3, 3]);
 
-    dataset.data.forEach((data: any) => {
-      if (!data || typeof data !== "object" || !("a" in data) || !("x" in data)) return;
+    dataset.data.forEach((d) => {
+      const data = d as CandlestickPoint;
+      if (!data || data.a === undefined || data.x === undefined) return;
 
       const x = scales.x.getPixelForValue(data.x);
       const y = scales.y.getPixelForValue(data.a);
 
       if (x >= chartArea.left && x <= chartArea.right && y >= chartArea.top && y <= chartArea.bottom) {
         const candleWidth = 8;
-
         ctx.beginPath();
         ctx.moveTo(x - candleWidth / 2, y);
         ctx.lineTo(x + candleWidth / 2, y);
@@ -144,21 +148,21 @@ const enhancedColorPlugin: Plugin = {
     const dataset = chart.data.datasets[0];
 
     let maxCount = 0;
-    dataset.data.forEach((data: any) => {
-      if (data && typeof data === "object" && "count" in data) {
+    dataset.data.forEach((d) => {
+      const data = d as CandlestickPoint;
+      if (data?.count !== undefined) {
         maxCount = Math.max(maxCount, data.count);
       }
     });
 
     if (maxCount === 0) return;
 
-    dataset.data.forEach((data: any, index: number) => {
-      if (!data || typeof data !== "object" || !("count" in data)) return;
+    dataset.data.forEach((d, index) => {
+      const data = d as CandlestickPoint;
+      if (data?.count === undefined) return;
 
       const intensity = data.count / maxCount;
       const alpha = 0.3 + intensity * 0.7;
-
-      const valueChange = data.c - data.o;
 
       const element = chart.getDatasetMeta(0).data[index];
       if (element) {
@@ -204,12 +208,8 @@ export default defineComponent({
     };
 
     const processedChartData = computed(() => {
-      if (!props.chartjsData || !props.chartjsData.datasets || props.chartjsData.datasets.length === 0) {
-        return props.chartjsData;
-      }
-
-      const newData = JSON.parse(JSON.stringify(props.chartjsData));
-      return newData;
+      if (!props.chartjsData?.datasets?.length) return props.chartjsData;
+      return JSON.parse(JSON.stringify(props.chartjsData));
     });
 
     const chartPlugins = [medianLinesPlugin, averageLinePlugin, enhancedColorPlugin];
@@ -228,18 +228,14 @@ export default defineComponent({
       { deep: true, immediate: true },
     );
 
-    const minmax = computed(() => {
-      const result = store.minMaxFromDataset?.[props.questionKey];
-      return result;
-    });
+    const minmax = computed(() => store.minMaxFromDataset?.[props.questionKey]);
 
-    const formatYAxisTick = (value: string | number) => {
-      return Number(value).toFixed(1);
-    };
+    const formatYAxisTick = (value: string | number) => Number(value).toFixed(1);
 
-    const formatTooltipTitle = (items: any[]) => {
-      if (!items || items.length === 0) return "";
-      const date = new Date(items[0].parsed.x);
+    const formatTooltipTitle = (items: TooltipItem<"candlestick">[]) => {
+      if (!items?.length) return "";
+      const raw = items[0].raw as CandlestickPoint;
+      const date = new Date(raw.x);
       return date.toLocaleDateString("en-US", {
         weekday: "short",
         year: "numeric",
@@ -248,9 +244,8 @@ export default defineComponent({
       });
     };
 
-    // Updated chartOptions to exactly match the structure in line-options.ts
-    const chartOptions = computed((): CandlestickChartOptions => {
-      return {
+    const chartOptions = computed(
+      (): CandlestickChartOptions => ({
         responsive: true,
         maintainAspectRatio: false,
         elements: {
@@ -267,9 +262,7 @@ export default defineComponent({
           x: {
             offset: true,
             type: "time",
-            time: {
-              unit: "day",
-            },
+            time: { unit: "day" },
             title: {
               display: true,
               text: "Date",
@@ -279,9 +272,7 @@ export default defineComponent({
               },
             },
             ticks: {
-              font: {
-                size: fontConfig.tickLabelSize,
-              },
+              font: { size: fontConfig.tickLabelSize },
             },
           },
           y: {
@@ -296,9 +287,7 @@ export default defineComponent({
               },
             },
             ticks: {
-              font: {
-                size: fontConfig.tickLabelSize,
-              },
+              font: { size: fontConfig.tickLabelSize },
               callback: formatYAxisTick,
             },
           },
@@ -313,46 +302,31 @@ export default defineComponent({
               weight: "bold",
             },
           },
-          legend: {
-            display: false,
-          },
+          legend: { display: false },
           tooltip: {
-            titleFont: {
-              size: fontConfig.tooltipSize,
-            },
-            bodyFont: {
-              size: fontConfig.tooltipSize,
-            },
+            titleFont: { size: fontConfig.tooltipSize },
+            bodyFont: { size: fontConfig.tooltipSize },
             intersect: false,
-            mode: "index" as const,
+            mode: "index",
             displayColors: false,
             callbacks: {
               title: formatTooltipTitle,
               label(ctx: TooltipItem<"candlestick">) {
-                const point = ctx.parsed as any;
-                const dataPoint = ctx.dataset.data[ctx.dataIndex] as any;
+                const point = ctx.parsed as CandlestickPoint;
+                const dataPoint = ctx.dataset.data[ctx.dataIndex] as CandlestickPoint;
 
-                const tooltipLabels = [];
-
-                const date = new Date(dataPoint.x);
-                tooltipLabels.push(
-                  `Date: ${date.toLocaleDateString("en-US", {
+                const tooltipLabels = [
+                  `Date: ${new Date(dataPoint.x).toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
                     month: "long",
                     day: "numeric",
                   })}`,
-                );
+                  `Active responses: ${dataPoint.count}`,
+                ];
 
-                tooltipLabels.push(`Active responses: ${dataPoint.count}`);
-
-                if ("m" in dataPoint) {
-                  tooltipLabels.push(`Median: ${dataPoint.m.toFixed(2)}`);
-                }
-
-                if ("a" in dataPoint) {
-                  tooltipLabels.push(`Average: ${dataPoint.a.toFixed(2)}`);
-                }
+                if (dataPoint.m !== undefined) tooltipLabels.push(`Median: ${dataPoint.m.toFixed(2)}`);
+                if (dataPoint.a !== undefined) tooltipLabels.push(`Average: ${dataPoint.a.toFixed(2)}`);
 
                 tooltipLabels.push(
                   `Range: ${point.l.toFixed(2)} - ${point.h.toFixed(2)}`,
@@ -361,18 +335,13 @@ export default defineComponent({
                   `Change: ${(point.c - point.o).toFixed(2)}`,
                 );
 
-                if (dataPoint.tokens && dataPoint.tokens.length > 0) {
-                  tooltipLabels.push("");
-                  tooltipLabels.push("Active participants:");
-                  const maxParticipantsToShow = 5;
-                  const participants = dataPoint.tokens.slice(0, maxParticipantsToShow).map((token: string) => {
-                    return getParticipant(token);
-                  });
-
+                if (dataPoint.tokens?.length) {
+                  tooltipLabels.push("", "Active participants:");
+                  const participants = dataPoint.tokens.slice(0, 5).map(getParticipant);
                   tooltipLabels.push(...participants);
 
-                  if (dataPoint.tokens.length > maxParticipantsToShow) {
-                    tooltipLabels.push(`...and ${dataPoint.tokens.length - maxParticipantsToShow} more`);
+                  if (dataPoint.tokens.length > 5) {
+                    tooltipLabels.push(`...and ${dataPoint.tokens.length - 5} more`);
                   }
                 }
 
@@ -386,8 +355,8 @@ export default defineComponent({
           axis: "x",
           intersect: false,
         },
-      };
-    });
+      }),
+    );
 
     onMounted(async () => {
       try {
