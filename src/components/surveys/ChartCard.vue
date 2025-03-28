@@ -4,8 +4,15 @@
       <v-row class="chartrow align-stretch">
         <v-col cols="12" class="px-3 py-2">
           <v-card-title class="px-0 py-1">
-            <span class="question-id">{{ questionKey }} – </span>
-            <span class="question-title">{{ questionText }}</span>
+            <v-tooltip location="top">
+              <template #activator="{ props }">
+                <span v-bind="props">
+                  <span class="question-id">{{ questionKey }} – </span>
+                  <span class="question-title">{{ questionText }}</span>
+                </span>
+              </template>
+              <span>Question type: {{ questionType }}</span>
+            </v-tooltip>
           </v-card-title>
         </v-col>
         <v-col cols="12" class="d-flex flex-wrap pt-0 pb-3">

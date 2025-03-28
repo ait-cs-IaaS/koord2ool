@@ -27,23 +27,163 @@ interface HistogramChartData {
   subtitle: string;
 }
 
-function aggregateForHL(data: FilteredResponse[]): HLResponse[] {
-  const aggregatedData: { [key: string]: HLResponse } = {};
-  data.forEach((item) => {
-    const dateKey = item.time.toISOString().split("T")[0];
-    if (!aggregatedData[dateKey]) {
-      aggregatedData[dateKey] = {
-        token: item.token,
-        time: new Date(dateKey),
-        lowValue: Number(item.answer),
-        highValue: Number(item.answer),
-      };
-    } else {
-      const currentValue = Number(item.answer);
-      aggregatedData[dateKey].lowValue = Math.min(Number(aggregatedData[dateKey].lowValue), currentValue);
-      aggregatedData[dateKey].highValue = Math.max(Number(aggregatedData[dateKey].highValue), currentValue);
+interface ExtendedFinancialDataPoint extends FinancialDataPoint {
+  m: number;
+  a: number;
+  count: number;
+  tokens: string[];
+}
+
+interface ExtendedHLResponse extends HLResponse {
+  values: number[];
+  average: number;
+  tokens: string[];
+}
+
+export function getActiveHistogramData(data: FilteredResponse[], questionKey: string): HistogramChartData {
+  const store = useSurveyStore();
+  const expirationDays = store.settings.expirationTime;
+
+  if (data.length === 0) {
+    return {
+      labels: [],
+      datasets: [],
+      title: "No numerical data available",
+      subtitle: "",
+    };
+  }
+
+  const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
+
+  const startDate = new Date(sortedData[0].time);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = store.untilDate || new Date(sortedData[sortedData.length - 1].time);
+  endDate.setHours(23, 59, 59, 999);
+
+  const latestResponsesByToken: Record<string, FilteredResponse> = {};
+
+  sortedData.forEach((response) => {
+    if (!isResponseActive(response, endDate, expirationDays)) return;
+
+    const existing = latestResponsesByToken[response.token];
+    if (!existing || response.time > existing.time) {
+      latestResponsesByToken[response.token] = response;
     }
   });
+
+  const values: number[] = [];
+  Object.values(latestResponsesByToken).forEach((resp) => {
+    const v = Number(resp.answer);
+    if (!isNaN(v)) values.push(v);
+  });
+
+  if (values.length === 0) {
+    return {
+      labels: [],
+      datasets: [],
+      title: "No numerical data available",
+      subtitle: "",
+    };
+  }
+
+  const bins = createOptimalBins(values);
+  const binCounts = countValuesInBins(values, bins);
+  const binData = bins.map((bin, index) => ({
+    value: bin.min,
+    count: binCounts[index],
+    label: bin.label,
+    percentage: ((binCounts[index] / values.length) * 100).toFixed(1),
+  }));
+
+  const questionText = getQuestionText(questionKey);
+  const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
+
+  return {
+    labels: binData.map((b) => b.label),
+    datasets: [
+      {
+        data: binData.map((b) => b.count),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+        label: `Responses (${values.length} total)`,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+        originalData: binData,
+      },
+    ],
+    title: shortTitle,
+    subtitle: `${Object.keys(latestResponsesByToken).length} participants, ${values.length} responses`,
+  };
+}
+function isResponseActive(response: FilteredResponse, targetDate: Date, expirationDays: number): boolean {
+  const expirationTime = new Date(response.time);
+  expirationTime.setDate(expirationTime.getDate() + expirationDays);
+
+  return response.time <= targetDate && expirationTime >= targetDate;
+}
+
+function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[] {
+  const store = useSurveyStore();
+  const expirationDays = store.settings.expirationTime;
+
+  if (data.length === 0) return [];
+
+  const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
+
+  const startDate = new Date(sortedData[0].time);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(sortedData[sortedData.length - 1].time);
+  endDate.setHours(23, 59, 59, 999);
+
+  const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split("T")[0];
+    const activeResponses: FilteredResponse[] = [];
+    const activeTokens: Set<string> = new Set();
+
+    for (const response of sortedData) {
+      if (response.time > currentDate) continue;
+
+      if (isResponseActive(response, currentDate, expirationDays)) {
+        const value = Number(response.answer);
+        if (!isNaN(value)) {
+          const existingIndex = activeResponses.findIndex((r) => r.token === response.token);
+          if (existingIndex >= 0) {
+            if (response.time > activeResponses[existingIndex].time) {
+              activeResponses[existingIndex] = response;
+            }
+          } else {
+            activeResponses.push(response);
+            activeTokens.add(response.token);
+          }
+        }
+      }
+    }
+
+    if (activeResponses.length > 0) {
+      const values = activeResponses.map((r) => Number(r.answer)).filter((v) => !isNaN(v));
+
+      if (values.length > 0) {
+        aggregatedData[dateKey] = {
+          token: dateKey,
+          time: new Date(currentDate),
+          lowValue: Math.min(...values),
+          highValue: Math.max(...values),
+          values: values,
+          average: values.reduce((sum, val) => sum + val, 0) / values.length,
+          tokens: Array.from(activeTokens),
+        };
+      }
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
   return Object.values(aggregatedData);
 }
 
@@ -78,17 +218,37 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
 }
 
 export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
-  const hldata = aggregateForHL(data);
-  const datasets: FinancialDataPoint[] = [];
+  const hldata = aggregateActiveResponses(data);
+  const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
-    const point: FinancialDataPoint = {
+    const values = [...item.values].sort((a, b) => a - b);
+    const mid = Math.floor(values.length / 2);
+    let median = 0;
+
+    if (values.length === 0) {
+      median = 0;
+    } else if (values.length % 2 === 0) {
+      median = (values[mid - 1] + values[mid]) / 2;
+    } else {
+      median = values[mid];
+    }
+
+    const open = values[0] || 0;
+    const close = values[values.length - 1] || 0;
+
+    const point: ExtendedFinancialDataPoint = {
       x: item.time.getTime(),
-      o: +Number(item.lowValue).toFixed(),
-      h: +Number(item.highValue).toFixed(),
-      l: +Number(item.lowValue).toFixed(),
-      c: +Number(item.highValue).toFixed(),
+      o: +Number(open).toFixed(1),
+      h: +Number(item.highValue).toFixed(1),
+      l: +Number(item.lowValue).toFixed(1),
+      c: +Number(close).toFixed(1),
+      m: +Number(median).toFixed(1),
+      a: +Number(item.average).toFixed(1),
+      count: item.tokens.length,
+      tokens: item.tokens,
     };
+
     datasets.push(point);
   });
 
@@ -101,7 +261,6 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
     ],
   };
 }
-
 export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartDataEntry[] {
   const store = useSurveyStore();
 
@@ -249,15 +408,34 @@ function getBucketsInRange(responsesInRange: FilteredResponse[], uniqueBuckets: 
     }
 
     const roundedValue = Math.round(value);
-
     let found = false;
 
-    for (const bucket of uniqueBuckets) {
+    for (let i = 0; i < uniqueBuckets.length; i++) {
+      const bucket = uniqueBuckets[i];
       const parsed = parseBinLabel(bucket);
-      if (parsed && roundedValue >= parsed.min && roundedValue <= parsed.max) {
-        buckets[bucket]++;
-        found = true;
-        break;
+
+      if (!parsed) continue;
+      if (parsed.min === parsed.max) {
+        if (roundedValue === parsed.min) {
+          buckets[bucket]++;
+          found = true;
+          break;
+        }
+      } else {
+        if (i === uniqueBuckets.length - 1) {
+          if (roundedValue >= parsed.min && roundedValue <= parsed.max) {
+            buckets[bucket]++;
+            found = true;
+            break;
+          }
+        } else {
+          const nextBucket = parseBinLabel(uniqueBuckets[i + 1]);
+          if (nextBucket && roundedValue >= parsed.min && roundedValue < nextBucket.min) {
+            buckets[bucket]++;
+            found = true;
+            break;
+          }
+        }
       }
     }
 
@@ -353,47 +531,32 @@ export function getHistogramData(data: FilteredResponse[], questionKey: string):
   const values = valueData.map((item) => item.value);
   const uniqueTokens = new Set(valueData.map((item) => item.token)).size;
 
-  const binLabels = bucketsFromResponses(data);
+  const bins = createOptimalBins(values);
 
-  const binCounts = binLabels.map((label, index) => {
-    let count = 0;
-    const roundedValues = values.map((val) => Math.round(val));
-    const parsedBin = parseBinLabel(label);
+  const binCounts = countValuesInBins(values, bins);
 
-    if (parsedBin) {
-      const isLastBin = index === binLabels.length - 1;
-
-      count = roundedValues.filter((val) => {
-        if (parsedBin.min === parsedBin.max) {
-          return val === parsedBin.min;
-        }
-        return isLastBin ? val >= parsedBin.min && val <= parsedBin.max : val >= parsedBin.min && val < parsedBin.max;
-      }).length;
-    }
-
-    return {
-      value: parsedBin ? parsedBin.min : 0,
-      count: count,
-      label: label,
-      percentage: ((count / values.length) * 100).toFixed(1),
-    };
-  });
+  const binData = bins.map((bin, index) => ({
+    value: bin.min,
+    count: binCounts[index],
+    label: bin.label,
+    percentage: ((binCounts[index] / values.length) * 100).toFixed(1),
+  }));
 
   const questionText = getQuestionText(questionKey);
   const shortTitle = questionText.length > 40 ? questionText.substring(0, 40) + "..." : questionText;
 
   return {
-    labels: binCounts.map((item) => item.label),
+    labels: binData.map((item) => item.label),
     datasets: [
       {
-        data: binCounts.map((item) => item.count),
+        data: binData.map((item) => item.count),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
         label: `Responses (${values.length} total)`,
-        barPercentage: 0.9,
-        categoryPercentage: 0.8,
-        originalData: binCounts,
+        barPercentage: 0.95,
+        categoryPercentage: 0.95,
+        originalData: binData,
       },
     ],
     title: shortTitle,
@@ -458,6 +621,84 @@ function aggregateDataByTimeStep(
       };
     })
     .sort((a, b) => a.timestamp - b.timestamp);
+}
+function calculateFDRule(values: number[]): number {
+  const sortedValues = [...values].sort((a, b) => a - b);
+
+  const q1Index = Math.floor(sortedValues.length * 0.25);
+  const q3Index = Math.floor(sortedValues.length * 0.75);
+  const q1 = sortedValues[q1Index];
+  const q3 = sortedValues[q3Index];
+  const iqr = q3 - q1 || 1;
+  // Apply Freedman-Diaconis rule
+  const binWidth = 2 * iqr * Math.pow(values.length, -1 / 3);
+
+  return Math.max(1, binWidth);
+}
+
+function countValuesInBins(values: number[], bins: { min: number; max: number; label: string }[]): number[] {
+  const counts = Array(bins.length).fill(0);
+
+  values.forEach((value) => {
+    for (let i = 0; i < bins.length; i++) {
+      const { min, max } = bins[i];
+      if (i === bins.length - 1) {
+        if (value >= min && value <= max) {
+          counts[i]++;
+          break;
+        }
+      } else if (value >= min && value < max) {
+        counts[i]++;
+        break;
+      }
+    }
+  });
+
+  return counts;
+}
+
+function createOptimalBins(values: number[], maxBins = 10): { min: number; max: number; label: string }[] {
+  if (values.length === 0) return [];
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  if (min === max) {
+    return [{ min, max, label: `${min.toFixed(2)} - ${max.toFixed(2)}` }];
+  }
+
+  let binWidth = calculateFDRule(values);
+
+  if (values.length < 10) {
+    binWidth = Math.max(1, Math.ceil((max - min) / 5));
+  }
+  let numBins = Math.ceil((max - min) / binWidth);
+  if (numBins > maxBins) {
+    numBins = maxBins;
+    binWidth = (max - min) / numBins;
+  }
+
+  if (numBins < 2 && max - min > 1) {
+    numBins = Math.min(maxBins, Math.max(2, Math.ceil(values.length / 2)));
+    binWidth = (max - min) / numBins;
+  }
+
+  const bins = [];
+  for (let i = 0; i < numBins; i++) {
+    const binMin = min + i * binWidth;
+    const binMax = binMin + binWidth;
+
+    const binMinFormatted = binMin.toFixed(2);
+    const binMaxFormatted = (binMax - 0.01).toFixed(2);
+
+    bins.push({
+      min: binMin,
+      max: binMax,
+      label: `${binMinFormatted} - ${binMaxFormatted}`,
+    });
+  }
+
+  return bins;
 }
 
 export function getAverageLineChart(data: FilteredResponse[], questionKey?: string): ChartData<"line"> {
