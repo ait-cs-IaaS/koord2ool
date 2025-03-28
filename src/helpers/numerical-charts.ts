@@ -277,7 +277,7 @@ export function getNumericalAreaChartData(responses: FilteredResponse[]): ChartD
   return generateContinuousChartData(sortedResponses, uniqueBuckets, userLastResponse, buckets, chartData);
 }
 
-function bucketsFromResponses(data: FilteredResponse[], maxBins: number = 5): string[] {
+function bucketsFromResponses(data: FilteredResponse[], maxBins: number = 10): string[] {
   const values = data
     .map((item) => Number(item.answer))
     .filter((item) => !isNaN(item))

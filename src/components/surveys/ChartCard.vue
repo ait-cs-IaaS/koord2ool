@@ -19,14 +19,15 @@
           <div v-if="questionType === 'numerical'" class="chart-container histogram-chart px-2">
             <histogram-chart :chartjs-data="chartData" :question-type="questionType" :question-key="questionKey" />
           </div>
+          <div v-else-if="isTextQuestion" class="chart-container word-cloud-chart px-2">
+            <word-cloud-chart :raw-responses="freeTextResponses" />
+          </div>
           <div v-else class="chart-container doughnut-chart px-2">
             <doughnut-chart v-if="counters.length > 0" :counters="counters" />
             <div v-else class="no-data">No data available</div>
           </div>
 
           <div class="chart-container line-chart px-2">
-            <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
-            <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
             <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
             <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
@@ -41,6 +42,7 @@ import LineChart from "./LineChart.vue";
 import DoughnutChart from "./DoughnutChart.vue";
 import HistogramChart from "./HistogramChart.vue";
 import CandlestickChart from "./CandlestickChart.vue";
+import WordCloudChart from "./WordCloudChart.vue";
 import { computed, defineComponent } from "vue";
 import {
   getQuestionText,
@@ -49,6 +51,8 @@ import {
   createActiveNumericalData,
   createNumericChartData,
 } from "../../helpers/chartFunctions";
+import { isFreeTextQuestion } from "../../helpers/questionMapping";
+import { prepareWordCloudData } from "../../helpers/wordcloud-charts";
 import { useSurveyStore } from "../../store/surveyStore";
 
 export default defineComponent({
@@ -58,6 +62,7 @@ export default defineComponent({
     DoughnutChart,
     HistogramChart,
     CandlestickChart,
+    WordCloudChart,
   },
   props: {
     questionKey: { type: String, required: true },
@@ -77,6 +82,16 @@ export default defineComponent({
     const questionType = computed(() => {
       console.debug("Computing question type for:", props.questionKey);
       return store.getQuestionType(props.questionKey);
+    });
+    
+    const isTextQuestion = computed(() => {
+      return isFreeTextQuestion(questionType.value);
+    });
+    
+    const freeTextResponses = computed(() => {
+      if (!isTextQuestion.value) return [];
+      console.debug("Getting free text responses for:", props.questionKey);
+      return prepareWordCloudData(store.getFilteredResponses(props.questionKey));
     });
 
     const chartjsdata = computed(() => {
@@ -114,6 +129,8 @@ export default defineComponent({
       questionType,
       chartData,
       numericChartData,
+      isTextQuestion,
+      freeTextResponses,
     };
   },
 });
@@ -131,7 +148,8 @@ export default defineComponent({
   position: relative;
 }
 
-.histogram-chart {
+.histogram-chart,
+.word-cloud-chart {
   width: 39%;
   margin-right: 1%;
 }
@@ -185,6 +203,7 @@ export default defineComponent({
 @media (max-width: 959px) {
   .histogram-chart,
   .doughnut-chart,
+  .word-cloud-chart,
   .line-chart {
     width: 100%;
     margin-bottom: 20px;
