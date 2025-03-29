@@ -48,17 +48,17 @@ export function isMultipleChoiceQuestion(question_type: string): boolean {
 
 export function isFreeTextQuestion(question_type: string): boolean {
   const textQuestionTypes = [
-    'shortfreetext',
-    'longfreetext',
-    'text',
-    'huge_free_text',
-    'long_free_text',
-    'short_free_text',
-    'multiple_short_text',
-    'input_on_demand'
+    "shortfreetext",
+    "longfreetext",
+    "text",
+    "huge_free_text",
+    "long_free_text",
+    "short_free_text",
+    "multiple_short_text",
+    "input_on_demand",
   ];
 
-  return textQuestionTypes.includes(question_type.toLowerCase().replace(/\s+/g, '_'));
+  return textQuestionTypes.includes(question_type.toLowerCase().replace(/\s+/g, "_"));
 }
 
 export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {

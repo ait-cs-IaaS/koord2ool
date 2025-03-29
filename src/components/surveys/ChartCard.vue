@@ -83,11 +83,11 @@ export default defineComponent({
       console.debug("Computing question type for:", props.questionKey);
       return store.getQuestionType(props.questionKey);
     });
-    
+
     const isTextQuestion = computed(() => {
       return isFreeTextQuestion(questionType.value);
     });
-    
+
     const freeTextResponses = computed(() => {
       if (!isTextQuestion.value) return [];
       console.debug("Getting free text responses for:", props.questionKey);
