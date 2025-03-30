@@ -1,7 +1,7 @@
 <template>
   <div class="word-cloud-container">
     <div v-if="words.length > 0" ref="cloudContainer" class="word-cloud">
-      <span
+      <div
         v-for="(word, index) in words"
         :key="word.text"
         class="word"
@@ -9,19 +9,19 @@
           fontSize: `${getWordSize(word.count)}px`,
           color: getWordColor(word.count),
           opacity: wordPositions[index]?.x === -9999 ? 0 : getWordOpacity(word.count),
-          transform: wordPositions[index] ? `translate(${wordPositions[index].x}px, ${wordPositions[index].y}px)` : 'none',
+          position: 'absolute',
+          left: `${wordPositions[index]?.x || 0}px`,
+          top: `${wordPositions[index]?.y || 0}px`,
+          transform: 'translate(-50%, -50%)',
           padding: '4px',
           cursor: 'pointer',
-          position: 'absolute',
           zIndex: word.count === selectedWord?.count ? 10 : 1,
-          display: wordPositions[index]?.x === -9999 ? 'none' : 'inline-block',
-          '--x': `${wordPositions[index]?.x || 0}px`,
-          '--y': `${wordPositions[index]?.y || 0}px`,
+          display: wordPositions[index]?.x === -9999 ? 'none' : 'block',
         }"
         @click="toggleWordSelection(word)"
       >
         {{ word.text }}
-      </span>
+      </div>
     </div>
     <div v-else class="no-data">
       <p>No text data available</p>
@@ -48,12 +48,24 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, PropType, onMounted, reactive, watch } from "vue";
+import cloud from "d3-cloud";
 
 export interface WordData {
   text: string;
   count: number;
   occurrences: string[];
   fullResponses: string[];
+}
+
+interface CloudWord {
+  text: string;
+  size: number;
+  value?: number;
+  color?: string;
+  x?: number;
+  y?: number;
+  rotate?: number;
+  fullResponses?: string[];
 }
 
 export default defineComponent({
@@ -368,7 +380,6 @@ export default defineComponent({
         });
       });
 
-      // Associate full responses with each word
       for (const [word, responses] of fullResponseMap.entries()) {
         if (wordMap.has(word)) {
           wordMap.get(word)!.fullResponses = responses;
@@ -392,11 +403,7 @@ export default defineComponent({
       return Math.min(...words.value.map((w) => w.count));
     });
 
-    /**
-     * Calculate font size based on word frequency
-     * Uses logarithmic scaling to create better visual balance
-     */
-    function getWordSize(count: number) {
+    function getWordSize(count: number): number {
       const minSize = 14;
       const maxSize = 32;
 
@@ -407,13 +414,12 @@ export default defineComponent({
       const normalizedCount = (count - minCount.value) / (maxCount.value - minCount.value);
       const logScale = Math.log(1 + 9 * normalizedCount) / Math.log(10);
 
-      // Ensure the most frequent word is always maximum size
       if (count === maxCount.value) return maxSize;
 
       return minSize + logScale * (maxSize - minSize);
     }
 
-    function getWordColor(count: number) {
+    function getWordColor(count: number): string {
       const colors = [
         // Blues
         "#80c1ff",
@@ -464,200 +470,74 @@ export default defineComponent({
       return colors[colorIndex];
     }
 
-    function getWordOpacity(count: number) {
+    function getWordOpacity(count: number): number {
       if (maxCount.value === minCount.value) return 1;
 
       return 0.7 + 0.3 * ((count - minCount.value) / (maxCount.value - minCount.value));
     }
 
-    /**
-     * Main algorithm to calculate word positions without overlap
-     * Uses a combination of spiral and radial placement strategies
-     */
-    function calculateWordPositions() {
+    function calculateWordPositions(): void {
       if (!cloudContainer.value) return;
 
       const containerWidth = cloudContainer.value.clientWidth;
       const containerHeight = cloudContainer.value.clientHeight;
 
-      wordPositions.length = 0;
-
-      const centerX = containerWidth / 2;
-      const centerY = containerHeight / 2;
-
-      const maxDistanceX = containerWidth * 0.42;
-      const maxDistanceY = containerHeight * 0.38;
-      const placedWordRects: Array<{ x: number; y: number; width: number; height: number }> = [];
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d")!;
-
-      const computedStyle = getComputedStyle(document.body);
-      const fontFamily = computedStyle.fontFamily || "'Segoe UI', sans-serif";
-
-      function measureText(text: string, fontSize: number): { width: number; height: number } {
-        ctx.font = `500 ${fontSize}px ${fontFamily}`;
-        const metrics = ctx.measureText(text);
-
-        return {
-          width: metrics.width + 16,
-          height: fontSize * 1.3,
-        };
+      while (wordPositions.length > 0) {
+        wordPositions.pop();
       }
 
-      function checkOverlap(rect: { x: number; y: number; width: number; height: number }, padding: number = 7): boolean {
-        for (const placedRect of placedWordRects) {
-          if (
-            rect.x - padding < placedRect.x + placedRect.width + padding &&
-            rect.x + rect.width + padding > placedRect.x - padding &&
-            rect.y - padding < placedRect.y + placedRect.height + padding &&
-            rect.y + rect.height + padding > placedRect.y - padding
-          ) {
-            return true;
-          }
-        }
-        return false;
-      }
+      words.value.forEach(() => {
+        wordPositions.push({ x: 0, y: 0 });
+      });
 
-      /**
-       * Archimedean spiral placement algorithm
-       * Formula: r = a + b*θ where θ is the angle and r is distance from center
-       */
-      function archimedeanSpiral(t: number, spread: number = 1): [number, number] {
-        // Balance spiral growth rate based on container size
-        const growthFactor = Math.min(containerWidth, containerHeight) / 700;
-        const a = 16 * growthFactor; // Controls initial spacing
-        const b = 2.9 * growthFactor; // Controls spiral growth rate
+      const wordData: CloudWord[] = words.value.map((word) => ({
+        text: word.text,
+        size: getWordSize(word.count),
+        value: word.count,
+        color: getWordColor(word.count),
+        fullResponses: word.fullResponses,
+      }));
 
-        // Calculate spiral coordinates with customized spread
-        const angle = spread * t;
-        const x = (a + b * angle) * Math.cos(angle);
-        const y = (a + b * angle) * Math.sin(angle) * 0.68;
+      console.log(`Attempting to place ${wordData.length} words with d3-cloud`);
 
-        return [x, y];
-      }
+      const layout = cloud<CloudWord>()
+        .size([containerWidth, containerHeight])
+        .words(wordData)
+        .padding(7)
+        .rotate(0)
+        .font(getComputedStyle(document.body).fontFamily || "'Segoe UI', sans-serif")
+        .fontSize((d) => d.size)
+        .random(() => 0.5)
+        .spiral("archimedean")
+        .on("end", (computedWords: CloudWord[]) => {
+          console.log(`Successfully placed ${computedWords.length} words with d3-cloud`);
 
-      const sortedWords = [...words.value].sort((a, b) => b.count - a.count);
+          const centerX = containerWidth / 2;
+          const centerY = containerHeight / 2;
 
-      const maxWordsToShow = Math.min(Math.max(12, Math.floor((containerWidth * containerHeight) / 12000)), 45, sortedWords.length);
-
-      if (sortedWords.length > 0) {
-        const firstWord = sortedWords[0];
-        const fontSize = getWordSize(firstWord.count);
-        const { width, height } = measureText(firstWord.text, fontSize);
-
-        const centerRect = {
-          x: centerX - width / 2,
-          y: centerY - height / 2,
-          width,
-          height,
-        };
-
-        placedWordRects.push(centerRect);
-
-        wordPositions.push({
-          x: 0,
-          y: 0,
-        });
-      }
-
-      let placedCount = 1;
-      let skippedCount = 0;
-
-      const tryPlacement = (word: (typeof sortedWords)[0], fontSize: number): boolean => {
-        const { width, height } = measureText(word.text, fontSize);
-
-        for (let t = 1; t < 800; t += 0.1) {
-          for (const spread of [1.0, 0.97, 1.03, 0.94, 1.06, 0.91, 1.09]) {
-            const [spiralX, spiralY] = archimedeanSpiral(t, spread);
-
-            const x = centerX + spiralX;
-            const y = centerY + spiralY;
-
-            if (Math.abs(x - centerX) <= maxDistanceX && Math.abs(y - centerY) <= maxDistanceY) {
-              const rect = {
-                x: x - width / 2,
-                y: y - height / 2,
-                width,
-                height,
+          computedWords.forEach((word, i) => {
+            if (i < wordPositions.length && word.x !== undefined && word.y !== undefined) {
+              wordPositions[i] = {
+                x: centerX + word.x,
+                y: centerY + word.y,
               };
+            }
+          });
 
-              if (!checkOverlap(rect)) {
-                placedWordRects.push(rect);
-                wordPositions.push({
-                  x: x - centerX,
-                  y: y - centerY,
-                });
-                return true;
-              }
+          if (computedWords.length < wordPositions.length) {
+            for (let i = computedWords.length; i < wordPositions.length; i++) {
+              wordPositions[i] = {
+                x: -9999,
+                y: -9999,
+              };
             }
           }
-        }
-
-        for (let radius = 40; radius < Math.min(maxDistanceX, maxDistanceY); radius += 12) {
-          for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 18) {
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle) * 0.7;
-
-            const rect = {
-              x: x - width / 2,
-              y: y - height / 2,
-              width,
-              height,
-            };
-
-            if (!checkOverlap(rect)) {
-              placedWordRects.push(rect);
-              wordPositions.push({
-                x: x - centerX,
-                y: y - centerY,
-              });
-              return true;
-            }
-          }
-        }
-
-        return false;
-      };
-
-      for (let i = 1; i < sortedWords.length; i++) {
-        if (placedCount >= maxWordsToShow && i > sortedWords.length * 0.5) {
-          wordPositions.push({
-            x: -9999,
-            y: -9999,
-          });
-          continue;
-        }
-
-        const word = sortedWords[i];
-        const fontSize = getWordSize(word.count);
-
-        if (tryPlacement(word, fontSize)) {
-          placedCount++;
-        } else {
-          skippedCount++;
-          wordPositions.push({
-            x: -9999,
-            y: -9999,
-          });
-        }
-
-        // Early exit condition when placement becomes difficult
-        if (placedCount >= maxWordsToShow * 0.85 && skippedCount > 3) {
-          // We're close to target and having trouble placing more words
-          break;
-        }
-      }
-
-      for (let i = wordPositions.length; i < sortedWords.length; i++) {
-        wordPositions.push({
-          x: -9999,
-          y: -9999,
         });
-      }
+
+      layout.start();
     }
 
-    function toggleWordSelection(word: WordData) {
+    function toggleWordSelection(word: WordData): void {
       if (selectedWord.value === word) {
         selectedWord.value = null;
       } else {
@@ -696,6 +576,16 @@ export default defineComponent({
       }
     });
 
+    watch(
+      () => props.rawResponses,
+      () => {
+        if (words.value.length > 0 && cloudContainer.value) {
+          setTimeout(calculateWordPositions, 200);
+        }
+      },
+      { deep: true },
+    );
+
     return {
       words,
       selectedWord,
@@ -726,31 +616,18 @@ export default defineComponent({
   position: relative;
   width: 100%;
   height: 100%;
-  padding: 15px;
-  line-height: 1.1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .word {
-  transition:
-    transform 0.3s ease-out,
-    opacity 0.2s,
-    color 0.2s,
-    filter 0.2s;
+  transition: all 0.3s ease;
   font-weight: 500;
-  display: inline-block;
-  border-radius: 2px;
-  transform-origin: center center;
   white-space: nowrap;
   will-change: transform;
-  top: 50%;
-  left: 50%;
+  text-align: center;
 }
 
 .word:hover {
-  transform: translate(var(--x), var(--y)) scale(1.15) !important;
+  transform: translate(-50%, -50%) scale(1.15) !important;
   z-index: 10 !important;
   filter: brightness(1.1);
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.15);

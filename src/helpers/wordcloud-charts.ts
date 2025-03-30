@@ -12,7 +12,16 @@ export function prepareWordCloudData(responses: FilteredResponse[]): FilteredRes
 }
 
 export function isFreeTextQuestion(question_type: string): boolean {
-  const freeTextTypes = ["text", "shorttext", "longtext", "longfreetext", "textarea", "comment"];
+  const textQuestionTypes = [
+    "shortfreetext",
+    "longfreetext",
+    "text",
+    "huge_free_text",
+    "long_free_text",
+    "short_free_text",
+    "multiple_short_text",
+    "input_on_demand",
+  ];
 
-  return freeTextTypes.includes(question_type);
+  return textQuestionTypes.includes(question_type.toLowerCase().replace(/\s+/g, "_"));
 }
