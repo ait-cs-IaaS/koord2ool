@@ -76,11 +76,7 @@ export function createActiveNumericalData(questionKey: string): HistogramChartDa
   const allResponses = store.getFilteredResponses(questionKey);
   const filteredResponsesNA = filterNA(allResponses);
 
-  if (store.settings.onlyActive) {
-    return getActiveHistogramData(filteredResponsesNA, questionKey);
-  } else {
-    return getHistogramData(filteredResponsesNA, questionKey);
-  }
+  return getActiveHistogramData(filteredResponsesNA, questionKey);
 }
 
 export function getLastResponses(responses: FilteredResponse[]): FilteredResponse[] {
@@ -180,7 +176,6 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
 export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
   const store = useSurveyStore();
-  console.debug("Creating numeric chart data for:", questionKey);
 
   if (store.selectedSurveyID === undefined) {
     console.error("No survey selected");
