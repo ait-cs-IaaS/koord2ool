@@ -273,6 +273,13 @@ export default defineComponent({
             },
             ticks: {
               font: { size: fontConfig.tickLabelSize },
+              major: {
+                enabled: false,
+              },
+              maxRotation: 45,
+              autoSkip: true,
+              autoSkipPadding: 0,
+              sampleSize: 10,
             },
           },
           y: {

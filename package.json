@@ -15,7 +15,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@vueform/slider": "^2.1.10",
-    "axios": "^1.8.3",
+    "axios": "^1.8.4",
     "chart.js": "^4.4.8",
     "chartjs-adapter-moment": "^1.0.1",
     "chartjs-chart-financial": "^0.2.1",
@@ -24,25 +24,25 @@
     "vue": "^3.5.13",
     "vue-chartjs": "^5.3.2",
     "vue-router": "^4.5.0",
-    "vuetify": "^3.7.16"
+    "vuetify": "^3.7.19"
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.41",
-    "@types/node": "^22.13.10",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@types/node": "^22.13.14",
+    "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
     "@vueform/slider": "^2.1.10",
-    "eslint": "^9.22.0",
-    "eslint-plugin-vue": "^9.33.0",
+    "eslint": "^9.23.0",
+    "eslint-plugin-vue": "^10.0.0",
     "globals": "^16.0.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
-    "sass": "^1.85.1",
+    "sass": "^1.86.0",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2",
+    "vite": "^6.2.4",
     "vite-plugin-vuetify": "^2.1.0",
-    "vitest": "^3.0.8",
+    "vitest": "^3.0.9",
     "vue-tsc": "^2.2.8"
   }
 }
