@@ -1,7 +1,7 @@
 import { ChartOptions, TooltipItem } from "chart.js";
 import { useSurveyStore } from "../../store/surveyStore";
 import { getParticipant, getQuestionText } from "../../helpers/chartFunctions";
-import { FinancialDataPoint } from "chart.js";
+import { CandlestickPoint } from "../../helpers/chart-types";
 
 const store = useSurveyStore();
 
@@ -274,18 +274,6 @@ type CandlestickChartOptions = ChartOptions<"candlestick"> & {
       borderWidth?: number;
     };
   };
-};
-
-type CandlestickPoint = FinancialDataPoint & {
-  x: number;
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  m?: number;
-  a?: number;
-  count?: number;
-  tokens?: string[];
 };
 
 export const candlestickChartOptions: CandlestickChartOptions = {

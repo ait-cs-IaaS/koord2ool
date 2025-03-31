@@ -3,28 +3,17 @@
 </template>
 
 <script lang="ts">
-import { Chart as ChartJS, ChartData, Plugin, FinancialDataPoint } from "chart.js";
+import { Chart as ChartJS, ChartData, Plugin } from "chart.js";
 import { CandlestickController, CandlestickElement, OhlcController, OhlcElement } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed } from "vue";
 import "chartjs-adapter-moment";
 import { candlestickChartOptions } from "./chart-options";
+import { CandlestickPoint } from "../../helpers/chart-types";
 
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
 ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
-
-type CandlestickPoint = FinancialDataPoint & {
-  x: number;
-  o: number;
-  h: number;
-  l: number;
-  c: number;
-  m?: number;
-  a?: number;
-  count?: number;
-  tokens?: string[];
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CandlestickElementPrototype = (CandlestickElement as unknown as { prototype: any }).prototype;

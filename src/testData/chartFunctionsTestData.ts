@@ -3,6 +3,7 @@ import { ChartData, ChartDataset } from "chart.js";
 import { SurveyModel } from "../types/survey.model";
 import { QuestionModel } from "../types/question.model";
 import { Point } from "chart.js/dist/core/core.controller";
+import { CandlestickDataset, CandleStickChartData } from "../helpers/chart-types";
 
 export const responses1: ResponseModel[] = [
   {
@@ -310,7 +311,7 @@ export const chartDataSet = [
       },
     ],
     fill: true,
-    backgroundColor: "#8F1616",
+    backgroundColor: "#FF0000",
     cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
@@ -375,7 +376,7 @@ export const chartDataSet = [
       },
     ],
     fill: true,
-    backgroundColor: "#3CB371",
+    backgroundColor: "#32CD32",
     cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
@@ -440,7 +441,7 @@ export const chartDataSet = [
       },
     ],
     fill: true,
-    backgroundColor: "#A4A4A4",
+    backgroundColor: "#D0D0D0",
     cubicInterpolationMode: "monotone" as const,
     pointRadius: 1,
   },
@@ -448,7 +449,7 @@ export const chartDataSet = [
 
 export const chartDataSetFreeText: ChartDataset<"line">[] = [
   {
-    borderColor: "#3CB371",
+    borderColor: "#FF6347",
     data: [
       {
         tooltip: "Freitext Test 1234",
@@ -465,7 +466,7 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
     label: "testuser2",
   },
   {
-    borderColor: "#AC004B",
+    borderColor: "#32CD32",
     data: [
       {
         tooltip: "Erster Kommentar",
@@ -482,7 +483,7 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
     label: "testuser1",
   },
   {
-    borderColor: "#D3802B",
+    borderColor: "#9752CB",
     data: [
       {
         tooltip: "Testing comment",
@@ -499,7 +500,7 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
     label: "testuser3",
   },
   {
-    borderColor: "#DDBC42",
+    borderColor: "#AC004B",
     data: [
       {
         tooltip: "Another test comment",
@@ -511,7 +512,7 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
     label: "testuser4",
   },
   {
-    borderColor: "#313131",
+    borderColor: "#3CB371",
     data: [
       {
         tooltip: "Comment number five",
@@ -524,10 +525,198 @@ export const chartDataSetFreeText: ChartDataset<"line">[] = [
   },
 ];
 
-export const chartDataSetNumerical: ChartDataset<"bar">[] = [
+export const chartDataSetNumerical: CandlestickDataset[] = [
   {
-    data: [1, 2, 3, 4, 5, 6, 7, 8],
-    label: "G01Q04TEMP",
+    data: [
+      {
+        a: 15,
+        c: 15,
+        count: 1,
+        h: 15,
+        l: 15,
+        m: 15,
+        o: 15,
+        tokens: ["testuser2"],
+        x: 1677020400000,
+      },
+      {
+        a: 19,
+        c: 20,
+        count: 2,
+        h: 20,
+        l: 18,
+        m: 19,
+        o: 18,
+        tokens: ["testuser2", "testuser1"],
+        x: 1677106800000,
+      },
+      {
+        a: 19.8,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 18,
+        m: 19.5,
+        o: 18,
+        tokens: ["testuser2", "testuser1", "testuser3", "testuser4"],
+        x: 1677193200000,
+      },
+      {
+        a: 19,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 17,
+        m: 18.5,
+        o: 17,
+        tokens: ["testuser2", "testuser1", "testuser3", "testuser4"],
+        x: 1677279600000,
+      },
+      {
+        a: 19,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 17,
+        m: 18.5,
+        o: 17,
+        tokens: ["testuser2", "testuser1", "testuser3", "testuser4"],
+        x: 1677366000000,
+      },
+      {
+        a: 19,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 17,
+        m: 18.5,
+        o: 17,
+        tokens: ["testuser2", "testuser1", "testuser3", "testuser4"],
+        x: 1677452400000,
+      },
+      {
+        a: 19,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 17,
+        m: 18.5,
+        o: 17,
+        tokens: ["testuser2", "testuser1", "testuser3", "testuser4"],
+        x: 1677538800000,
+      },
+      {
+        a: 19,
+        c: 22,
+        count: 4,
+        h: 22,
+        l: 17,
+        m: 18.5,
+        o: 17,
+        tokens: ["testuser1", "testuser2", "testuser3", "testuser4"],
+        x: 1677625200000,
+      },
+      {
+        a: 19.3,
+        c: 22,
+        count: 3,
+        h: 22,
+        l: 17,
+        m: 19,
+        o: 17,
+        tokens: ["testuser3", "testuser4", "testuser1"],
+        x: 1677711600000,
+      },
+      {
+        a: 17,
+        c: 17,
+        count: 1,
+        h: 17,
+        l: 17,
+        m: 17,
+        o: 17,
+        tokens: ["testuser1"],
+        x: 1677798000000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1677970800000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678057200000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678143600000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678230000000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678316400000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678402800000,
+      },
+      {
+        a: 16,
+        c: 16,
+        count: 1,
+        h: 16,
+        l: 16,
+        m: 16,
+        o: 16,
+        tokens: ["testuser5"],
+        x: 1678489200000,
+      },
+    ],
+    label: "Wie warm ist es gerade draußen (°C)?",
   },
 ];
 
@@ -539,7 +728,7 @@ export const chartDataFreeText: ChartData<"line"> = {
   datasets: chartDataSetFreeText,
 };
 
-export const chartDataNumerical: ChartData<"bar"> = {
+export const chartDataNumerical: CandleStickChartData = {
   datasets: chartDataSetNumerical,
 };
 
@@ -589,16 +778,14 @@ export const authResponse = {
 
 export const expiredSessionResponse = {
   id: 2,
-  result: {
-    status: "Invalid session key",
-  },
-  error: null,
+  error: "Invalid session key",
 };
 
 export const surveyList1: SurveyModel[] = [
   {
     sid: 123456,
     surveyls_title: "Test 1",
+    compatible: true,
     startdate: null,
     expires: null,
     active: "Y",
@@ -606,6 +793,7 @@ export const surveyList1: SurveyModel[] = [
   {
     sid: 123457,
     surveyls_title: "Test Survey 2",
+    compatible: false,
     startdate: null,
     expires: null,
     active: "N",
@@ -615,6 +803,71 @@ export const surveyList1: SurveyModel[] = [
 export const surveyListResponse = {
   id: 2,
   result: surveyList1,
+  error: null,
+};
+
+export const surveyPropertiesResponse = {
+  id: 3,
+  result: {
+    sid: 123456,
+    owner_id: 1,
+    gsid: 1,
+    admin: "Admin",
+    active: "Y",
+    expires: null,
+    startdate: null,
+    adminemail: "admin@localhost",
+    anonymized: "N",
+    format: "A",
+    savetimings: "N",
+    template: "inherit",
+    language: "en",
+    additional_languages: "",
+    datestamp: "Y",
+    usecookie: "I",
+    allowregister: "I",
+    allowsave: "N",
+    autonumber_start: 0,
+    autoredirect: "I",
+    allowprev: "I",
+    printanswers: "I",
+    ipaddr: "N",
+    ipanonymize: "N",
+    refurl: "N",
+    datecreated: "2025-03-31 13:53:03",
+    showsurveypolicynotice: 0,
+    publicstatistics: "I",
+    publicgraphs: "I",
+    listpublic: "I",
+    htmlemail: "I",
+    sendconfirmation: "I",
+    tokenanswerspersistence: "I",
+    assessments: "I",
+    usecaptcha: "E",
+    usetokens: "N",
+    bounce_email: "inherit",
+    attributedescriptions: "a:0:{}",
+    emailresponseto: "inherit",
+    emailnotificationto: "inherit",
+    tokenlength: -1,
+    showxquestions: "I",
+    showgroupinfo: "I",
+    shownoanswer: "I",
+    showqnumcode: "I",
+    bouncetime: null,
+    bounceprocessing: "N",
+    bounceaccounttype: null,
+    bounceaccounthost: null,
+    bounceaccountpass: null,
+    bounceaccountencryption: null,
+    bounceaccountuser: null,
+    showwelcome: "I",
+    showprogress: "I",
+    questionindex: -1,
+    navigationdelay: -1,
+    nokeyboard: "I",
+    alloweditaftercompletion: "Y",
+  },
   error: null,
 };
 
@@ -649,7 +902,7 @@ export const questionList1: QuestionModel[] = [
     language: "en",
     qid: 5,
     parent_qid: 0,
-    sid: 944175,
+    sid: 123456,
     type: "N",
     title: "G01Q04TEMP",
     preg: "",
@@ -672,7 +925,7 @@ export const questionList1: QuestionModel[] = [
     language: "en",
     qid: 6,
     parent_qid: 0,
-    sid: 944175,
+    sid: 123456,
     type: "S",
     title: "G01Q05FREE",
     preg: "",
@@ -693,5 +946,56 @@ export const questionList1: QuestionModel[] = [
 export const questionListResponse = {
   id: 3,
   result: questionList1,
+  error: null,
+};
+
+export const questionListResponseInvalid = {
+  id: 4,
+  result: {
+    id: 5,
+    question: "Invalid Question",
+    help: "",
+    language: "en",
+    qid: 7,
+    parent_qid: 0,
+    sid: 123457,
+    type: "S",
+    title: "G02Q01INVALID",
+    preg: "",
+    other: "N",
+    mandatory: "N",
+    encrypted: "N",
+    question_order: 1,
+    scale_id: 0,
+    same_default: 0,
+    question_theme_name: "invalid",
+    modulename: "",
+    same_script: 0,
+    gid: 1,
+    relevance: "1",
+  },
+  error: null,
+};
+
+export const export_responsesResponse = {
+  id: 4,
+  result: btoa(JSON.stringify({ responses: responses1 })),
+  error: null,
+};
+
+export const listParticiepantsResponse = {
+  id: 5,
+  result: [
+    {
+      tid: 1,
+      token: "testuser1",
+      participant_info: {},
+    },
+    {
+      tid: 2,
+      token: "testuser2",
+      participant_info: {},
+    },
+  ],
   error: null,
 };

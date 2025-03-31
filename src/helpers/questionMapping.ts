@@ -1,4 +1,4 @@
-import type { QuestionPropertyModel } from "../types/question_property.model";
+import type { QuestionModel } from "../types/question.model";
 
 type ChartType = "line" | "area" | "doughnut" | "histogram" | "candlestick" | null;
 
@@ -48,8 +48,17 @@ export function isMultipleChoiceQuestion(question_type: string): boolean {
   return getChartType(question_type) === "area";
 }
 
-export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {
-  if (!Array.isArray(questions)) return true;
-  if (questions.length === 0) return true;
-  return questions.every((q) => "type" in q && isQuestionTypeSupported(q.type));
+export function checkQuestionCompatibility(questions: QuestionModel[]): boolean {
+  if (!Array.isArray(questions)) {
+    return false;
+  }
+  if (questions.length === 0) {
+    return false;
+  }
+  return questions.every((q) => {
+    if (!q.question_theme_name) {
+      return false;
+    }
+    return isQuestionTypeSupported(q.question_theme_name);
+  });
 }

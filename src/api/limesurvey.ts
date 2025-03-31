@@ -48,22 +48,22 @@ export class LimesurveyApi {
   async listSurveys(): Promise<SurveyModel[]> {
     try {
       const surveys = await this.call<SurveyModel[]>("list_surveys");
-
       if (!Array.isArray(surveys)) {
         console.error("Expected surveys to be an array but got:", surveys);
         return [];
       }
 
-      const surveysWithCompatibility = await Promise.all(
+      return await Promise.all(
         surveys.map(async (survey) => {
           const properties = await this.getSurveyProperties(survey.sid);
           const responses = await this.getResponses(survey.sid);
-          const questions = await this.getQuestionProperties(survey.sid);
-          const questionCompatible = Array.isArray(questions) ? checkQuestionCompatibility(questions) : true;
+          const questions = await this.getQuestions(survey.sid);
+          const questionCompatible = checkQuestionCompatibility(questions);
 
           const compatible = Boolean(
             properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
           );
+          //const compatible = properties
 
           return {
             ...survey,
@@ -71,8 +71,6 @@ export class LimesurveyApi {
           };
         }),
       );
-
-      return surveysWithCompatibility;
     } catch (error) {
       console.error("Error listing surveys:", error);
       return [];
@@ -103,8 +101,8 @@ export class LimesurveyApi {
     return this.call("list_questions", true, sid);
   }
 
-  async getQuestionProperties(sid: number): Promise<QuestionPropertyModel> {
-    return await this.call<QuestionPropertyModel>("get_question_properties", true, sid);
+  async getQuestionProperties(qid: number): Promise<QuestionPropertyModel> {
+    return await this.call<QuestionPropertyModel>("get_question_properties", true, qid);
   }
   async getSurveyProperties(sid: number): Promise<SurveyProperties> {
     return this.call("get_survey_properties", true, sid);

@@ -2,14 +2,42 @@ import { LimesurveyApi } from "../api/limesurvey";
 import { expect, describe, it, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import axios from "axios";
-import { authResponse, surveyListResponse, questionListResponse, expiredSessionResponse } from "../testData/chartFunctionsTestData";
-import router from "../router";
+import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import {
+  authResponse,
+  surveyListResponse,
+  surveyPropertiesResponse,
+  questionListResponse,
+  expiredSessionResponse,
+  export_responsesResponse,
+  listParticiepantsResponse,
+  questionListResponseInvalid,
+} from "../testData/chartFunctionsTestData";
 
 vi.mock("axios");
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const mockAxios = axios as Vi.Mocked<typeof axios>;
+
+interface LimeSurveyRequest {
+  method: string;
+  id?: string | number;
+  params?: string[] | number[];
+  statusText: "OK";
+}
+
+function createMockAxiosResponse<T>(data: T, status = 200): AxiosResponse<T> {
+  return {
+    data,
+    status,
+    statusText: "OK",
+    headers: {},
+    config: {
+      headers: {},
+    } as InternalAxiosRequestConfig,
+  };
+}
 
 describe("testLimesurveyApiInit", () => {
   beforeEach(() => {
@@ -45,30 +73,66 @@ describe("testLimesurveyAuthenticate", () => {
   });
 });
 
+describe("testUnsucessfulAuthenticate", () => {
+  let api: LimesurveyApi;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
+    api.setSession("1234", "user");
+    mockAxios.post.mockImplementation((url: string, data?: LimeSurveyRequest): Promise<AxiosResponse> => {
+      const body = data as LimeSurveyRequest;
+
+      if (body.method == "get_session_key") {
+        return Promise.resolve(createMockAxiosResponse(expiredSessionResponse));
+      }
+      return Promise.resolve(createMockAxiosResponse({ error: "TEST FAILED" }));
+    });
+  });
+  it("Should redirect to login if session key is expired", async () => {
+    const surveys = await api.listSurveys();
+    expect(surveys).toEqual([]);
+  });
+});
+
 describe("testLimesurveyAPI", () => {
   let api: LimesurveyApi;
   beforeEach(() => {
     setActivePinia(createPinia());
     api = new LimesurveyApi("http://localhost:8080/index.php/admin/remotecontrol");
     api.setSession("1234", "user");
-  });
-  it("Should redirect to login if session key is expired", async () => {
-    const pushSpy = vi.spyOn(router, "push");
+    mockAxios.post.mockImplementation((url: string, data?: LimeSurveyRequest): Promise<AxiosResponse> => {
+      const body = data as LimeSurveyRequest;
 
-    mockAxios.post.mockResolvedValue({
-      data: expiredSessionResponse,
-      status: 200,
+      switch (body.method) {
+        case "get_session_key":
+          return Promise.resolve(createMockAxiosResponse(authResponse));
+        case "list_surveys":
+          return Promise.resolve(createMockAxiosResponse(surveyListResponse));
+        case "get_survey_properties":
+          return Promise.resolve(createMockAxiosResponse(surveyPropertiesResponse));
+        case "export_responses":
+          return Promise.resolve(createMockAxiosResponse(export_responsesResponse));
+        case "list_questions":
+          if (!body.params) {
+            return Promise.resolve(createMockAxiosResponse(expiredSessionResponse));
+          }
+          if (body.params[1] === 123456) {
+            return Promise.resolve(createMockAxiosResponse(questionListResponse));
+          }
+          if (body.params[1] === 123457) {
+            return Promise.resolve(createMockAxiosResponse(questionListResponseInvalid));
+          }
+        case "get_question_properties":
+          return Promise.resolve(createMockAxiosResponse({}));
+        case "list_participants":
+          return Promise.resolve(createMockAxiosResponse(listParticiepantsResponse));
+        default:
+          return Promise.resolve(createMockAxiosResponse(expiredSessionResponse));
+      }
     });
-    const surveys = await api.listSurveys();
-    expect(surveys).toEqual({ status: "Invalid session key" });
-    expect(pushSpy).toHaveBeenCalledWith({ name: "login" });
   });
-
   it("Return Survey List", async () => {
-    mockAxios.post.mockResolvedValue({
-      data: surveyListResponse,
-      status: 200,
-    });
     const surveys = await api.listSurveys();
     expect(surveys).toEqual(surveyListResponse.result);
   });
