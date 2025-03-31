@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartData } from "chart.js";
 import { Doughnut } from "vue-chartjs";
-import { chartOptions } from "./doughnut-options";
+import { doughnutChartOptions } from "./chart-options";
 import { doughnutChartData } from "../../helpers/chartFunctions";
 import { defineComponent, computed, ref } from "vue";
 
@@ -23,7 +23,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const options = chartOptions;
+    const options = doughnutChartOptions;
     const chartStyle = ref({
       height: "300px",
     });

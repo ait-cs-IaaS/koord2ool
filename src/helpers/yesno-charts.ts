@@ -152,7 +152,7 @@ export function transformChartData(chartData: ChartDataEntry[]): ChartData<"line
     cubicInterpolationMode: "monotone" as const,
     label: item.name,
     data: item.data.map(([x, y]) => ({ x, y })),
-    fill: true,
+    fill: "stack",
     pointRadius: 1,
     backgroundColor: getBorderColor(item.name),
   }));

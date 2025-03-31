@@ -5,7 +5,7 @@
 <script lang="ts">
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, ChartDataset } from "chart.js";
 import { Pie } from "vue-chartjs";
-import { chartOptions } from "./pie-options";
+import { pieChartOptions } from "./chart-options";
 import { computed, defineComponent } from "vue";
 import { getBorderColor } from "../../helpers/shared-chartFunctions";
 
@@ -39,7 +39,7 @@ export default defineComponent({
       };
     });
     return {
-      options: chartOptions,
+      options: pieChartOptions,
       chartData,
     };
   },

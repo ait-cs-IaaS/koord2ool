@@ -3,13 +3,13 @@
 </template>
 
 <script lang="ts">
-import { Chart as ChartJS, ChartOptions, ChartData, TooltipItem, Plugin, FinancialDataPoint } from "chart.js";
+import { Chart as ChartJS, ChartData, Plugin, FinancialDataPoint } from "chart.js";
 import { CandlestickController, CandlestickElement, OhlcController, OhlcElement } from "chartjs-chart-financial";
 import { createTypedChart } from "vue-chartjs";
-import { defineComponent, ref, onMounted, nextTick, computed, watch } from "vue";
+import { defineComponent, ref, onMounted, nextTick, computed } from "vue";
 import "chartjs-adapter-moment";
-import { useSurveyStore } from "../../store/surveyStore";
-import { getParticipant } from "../../helpers/chartFunctions";
+import { candlestickChartOptions } from "./chart-options";
+
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
 
 ChartJS.register(CandlestickController, CandlestickElement, OhlcController, OhlcElement);
@@ -57,19 +57,6 @@ CandlestickElementPrototype.draw = function (ctx: CanvasRenderingContext2D) {
     }
     originalDraw.call(this, ctx);
   }
-};
-
-type CandlestickChartOptions = ChartOptions<"candlestick"> & {
-  elements?: {
-    candlestick?: {
-      color?: {
-        up?: string;
-        down?: string;
-        unchanged?: string;
-      };
-      borderWidth?: number;
-    };
-  };
 };
 
 const medianLinesPlugin: Plugin = {
@@ -177,13 +164,6 @@ const enhancedColorPlugin: Plugin = {
   },
 };
 
-const fontConfig = {
-  titleSize: 16,
-  axisTitleSize: 14,
-  tickLabelSize: 12,
-  tooltipSize: 13,
-};
-
 export default defineComponent({
   name: "CandleStickChartComponent",
   components: {
@@ -201,10 +181,10 @@ export default defineComponent({
   },
   setup(props) {
     const renderChart = ref(false);
-    const store = useSurveyStore();
     const chartStyle = {
+      position: "relative",
       width: "100%",
-      height: "100%",
+      height: "300px",
     };
 
     const processedChartData = computed(() => {
@@ -213,157 +193,6 @@ export default defineComponent({
     });
 
     const chartPlugins = [medianLinesPlugin, averageLinePlugin, enhancedColorPlugin];
-
-    watch(
-      () => props.chartjsData,
-      (newData) => {
-        console.debug("Candlestick data updated:", newData);
-        if (newData?.datasets?.length) {
-          const dataset = newData.datasets[0];
-          if (dataset.data?.length > 0) {
-            console.debug("Sample data point:", dataset.data[0]);
-          }
-        }
-      },
-      { deep: true, immediate: true },
-    );
-
-    const minmax = computed(() => store.minMaxFromDataset?.[props.questionKey]);
-
-    const formatYAxisTick = (value: string | number) => Number(value).toFixed(1);
-
-    const formatTooltipTitle = (items: TooltipItem<"candlestick">[]) => {
-      if (!items?.length) return "";
-      const raw = items[0].raw as CandlestickPoint;
-      const date = new Date(raw.x);
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    };
-
-    const chartOptions = computed(
-      (): CandlestickChartOptions => ({
-        responsive: true,
-        maintainAspectRatio: false,
-        elements: {
-          candlestick: {
-            color: {
-              up: "rgba(75, 192, 192, 1)",
-              down: "rgba(255, 99, 132, 1)",
-              unchanged: "rgba(150, 150, 150, 1)",
-            },
-            borderWidth: 1,
-          },
-        },
-        scales: {
-          x: {
-            offset: true,
-            type: "time",
-            time: { unit: "day" },
-            title: {
-              display: true,
-              text: "Date",
-              font: {
-                size: fontConfig.axisTitleSize,
-                weight: "bold",
-              },
-            },
-            ticks: {
-              font: { size: fontConfig.tickLabelSize },
-              major: {
-                enabled: false,
-              },
-              maxRotation: 45,
-              autoSkip: true,
-              autoSkipPadding: 0,
-              sampleSize: 10,
-            },
-          },
-          y: {
-            min: minmax.value?.min || 0,
-            max: minmax.value?.max || 200,
-            title: {
-              display: true,
-              text: "Value",
-              font: {
-                size: fontConfig.axisTitleSize,
-                weight: "bold",
-              },
-            },
-            ticks: {
-              font: { size: fontConfig.tickLabelSize },
-              callback: formatYAxisTick,
-            },
-          },
-        },
-        plugins: {
-          title: {
-            display: true,
-            text: "",
-            padding: 20,
-            font: {
-              size: fontConfig.titleSize,
-              weight: "bold",
-            },
-          },
-          legend: { display: false },
-          tooltip: {
-            titleFont: { size: fontConfig.tooltipSize },
-            bodyFont: { size: fontConfig.tooltipSize },
-            intersect: false,
-            mode: "index",
-            displayColors: false,
-            callbacks: {
-              title: formatTooltipTitle,
-              label(ctx: TooltipItem<"candlestick">) {
-                const point = ctx.parsed as CandlestickPoint;
-                const dataPoint = ctx.dataset.data[ctx.dataIndex] as CandlestickPoint;
-
-                const tooltipLabels = [
-                  `Date: ${new Date(dataPoint.x).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}`,
-                  `Active responses: ${dataPoint.count}`,
-                ];
-
-                if (dataPoint.m !== undefined) tooltipLabels.push(`Median: ${dataPoint.m.toFixed(2)}`);
-                if (dataPoint.a !== undefined) tooltipLabels.push(`Average: ${dataPoint.a.toFixed(2)}`);
-
-                tooltipLabels.push(
-                  `Range: ${point.l.toFixed(2)} - ${point.h.toFixed(2)}`,
-                  `First: ${point.o.toFixed(2)}`,
-                  `Last: ${point.c.toFixed(2)}`,
-                  `Change: ${(point.c - point.o).toFixed(2)}`,
-                );
-
-                if (dataPoint.tokens?.length) {
-                  tooltipLabels.push("", "Active participants:");
-                  const participants = dataPoint.tokens.slice(0, 5).map(getParticipant);
-                  tooltipLabels.push(...participants);
-
-                  if (dataPoint.tokens.length > 5) {
-                    tooltipLabels.push(`...and ${dataPoint.tokens.length - 5} more`);
-                  }
-                }
-
-                return tooltipLabels;
-              },
-            },
-          },
-        },
-        interaction: {
-          mode: "nearest",
-          axis: "x",
-          intersect: false,
-        },
-      }),
-    );
 
     onMounted(async () => {
       try {
@@ -374,7 +203,7 @@ export default defineComponent({
       }
     });
 
-    return { chartStyle, renderChart, chartOptions, chartPlugins, processedChartData };
+    return { chartStyle, renderChart, chartOptions: candlestickChartOptions, chartPlugins, processedChartData };
   },
 });
 </script>

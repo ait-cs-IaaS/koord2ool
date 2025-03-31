@@ -70,26 +70,20 @@ export default defineComponent({
     });
 
     const counters = computed(() => {
-      console.debug("Computing counters for:", props.questionKey);
       return countResponsesFor(props.questionKey);
     });
 
     const questionType = computed(() => {
-      console.debug("Computing question type for:", props.questionKey);
       return store.getQuestionType(props.questionKey);
     });
 
     const chartjsdata = computed(() => {
-      console.debug("Computing chart data for:", props.questionKey);
       return createTimelineFor(props.questionKey);
     });
 
     const chartData = computed(() => {
       try {
-        console.debug("Computing histogram data for:", props.questionKey);
-        const data = createActiveNumericalData(props.questionKey);
-        console.debug("Histogram data generated:", data);
-        return data;
+        return createActiveNumericalData(props.questionKey);
       } catch (e) {
         console.error("Error preparing chart data:", e);
         return { labels: [], datasets: [] };
@@ -98,7 +92,6 @@ export default defineComponent({
 
     const numericChartData = computed(() => {
       try {
-        console.debug("Computing candlestick data for:", props.questionKey);
         return createNumericChartData(props.questionKey);
       } catch (e) {
         console.error("Error preparing candlestick data:", e);

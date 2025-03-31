@@ -19,11 +19,11 @@ import {
   TooltipItem,
 } from "chart.js";
 import { Line as LineChart } from "vue-chartjs";
-import { lineChartOptions, areaChartOptions } from "./line-options";
+import { lineChartOptions, areaChartOptions } from "./chart-options";
 import { defineComponent, ref, computed, onMounted } from "vue";
 import "chartjs-adapter-moment";
 import { nextTick } from "vue";
-import { getActiveChartType } from "../../helpers/questionMapping";
+import { getChartType } from "../../helpers/questionMapping";
 import { useSurveyStore } from "../../store/surveyStore";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, TimeScale, TimeSeriesScale, Filler, Title, Tooltip, Legend);
@@ -51,15 +51,13 @@ export default defineComponent({
     const store = useSurveyStore();
     const renderChart = ref(false);
 
-    const baseOptions = computed(() => {
-      if (getActiveChartType(props.questionType) === "area") {
-        return areaChartOptions;
-      }
-      return lineChartOptions;
-    });
-
     const enhancedOptions = computed(() => {
-      const options = JSON.parse(JSON.stringify(baseOptions.value));
+      if (getChartType(props.questionType) === "line") {
+        console.debug(`Rendering line chart for question ${props.questionKey}`);
+        return lineChartOptions;
+      }
+
+      const options = JSON.parse(JSON.stringify(areaChartOptions));
 
       if (store.settings.timeFormat === "stepped") {
         if (options.plugins && options.plugins.tooltip && options.plugins.tooltip.callbacks) {
@@ -75,24 +73,6 @@ export default defineComponent({
                 return originalCallbacks.label(context);
               }
               return `${context.dataset.label || ""}: ${context.formattedValue}`;
-            },
-          };
-        }
-
-        if (options.scales && options.scales.x) {
-          options.scales.x.type = "time";
-
-          if (!options.scales.x.time) {
-            options.scales.x.time = {};
-          }
-
-          options.scales.x.time = {
-            ...options.scales.x.time,
-            displayFormats: {
-              hour: "HH:mm",
-              day: "MMM D",
-              week: "MMM D",
-              month: "MMM YYYY",
             },
           };
         }

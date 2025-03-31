@@ -1,8 +1,8 @@
 import { ChartData, ChartDataset } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
 import { responseCount, FilteredResponse } from "../types/response.model";
-import { isNumericalQuestion, isYesNoQuestion, isMultipleChoiceQuestion } from "./questionMapping";
-import { getHistogramData, getAverageLineChart, setMinMaxFromDataset, getActiveHistogramData, getOHLC } from "./numerical-charts";
+import { isNumericalQuestion, getChartType, isMultipleChoiceQuestion } from "./questionMapping";
+import { getHistogramData, getAverageLineChart, getActiveHistogramData, getOHLC } from "./numerical-charts";
 import { parseDataForAreaChart, transformChartData } from "./yesno-charts";
 import { addExpiredEntries, getBorderColor } from "./shared-chartFunctions";
 import { parseDataForFreeTextChart } from "./freetext-charts";
@@ -188,23 +188,12 @@ export function createNumericChartData(questionKey: string): ChartData<"candlest
   }
 
   const question_type = store.getQuestionType(questionKey);
-  console.debug("Question type:", question_type);
 
   const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
-  console.debug("Filtered responses count:", filteredResponses.length);
-  console.debug("Sample response:", filteredResponses.length > 0 ? JSON.stringify(filteredResponses[0]) : "None");
-
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
-    console.debug("Setting min/max for dataset");
-    setMinMaxFromDataset(filteredResponses, questionKey);
-
-    const ohlcData = getOHLC(filteredResponses, questionKey);
-    console.debug("OHLC data points:", ohlcData.datasets[0]?.data?.length || 0);
-    console.debug("Sample OHLC data point:", ohlcData.datasets[0]?.data?.[0] || "None");
-
-    return ohlcData;
+    return getOHLC(filteredResponses, questionKey);
   }
 
   console.debug("Not a numerical question, returning empty dataset");
@@ -224,14 +213,9 @@ export function createTimelineFor(questionKey: string): ChartData<"line"> {
 
   store.updateTokenMap(store.selectedSurveyID);
 
-  if (isYesNoQuestion(question_type)) {
+  if (getChartType(question_type) == "area") {
     const enrichedResponses = aggregateResponses(addExpiredEntries(filteredResponses));
-
     return transformChartData(parseDataForAreaChart(enrichedResponses));
-  }
-
-  if (isMultipleChoiceQuestion(question_type)) {
-    return transformChartData(parseDataForAreaChart(filteredResponses));
   }
 
   if (isNumericalQuestion(question_type)) {

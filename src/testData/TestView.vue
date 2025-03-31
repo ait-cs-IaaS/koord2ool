@@ -27,7 +27,7 @@ import DisplayOptions from "../components/surveys/DisplayOptions.vue";
 import { chartDataYesNo } from "./chartFunctionsTestData";
 import { createTimelineFor } from "../helpers/chartFunctions";
 import { surveyList1, questionList1, responses1 } from "../testData/chartFunctionsTestData";
-import { areaChartOptions } from "../components/surveys/line-options";
+import { areaChartOptions } from "../components/surveys/chart-options";
 import { chartOptions } from "../components/surveys/options";
 import type { ChartData } from "chart.js";
 import { useSurveyStore } from "../store/surveyStore";
