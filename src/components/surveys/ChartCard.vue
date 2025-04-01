@@ -27,8 +27,6 @@
           <div class="chart-container line-chart px-2">
             <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
             <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
-            <candlestick-chart v-if="questionType === 'numerical'" :chartjs-data="numericChartData" :question-key="questionKey" />
-            <line-chart v-else :chartjs-data="chartjsdata" :question-type="questionType" :question-key="questionKey" />
           </div>
         </v-col>
       </v-row>
