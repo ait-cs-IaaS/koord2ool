@@ -19,8 +19,10 @@
     "chart.js": "^4.4.8",
     "chartjs-adapter-moment": "^1.0.1",
     "chartjs-chart-financial": "^0.2.1",
+    "chartjs-chart-wordcloud": "^4.4.4",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",
+    "stopword": "^3.1.4",
     "vue": "^3.5.13",
     "vue-chartjs": "^5.3.2",
     "vue-router": "^4.5.0",
@@ -44,5 +46,6 @@
     "vite-plugin-vuetify": "^2.1.0",
     "vitest": "^3.0.8",
     "vue-tsc": "^2.2.8"
-  }
+  },
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
 }

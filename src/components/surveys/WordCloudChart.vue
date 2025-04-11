@@ -1,8 +1,7 @@
 <template>
   <div class="word-cloud-container">
-    <div v-if="processedWords.length > 0" class="word-cloud" ref="cloudContainer">
-      <div ref="wordCloudDiv" class="word-cloud-content">
-      </div>
+    <div v-if="processedWords.length > 0" ref="cloudContainer" class="word-cloud">
+      <div ref="wordCloudDiv" class="word-cloud-content"></div>
     </div>
     <div v-else class="no-data">
       <p>No text data available</p>
@@ -16,7 +15,7 @@
       <div v-if="selectedWord.fullResponses && selectedWord.fullResponses.length > 0" class="tooltip-responses">
         <div v-for="(response, index) in selectedWord.fullResponses.slice(0, 3)" :key="index" class="response-item">
           <div class="response-text">{{ response }}</div>
-          <div class="response-divider" v-if="index < Math.min(selectedWord.fullResponses.length - 1, 2)"></div>
+          <div v-if="index < Math.min(selectedWord.fullResponses.length - 1, 2)" class="response-divider"></div>
         </div>
         <div v-if="selectedWord.fullResponses.length > 3" class="more-responses">
           And {{ selectedWord.fullResponses.length - 3 }} more responses...
@@ -28,8 +27,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, PropType, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
-import { useSurveyStore } from '../../store/surveyStore';
+import { defineComponent, ref, computed, PropType, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
+import { eng, deu } from "stopword";
 
 export interface WordData {
   text: string;
@@ -45,93 +44,73 @@ interface Position {
 }
 
 export default defineComponent({
-  name: 'WordCloudChart',
+  name: "WordCloudChart",
   props: {
     rawResponses: {
-      type: Array as PropType<Array<{ answer: string | Record<string, string>, token: string }>>,
-      required: true
+      type: Array as PropType<Array<{ answer: string | Record<string, string>; token: string }>>,
+      required: true,
     },
-    language: {
-      type: String,
-      default: 'en'
+    languages: {
+      type: Array as PropType<string[]>,
+      default: () => ["en", "de"],
     },
     maxWords: {
       type: Number,
-      default: 35
+      default: 35,
     },
     minWordLength: {
       type: Number,
-      default: 3
-    }
+      default: 3,
+    },
   },
   setup(props) {
-    const store = useSurveyStore();
     const selectedWord = ref<WordData | null>(null);
     const cloudContainer = ref<HTMLElement | null>(null);
     const wordCloudDiv = ref<HTMLElement | null>(null);
 
-    const stopWords = new Set([
-      // English
-      'a', 'an', 'the', 'and', 'or', 'but', 'if', 'then', 'else', 'when',
-      'at', 'from', 'by', 'on', 'off', 'for', 'in', 'out', 'to', 'with',
-      'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
-      'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should', 'may',
-      'might', 'can', 'could', 'of', 'that', 'this', 'these', 'those', 'it',
-      'its', 'it\'s', 'i', 'my', 'me', 'mine', 'myself', 'you', 'your', 'yours',
-      'yourself', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
-      'we', 'us', 'our', 'ours', 'ourselves', 'they', 'them', 'their', 'theirs',
-      'themselves', 'what', 'which', 'who', 'whom', 'whose', 'where', 'when',
-      'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'some',
-      'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too',
-      'very', 'just', 'as',
+    const getStopwords = computed(() => {
+      const stopwordMap: Record<string, string[]> = {
+        en: eng,
+        de: deu,
+      };
 
-      // German
-      'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einer', 'eines',
-      'einem', 'einen', 'und', 'oder', 'aber', 'wenn', 'dann', 'als', 'als',
-      'zu', 'zur', 'zum', 'mit', 'für', 'bei', 'von', 'aus', 'durch', 'über',
-      'unter', 'um', 'an', 'auf', 'in', 'nach', 'vor', 'ist', 'sind', 'war',
-      'waren', 'wird', 'werden', 'wurde', 'wurden', 'sein', 'gewesen', 'haben',
-      'hat', 'hatte', 'hatten', 'können', 'kann', 'konnte', 'konnten', 'darf',
-      'dürfen', 'durfte', 'durften', 'muss', 'müssen', 'musste', 'mussten',
-      'soll', 'sollen', 'sollte', 'sollten', 'will', 'wollen', 'wollte',
-      'wollten', 'ich', 'mich', 'mir', 'mein', 'meine', 'du', 'dich', 'dir',
-      'dein', 'deine', 'er', 'ihn', 'ihm', 'sein', 'seine', 'sie', 'ihr', 'ihre',
-      'wir', 'uns', 'unser', 'unsere', 'ihr', 'euch', 'euer', 'eure', 'sie',
-      'ihnen', 'ihr', 'ihre', 'was', 'wer', 'wen', 'wem', 'welche', 'welcher',
-      'welches', 'wo', 'wie', 'warum', 'weshalb', 'wieso', 'dass', 'daß', 'ob',
-      'ja', 'nein', 'nicht', 'auch', 'schon', 'noch', 'nur', 'immer', 'alle',
-      'alles', 'alle', 'jeder', 'jede', 'jedes', 'man'
-    ]);
+      let stopwordsList: string[] = [];
+      props.languages.forEach((lang) => {
+        if (stopwordMap[lang]) {
+          stopwordsList = [...stopwordsList, ...stopwordMap[lang]];
+        }
+      });
+
+      return new Set(stopwordsList.map((word) => word.toLowerCase()));
+    });
 
     const processedWords = computed(() => {
       const wordMap = new Map<string, WordData>();
       const fullResponseMap = new Map<string, string[]>();
 
-      props.rawResponses.forEach(response => {
-        let text = '';
+      props.rawResponses.forEach((response) => {
+        let text = "";
 
-        if (typeof response.answer === 'string') {
+        if (typeof response.answer === "string") {
           text = response.answer;
-        } else if (typeof response.answer === 'object') {
-          text = Object.values(response.answer).join(' ');
+        } else if (typeof response.answer === "object") {
+          text = Object.values(response.answer).join(" ");
         }
 
-        if (!text || text === 'N/A') return;
+        if (!text || text === "N/A") return;
 
-        const tokens = text.toLowerCase()
-          .replace(/[^\p{L}\p{N}\s]/gu, '')
+        const tokens = text
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]/gu, "")
           .split(/\s+/)
-          .filter(word =>
-            word.length >= props.minWordLength &&
-            !stopWords.has(word.toLowerCase())
-          );
+          .filter((word) => word.length >= props.minWordLength && !getStopwords.value.has(word.toLowerCase()));
 
-        tokens.forEach(word => {
+        tokens.forEach((word) => {
           if (!wordMap.has(word)) {
             wordMap.set(word, {
               text: word,
               count: 0,
-              fullResponses: []
+              fullResponses: [],
             });
           }
 
@@ -158,12 +137,11 @@ export default defineComponent({
         .slice(0, props.maxWords);
     });
 
-
     function createWordCloud() {
       if (!wordCloudDiv.value) return;
 
       const container = wordCloudDiv.value;
-      container.innerHTML = '';
+      container.innerHTML = "";
 
       const words = processedWords.value;
       if (words.length === 0) return;
@@ -173,13 +151,13 @@ export default defineComponent({
 
       const margin = 35;
 
-      const minCount = Math.min(...words.map(w => w.count));
-      const maxCount = Math.max(...words.map(w => w.count));
+      const minCount = Math.min(...words.map((w) => w.count));
+      const maxCount = Math.max(...words.map((w) => w.count));
 
-      const measure = document.createElement('div');
-      measure.style.position = 'absolute';
-      measure.style.visibility = 'hidden';
-      measure.style.whiteSpace = 'nowrap';
+      const measure = document.createElement("div");
+      measure.style.position = "absolute";
+      measure.style.visibility = "hidden";
+      measure.style.whiteSpace = "nowrap";
       document.body.appendChild(measure);
 
       function getFontSize(count: number, index: number): number {
@@ -193,16 +171,7 @@ export default defineComponent({
         return 14 + Math.round(normalizedValue * 18);
       }
 
-      const colors = [
-        '#1a75ff',
-        '#0073e6',
-        '#0052cc',
-        '#2952a3',
-        '#304d99',
-        '#4a6bbd',
-        '#5c85d6',
-        '#0099cc',
-      ];
+      const colors = ["#1a75ff", "#0073e6", "#0052cc", "#2952a3", "#304d99", "#4a6bbd", "#5c85d6", "#0099cc"];
 
       function checkOverlap(pos1: Position, pos2: Position, buffer = 5): boolean {
         return !(
@@ -215,33 +184,35 @@ export default defineComponent({
 
       function isInBounds(pos: Position): boolean {
         return (
-          pos.x >= margin &&
-          pos.y >= margin &&
-          pos.x + pos.width <= containerWidth - margin &&
-          pos.y + pos.height <= containerHeight - margin
+          pos.x >= margin && pos.y >= margin && pos.x + pos.width <= containerWidth - margin && pos.y + pos.height <= containerHeight - margin
         );
       }
 
-      function getWordDimensions(text: string, fontSize: number, fontWeight: string, rotation: number = 0): { width: number, height: number } {
+      function getWordDimensions(
+        text: string,
+        fontSize: number,
+        fontWeight: string,
+        rotation: number = 0,
+      ): { width: number; height: number } {
         measure.textContent = text;
         measure.style.fontSize = `${fontSize}px`;
         measure.style.fontWeight = fontWeight;
-        measure.style.padding = '0';
-        measure.style.margin = '0';
-        measure.style.transform = rotation ? `rotate(${rotation}deg)` : '';
+        measure.style.padding = "0";
+        measure.style.margin = "0";
+        measure.style.transform = rotation ? `rotate(${rotation}deg)` : "";
 
         const rect = measure.getBoundingClientRect();
 
         if (Math.abs(rotation) > 0) {
           return {
-            width: rect.width + (Math.abs(rotation) * 1.2),
-            height: rect.height + (Math.abs(rotation) * 1.2)
+            width: rect.width + Math.abs(rotation) * 1.2,
+            height: rect.height + Math.abs(rotation) * 1.2,
           };
         }
 
         return {
           width: rect.width + 5,
-          height: rect.height + 5
+          height: rect.height + 5,
         };
       }
 
@@ -250,7 +221,7 @@ export default defineComponent({
         (word: WordData, index: number, rotation: number): Position[] => {
           const positions: Position[] = [];
           const fontSize = getFontSize(word.count, index);
-          const fontWeight = index < 3 ? 'bold' : 'normal';
+          const fontWeight = index < 3 ? "bold" : "normal";
           const { width, height } = getWordDimensions(word.text, fontSize, fontWeight, rotation);
 
           const centerX = containerWidth / 2;
@@ -272,7 +243,7 @@ export default defineComponent({
         (word: WordData, index: number, rotation: number): Position[] => {
           const positions: Position[] = [];
           const fontSize = getFontSize(word.count, index);
-          const fontWeight = index < 3 ? 'bold' : 'normal';
+          const fontWeight = index < 3 ? "bold" : "normal";
           const { width, height } = getWordDimensions(word.text, fontSize, fontWeight, rotation);
 
           const innerMargin = margin + 10;
@@ -290,7 +261,7 @@ export default defineComponent({
         (word: WordData, index: number, rotation: number): Position[] => {
           const positions: Position[] = [];
           const fontSize = getFontSize(word.count, index);
-          const fontWeight = index < 3 ? 'bold' : 'normal';
+          const fontWeight = index < 3 ? "bold" : "normal";
           const { width, height } = getWordDimensions(word.text, fontSize, fontWeight, rotation);
 
           const edgeMargin = margin + 5;
@@ -312,16 +283,16 @@ export default defineComponent({
           }
 
           return positions;
-        }
+        },
       ];
 
       const instructionHeight = 20;
 
       words.forEach((word, index) => {
-        const rotation = (index > 2 && Math.random() > 0.7) ? (Math.random() * 16 - 8) : 0;
+        const rotation = index > 2 && Math.random() > 0.7 ? Math.random() * 16 - 8 : 0;
 
         const fontSize = getFontSize(word.count, index);
-        const fontWeight = index < 3 ? 'bold' : 'normal';
+        const fontWeight = index < 3 ? "bold" : "normal";
         const { width, height } = getWordDimensions(word.text, fontSize, fontWeight, rotation);
 
         let colorIndex: number;
@@ -362,10 +333,11 @@ export default defineComponent({
             const centerX = containerWidth / 2;
             const centerY = containerHeight / 2;
 
-            const x = Math.max(margin, Math.min(containerWidth - width - margin,
-              centerX - width / 2 + (index - 1) * 20));
-            const y = Math.max(margin, Math.min(containerHeight - height - margin - instructionHeight,
-              centerY - height / 2 - 10 + index * 15));
+            const x = Math.max(margin, Math.min(containerWidth - width - margin, centerX - width / 2 + (index - 1) * 20));
+            const y = Math.max(
+              margin,
+              Math.min(containerHeight - height - margin - instructionHeight, centerY - height / 2 - 10 + index * 15),
+            );
 
             position = { x, y, width, height };
             foundPosition = true;
@@ -430,34 +402,34 @@ export default defineComponent({
           const x = Math.max(margin, Math.min(containerWidth - width - margin, position.x));
           const y = Math.max(margin, Math.min(containerHeight - height - margin - instructionHeight, position.y));
 
-          const wordEl = document.createElement('div');
-          wordEl.className = 'word-cloud-item';
+          const wordEl = document.createElement("div");
+          wordEl.className = "word-cloud-item";
           wordEl.textContent = word.text;
-          wordEl.style.position = 'absolute';
+          wordEl.style.position = "absolute";
           wordEl.style.left = `${x}px`;
           wordEl.style.top = `${y}px`;
           wordEl.style.fontSize = `${fontSize}px`;
           wordEl.style.fontWeight = fontWeight;
           wordEl.style.color = color;
-          wordEl.style.cursor = 'pointer';
-          wordEl.style.whiteSpace = 'nowrap';
-          wordEl.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : '';
-          wordEl.style.transformOrigin = 'center center';
-          wordEl.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          wordEl.style.cursor = "pointer";
+          wordEl.style.whiteSpace = "nowrap";
+          wordEl.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : "";
+          wordEl.style.transformOrigin = "center center";
+          wordEl.style.transition = "transform 0.2s ease, opacity 0.2s ease";
 
-          wordEl.addEventListener('mouseover', () => {
-            wordEl.style.opacity = '0.8';
-            wordEl.style.zIndex = '10';
-            wordEl.style.transform = `${wordEl.style.transform || ''} scale(1.1)`.trim();
+          wordEl.addEventListener("mouseover", () => {
+            wordEl.style.opacity = "0.8";
+            wordEl.style.zIndex = "10";
+            wordEl.style.transform = `${wordEl.style.transform || ""} scale(1.1)`.trim();
           });
 
-          wordEl.addEventListener('mouseout', () => {
-            wordEl.style.opacity = '1';
-            wordEl.style.zIndex = '';
-            wordEl.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : '';
+          wordEl.addEventListener("mouseout", () => {
+            wordEl.style.opacity = "1";
+            wordEl.style.zIndex = "";
+            wordEl.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : "";
           });
 
-          wordEl.addEventListener('click', () => {
+          wordEl.addEventListener("click", () => {
             toggleWordSelection(word);
           });
 
@@ -467,21 +439,21 @@ export default defineComponent({
             x,
             y,
             width,
-            height
+            height,
           });
         }
       });
 
       document.body.removeChild(measure);
 
-      const instructions = document.createElement('div');
-      instructions.className = 'word-cloud-instructions';
-      instructions.textContent = 'Click on a word to see related responses';
-      instructions.style.position = 'absolute';
-      instructions.style.bottom = '5px';
-      instructions.style.right = '10px';
-      instructions.style.fontSize = '12px';
-      instructions.style.color = '#777';
+      const instructions = document.createElement("div");
+      instructions.className = "word-cloud-instructions";
+      instructions.textContent = "Click on a word to see related responses";
+      instructions.style.position = "absolute";
+      instructions.style.bottom = "5px";
+      instructions.style.right = "10px";
+      instructions.style.fontSize = "12px";
+      instructions.style.color = "#777";
       container.appendChild(instructions);
     }
 
@@ -512,35 +484,42 @@ export default defineComponent({
         }, 300);
       };
 
-      window.addEventListener('resize', handleResize);
+      window.addEventListener("resize", handleResize);
 
       onBeforeUnmount(() => {
-        window.removeEventListener('resize', handleResize);
+        window.removeEventListener("resize", handleResize);
       });
     });
 
-    watch(() => processedWords.value.length, async (newCount) => {
-      if (newCount > 0) {
-        await nextTick();
-        createWordCloud();
-      }
-    });
+    watch(
+      () => processedWords.value.length,
+      async (newCount) => {
+        if (newCount > 0) {
+          await nextTick();
+          createWordCloud();
+        }
+      },
+    );
 
-    watch(() => props.rawResponses, async () => {
-      if (processedWords.value.length > 0) {
-        await nextTick();
-        createWordCloud();
-      }
-    }, { deep: true });
+    watch(
+      () => props.rawResponses,
+      async () => {
+        if (processedWords.value.length > 0) {
+          await nextTick();
+          createWordCloud();
+        }
+      },
+      { deep: true },
+    );
 
     return {
       processedWords,
       selectedWord,
       cloudContainer,
       wordCloudDiv,
-      toggleWordSelection
+      toggleWordSelection,
     };
-  }
+  },
 });
 </script>
 
