@@ -15,7 +15,7 @@ Koord2ool supports the following LimeSurvey question types:
 | Bootstrap Dropdown (`bootstrap_dropdown`) | Area     | Doughnut          |
 | List Radio (`listradio`)         | Area           | Doughnut          |
 | Numerical (`numerical`)          | Candlestick    | Histogram         |
-| Multiple Short Text (`multipleshorttext`) | Area     | Doughnut          |
+| Multiple Short Text (`multipleshorttext`) | Area     | Wordcloud          |
 | Multiple Choice (`multiplechoice`) | Area         | Doughnut          |
 
 ---
@@ -24,7 +24,7 @@ Koord2ool supports the following LimeSurvey question types:
 
 **Used for:** Yes/No, List Dropdown, Bootstrap Dropdown, List Radio, Multiple Short Text, and Multiple Choice questions  
 
-![Example Area Chart (Timeline)](images/area-chart-timeline-visualisation.png)
+![Example Area Chart (Timeline)](images/area-chart-timeline.png)
 
 ### **Visualization Details**
 - **Chart Type:** Stacked area chart  
@@ -71,56 +71,76 @@ Koord2ool supports the following LimeSurvey question types:
 
 ---
 
-## **Numerical Data Visualizations**
+## **Numerical Questions (`numerical`)**
 
-**Used for:** Numerical input questions  
-
-Koord2ool offers two visualization methods for numerical data:
-
-### **1. Scatter/Line Chart (Timeline Visualization)**
-
-_See Histogram image below for an example of how individual data points appear over time._
-
-- **Chart Type:** Scatter/Line chart  
-- **Purpose:** Track changes in numerical values and free text responses over time  
-- **Displayed Data:**  
-  - Shows individual data points across the time period  
-  - Y-axis displays either numerical values or response counts  
-  - X-axis shows dates  
-  - Data points appear as dots or circles on the chart  
-
-### **2. Histogram (Active Data)**
-
-![Example Histogram](images/histogramm-chart.png)
-
-- **Chart Type:** Bar chart histogram  
-- **Purpose:** Shows the distribution of numerical responses  
-- **Displayed Data:** Responses grouped into bins  
-
-### **Graph Interpretation (Histogram)**
-- **X-Axis:** Numerical value ranges  
-- **Y-Axis:** Number of responses per range  
-
-### **How Bins are Created**
-1. Responses are converted to numbers  
-2. The range of values is analyzed (e.g., from -40 to 40°C)  
-3. The range is divided into appropriate intervals (e.g., `-40–3`, `3–7`, `7–11`, `11–14`, `14–40`)  
-4. Responses are counted within each range  
-5. Bin labels show the range (e.g., `3–7`)  
-
-### **Tooltip Functionality**
-- Displays bin range (e.g., `3–7`, `7–11`)  
-- Shows total response count in that bin  
-- Shows percentage of total responses  
-- For the candlestick chart: shows exact values and dates  
+Numerical input questions are visualized using two chart types in Koord2ool: **Candlestick charts** for timeline-based trends and **Histograms** for active response distributions.
 
 ---
+![Example Histogram and Candlestick](images/histogram-chart.png)
+
+
+### **Timeline Chart: Candlestick Chart**
+
+- **Chart Type:** Candlestick  
+- **Purpose:** Visualize changes, spread, and trends in numerical values over time  
+- **X-Axis:** Time (per day)  
+- **Y-Axis:** Value range (dynamically scaled per dataset)  
+
+#### **Displayed Data per Day**
+- **Open:** First response value of the day  
+- **Close:** Last response value of the day  
+- **High:** Maximum value of the day  
+- **Low:** Minimum value of the day  
+- **Median:** Middle value of the sorted daily values  
+- **Average:** Mean of all active responses  
+- **Count:** Number of active responses for the day  
+
+#### **How It Works**
+- **Response Filtering:** Only responses marked as *active* on a given date are included (based on expiration window)  
+- **Grouping:** Responses are grouped by day  
+- **Aggregation:** For each day, values are sorted and used to compute open, close, min, max, median, and average  
+- **Visualization:**  
+  - Candlestick body shows open-to-close range  
+  - Wicks show min-to-max range  
+  - Median is marked with a horizontal line  
+  - Average is shown as a dashed overlay line  
+
+#### **Tooltip Functionality**
+- Full statistical breakdown for each day:
+  - Range, median, average, open, close  
+  - Number of participants  
+  - List of participant names (if enabled)
+
+---
+
+### **Active Data Chart: Histogram**
+
+- **Chart Type:** Bar chart histogram  
+- **Purpose:** Show distribution of *currently active* numerical responses  
+- **X-Axis:** Value ranges (bins)  
+- **Y-Axis:** Number of responses per bin  
+
+#### **How Bins Are Created**
+1. **Collect Responses:** Latest active numeric value per participant  
+2. **Determine Range:** From minimum to maximum value  
+3. **Calculate Bin Width:**
+   - Uses **Freedman–Diaconis rule** (based on interquartile range and sample size)  
+   - Adjusts number of bins for clarity  
+4. **Label Bins:** Each bin is labeled with a value range (e.g., `12.0 – 15.9`)  
+5. **Assign Counts:** Responses are placed into the correct bins based on their value  
+
+#### **Tooltip Functionality**
+- Displays for each bin:
+  - Range label  
+  - Number of responses  
+  - Percentage of total responses
+
 
 ## **Doughnut Charts (Active Data)**
 
 **Used for:** Current state analysis of Yes/No, List, and Multiple Choice questions  
 
-![Example Doughnut Chart](images/area-chart-timeline-visualisation.png)
+![Example Doughnut Chart](images/area-chart-timeline.png)
 
 ### **Visualization Details**
 - **Chart Type:** Doughnut chart  
@@ -138,11 +158,78 @@ _See Histogram image below for an example of how individual data points appear o
 
 ---
 
-## **Free Text Visualization**
+## **Free Text Questions (`shorttext`, `longtext`)**
 
-**Used for:** Free text response questions  
+Koord2ool supports two complementary views for analyzing free-text data:
 
-![Example Free Text Visualization](images/free-text-visualization.png)
+| Chart Type        | Context        | Description                                |
+|-------------------|----------------|--------------------------------------------|
+| Word Cloud        | Active Data    | Highlights most frequent keywords          |
+| Scatter Chart     | Timeline       | Shows when responses were submitted        |
+
+![Example Word Cloud Visualization](images/free-text-visualization.png)
+
+### **Word Cloud (Active Data)**
+
+- **Chart Type:** Word cloud  
+- **Purpose:** Highlight recurring terms in current responses  
+- **Displayed Data:** Top words extracted from currently active responses, with language-specific stopwords removed  
+- **Word Size:** Indicates how often a word appears  
+- **Colors:** Aid in visual grouping and readability  
+- **Interactivity:** Click a word to open a tooltip showing:
+  - How many times the word appears  
+  - Up to 3 sample responses using the word  
+  - A note if more responses are available  
+
+This view helps quickly identify recurring themes and frequently mentioned terms.
+
+---
+
+### **Scatter Chart (Timeline Visualization)**
+
+- **Chart Type:** Scatter chart  
+- **Purpose:** Show when individual text responses were submitted  
+- **Displayed Data:** Each point is a single text response with a timestamp  
+- **X-Axis:** Time  
+- **Y-Axis:** Participant index or response order  
+- **Tooltip:** Displays full response text, timestamp, and participant info
+
+
+**Used for:** Open-ended text response questions  
+
+Koord2ool provides two complementary visualizations for free text data:
+
+| Chart Type        | Context        | Description                                |
+|-------------------|----------------|--------------------------------------------|
+| Word Cloud        | Active Data    | Highlights most frequent keywords          |
+| Scatter Chart     | Timeline       | Shows when responses were submitted        |
+
+---
+
+
+### **Visualization Details**
+- **Chart Type:** Word cloud  
+- **Purpose:** Highlight the most frequent keywords from recent participant responses  
+- **Displayed Data:** Top words extracted from currently active responses, with stopwords removed based on selected languages  
+
+### **Graph Interpretation**
+- **Word Size:** Represents frequency — larger words appear more often  
+- **Colors:** Aid in visual grouping and distinction  
+- **Layout:** Dynamically positioned to maximize readability and avoid overlap  
+
+### **Tooltip & Interaction Functionality**
+- **Click a word** to view a tooltip showing:
+  - The number of times the word appears  
+  - Up to 3 full-text responses that include the word  
+  - A note if more responses are available  
+
+This view helps surface common themes and frequently mentioned terms at a glance.
+
+---
+
+### **2. Scatter Chart (Timeline Visualization)**
+
+![Example Free Text Timeline Visualization](images/free-text-visualization.png)
 
 ### **Visualization Details**
 - **Chart Type:** Scatter chart with data points  
@@ -157,8 +244,6 @@ _See Histogram image below for an example of how individual data points appear o
 ### **Tooltip Functionality**
 - Displays the full text response  
 - Shows submission timestamp and participant information  
-
----
 
 ## **Settings and Customizations**
 
