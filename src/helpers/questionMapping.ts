@@ -67,5 +67,4 @@ export function checkQuestionCompatibility(questions: Array<{ type: string } | Q
   if (!Array.isArray(questions)) return true;
   if (questions.length === 0) return true;
   return questions.every((q) => "type" in q && isQuestionTypeSupported(q.type));
-
 }
