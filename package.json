@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/chart.js": "^2.9.41",
     "@types/node": "^22.13.14",
+    "@types/stopword": "^2.0.3",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
@@ -45,5 +46,6 @@
     "vite-plugin-vuetify": "^2.1.0",
     "vitest": "^3.0.9",
     "vue-tsc": "^2.2.8"
-  }
+  },
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
 }

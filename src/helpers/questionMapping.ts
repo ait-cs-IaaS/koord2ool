@@ -1,5 +1,3 @@
-import type { QuestionModel } from "../types/question.model";
-
 type ChartType = "line" | "area" | "doughnut" | "histogram" | "candlestick" | null;
 
 const QUESTION_TYPE_MAPPING: Record<string, ChartType> = {
