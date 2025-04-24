@@ -262,23 +262,19 @@ export const useSurveyStore = defineStore(
         questionKeys.value = [];
         questionKeysWithSubquestions.value = [];
 
-        for (let question of rawQuestions) {
-          if (question.parent_qid === 0) {
-            if (!questionKeys.value.includes(question.title)) {
-              questionKeys.value.push(question.title);
-            }
+        for (const question of rawQuestions) {
+          if (question.parent_qid === 0 && !questionKeys.value.includes(question.title)) {
+            questionKeys.value.push(question.title);
           }
 
           if (question.question_theme_name && isMultipleChoiceQuestion(question.question_theme_name)) {
-            question = await refreshQuestionProperties(question);
-            if (question.available_answers !== undefined) {
-              const newKeys = Object.keys(question.available_answers).filter((key) => !questionKeysWithSubquestions.value.includes(key));
-              questionKeysWithSubquestions.value.push(...newKeys);
-            }
-          } else if (question.parent_qid === 0) {
-            if (!questionKeysWithSubquestions.value.includes(question.title)) {
-              questionKeysWithSubquestions.value.push(question.title);
-            }
+            // question = await refreshQuestionProperties(question);
+            // if (question.available_answers !== undefined) {
+            //   const newKeys = Object.keys(question.available_answers).filter((key) => !questionKeysWithSubquestions.value.includes(key));
+            //   questionKeysWithSubquestions.value.push(...newKeys);
+            // }
+          } else if (question.parent_qid === 0 && !questionKeysWithSubquestions.value.includes(question.title)) {
+            questionKeysWithSubquestions.value.push(question.title);
           }
           asRecord[question.title] = question;
         }

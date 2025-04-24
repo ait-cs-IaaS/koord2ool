@@ -1,4 +1,4 @@
-import { ChartData } from "chart.js";
+import { ChartData, FinancialDataPoint } from "chart.js";
 
 export interface HistogramBin {
   value: number;
@@ -55,3 +55,25 @@ export interface TabularViewHeader {
   align: "start" | "end";
   sortable: boolean;
 }
+
+export type CandlestickDataset = {
+  label: string;
+  data: CandlestickPoint[];
+};
+
+export type CandleStickChartData = {
+  datasets: CandlestickDataset[];
+  title?: string;
+};
+
+export type CandlestickPoint = FinancialDataPoint & {
+  x: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  m?: number;
+  a?: number;
+  count?: number;
+  tokens?: string[];
+};

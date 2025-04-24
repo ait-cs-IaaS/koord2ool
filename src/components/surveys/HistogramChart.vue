@@ -10,7 +10,8 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { Bar } from "vue-chartjs";
-import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartOptions, ChartData } from "chart.js";
+import { Chart as ChartJS, Title, Tooltip, TooltipItem, Legend, BarElement, CategoryScale, LinearScale, ChartData } from "chart.js";
+import { histogramChartOptions } from "./chart-options";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 import { HistogramChartData } from "../../helpers/chart-types";
@@ -68,80 +69,22 @@ export default defineComponent({
       }, 0);
     });
 
-    const chartOptions = computed((): ChartOptions<"bar"> => {
-      return {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: {
-            display: !!props.chartjsData.title,
-            text: props.chartjsData.title || "",
-            font: {
-              size: 14,
-              weight: "bold",
-            },
+    const chartOptions = computed(() => {
+      const baseOptions = JSON.parse(JSON.stringify(histogramChartOptions));
+      baseOptions.plugins.tooltip = {
+        callbacks: {
+          title(tooltipItems: TooltipItem<"bar">[]) {
+            return `${tooltipItems[0].label}`;
           },
-          subtitle: {
-            display: !!props.chartjsData.subtitle,
-            text: props.chartjsData.subtitle || "",
-            font: {
-              size: 12,
-            },
-            padding: {
-              bottom: 10,
-            },
-          },
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            callbacks: {
-              title(tooltipItems) {
-                return `${tooltipItems[0].label}`;
-              },
-              label(context) {
-                const count = context.parsed.y;
-                const percentage = totalResponses.value > 0 ? ((count / totalResponses.value) * 100).toFixed(1) : "0";
+          label(context: TooltipItem<"bar">) {
+            const count = context.parsed.y;
+            const percentage = totalResponses.value > 0 ? ((count / totalResponses.value) * 100).toFixed(1) : "0";
 
-                return [`Count: ${count} out of ${totalResponses.value}`, `Percentage: ${percentage}%`];
-              },
-            },
+            return [`Count: ${count} out of ${totalResponses.value}`, `Percentage: ${percentage}%`];
           },
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "Number of Responses",
-              font: {
-                weight: "bold",
-                size: 12,
-              },
-            },
-            ticks: {
-              precision: 0,
-            },
-          },
-          x: {
-            title: {
-              display: true,
-              text: "Values",
-              font: {
-                weight: "bold",
-                size: 12,
-              },
-            },
-            ticks: {
-              font: {
-                size: 10,
-              },
-              minRotation: 0,
-              maxRotation: 0,
-            },
-          },
-        },
-      } as ChartOptions<"bar">;
+      };
+      return baseOptions;
     });
 
     return {

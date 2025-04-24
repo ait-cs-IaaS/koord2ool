@@ -17,6 +17,8 @@ services:
     working_dir: /usr/src
     entrypoint: /bin/sh -c 'npm install -g corepack@latest && corepack enable && pnpm run dev'
     environment:
+      - COREPACK_ENABLE_AUTO_PIN=0
+      - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
       - VITE_APP_LIMESURVEY_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
       - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
       - VITE_APP_LIMESURVEY_API=/api/limesurvey/admin/remotecontrol

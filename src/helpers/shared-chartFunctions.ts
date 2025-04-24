@@ -1,8 +1,12 @@
-import { chartColors } from "../components/surveys/colors";
+import { chartColors } from "./colors";
 import { FilteredResponse } from "../types/response.model";
 import { useSurveyStore } from "../store/surveyStore";
 
-const keyToColorMap: Record<string, string> = {};
+const keyToColorMap: Record<string, string> = {
+  "N/A": "#D0D0D0",
+  Yes: "#32CD32",
+  No: "#FF0000",
+};
 
 export type ChartDataEntry = {
   name: string;

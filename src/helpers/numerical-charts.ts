@@ -188,6 +188,7 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
 }
 
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
+  // TODO: Remove seems to be obsolete
   const store = useSurveyStore();
   const minMax: { min: number; max: number } = { min: Infinity, max: -Infinity };
 
