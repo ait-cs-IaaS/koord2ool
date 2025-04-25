@@ -21,6 +21,7 @@
     "chartjs-chart-financial": "^0.2.1",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",
+    "stopword": "^3.1.4",
     "vue": "^3.5.13",
     "vue-chartjs": "^5.3.2",
     "vue-router": "^4.5.0",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@types/chart.js": "^2.9.41",
     "@types/node": "^22.13.14",
+    "@types/stopword": "^2.0.3",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",

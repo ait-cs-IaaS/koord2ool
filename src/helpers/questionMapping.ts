@@ -1,5 +1,3 @@
-import type { QuestionModel } from "../types/question.model";
-
 type ChartType = "line" | "area" | "doughnut" | "histogram" | "candlestick" | null;
 
 const QUESTION_TYPE_MAPPING: Record<string, ChartType> = {
@@ -48,17 +46,23 @@ export function isMultipleChoiceQuestion(question_type: string): boolean {
   return getChartType(question_type) === "area";
 }
 
-export function checkQuestionCompatibility(questions: QuestionModel[]): boolean {
-  if (!Array.isArray(questions)) {
-    return false;
-  }
-  if (questions.length === 0) {
-    return false;
-  }
-  return questions.every((q) => {
-    if (!q.question_theme_name) {
-      return false;
-    }
-    return isQuestionTypeSupported(q.question_theme_name);
-  });
+export function isFreeTextQuestion(question_type: string): boolean {
+  const textQuestionTypes = [
+    "shortfreetext",
+    "longfreetext",
+    "text",
+    "huge_free_text",
+    "long_free_text",
+    "short_free_text",
+    "multiple_short_text",
+    "input_on_demand",
+  ];
+
+  return textQuestionTypes.includes(question_type.toLowerCase().replace(/\s+/g, "_"));
+}
+
+export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {
+  if (!Array.isArray(questions)) return true;
+  if (questions.length === 0) return true;
+  return questions.every((q) => "type" in q && isQuestionTypeSupported(q.type));
 }
