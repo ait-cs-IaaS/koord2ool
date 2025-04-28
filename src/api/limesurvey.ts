@@ -58,7 +58,7 @@ export class LimesurveyApi {
           const properties = await this.getSurveyProperties(survey.sid);
           const responses = await this.getResponses(survey.sid);
           const questions = await this.getQuestions(survey.sid);
-          const questionCompatible = checkQuestionCompatibility(questions);
+          const questionCompatible = checkQuestionCompatibility(questions.map((q) => ({ type: q.type || "" })));
 
           const compatible = Boolean(
             properties.anonymized === "N" && properties.datestamp === "Y" && responses.length > 0 && questionCompatible,
