@@ -11,20 +11,12 @@ services:
     restart: unless-stopped
 
   koordtool:
-    image: node:22
-    volumes:
-     - .:/usr/src/
-    working_dir: /usr/src
-    entrypoint: /bin/sh -c 'npm install -g corepack@latest && corepack enable && pnpm run dev'
+    image: ghcr.io/ait-cs-iaas/koord2ool:latest
     environment:
-      - COREPACK_ENABLE_AUTO_PIN=0
-      - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-      - VITE_APP_LIMESURVEY_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
-      - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
-      - VITE_APP_LIMESURVEY_PASSWORD=${AUTOLOGIN_PASSWORD}
-      - VITE_APP_LIMESURVEY_LOGIN=${AUTOLOGIN_USER}
+      - LIMESURVEY_RPC_API=https://lime.taranis.ai/index.php/admin/remotecontrol
+      # - BASE_URI=/koordtool/
     ports:
-      - "5173:5173"
+      - "${KOORDTOOL_PORT:-8081}:80"
 
   limesurvey:
     image: martialblog/limesurvey:latest

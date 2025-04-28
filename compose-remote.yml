@@ -1,0 +1,26 @@
+services:
+  entrypoint:
+    image: nginx
+    volumes:
+    - ./dev/nginx_dev_remote.conf:/etc/nginx/conf.d/default.conf
+    ports:
+    - "${ENTRYPOINT_PORT:-8080}:80"
+    depends_on:
+    - koordtool
+    restart: unless-stopped
+
+  koordtool:
+    image: node:22
+    volumes:
+     - .:/usr/src/
+    working_dir: /usr/src
+    entrypoint: /bin/sh -c 'npm install -g corepack@latest && corepack enable && pnpm run dev'
+    environment:
+      - COREPACK_ENABLE_AUTO_PIN=0
+      - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+      - VITE_APP_LIMESURVEY_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
+      - LIMESURVEY_RPC_API=${LIMESURVEY_RPC_API:-http://localhost:8080/index.php/admin/remotecontrol}
+      - VITE_APP_LIMESURVEY_PASSWORD=${AUTOLOGIN_PASSWORD}
+      - VITE_APP_LIMESURVEY_LOGIN=${AUTOLOGIN_USER}
+    ports:
+      - "5173:5173"
