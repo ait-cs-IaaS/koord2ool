@@ -35,6 +35,8 @@ jobs:
         run: pnpm install
       - name: lint with eslint
         run: pnpm run lint_and_format
+      - name: test build
+        run: pnpm run build
 
   build:
     name: build docker
