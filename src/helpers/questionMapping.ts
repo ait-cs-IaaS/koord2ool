@@ -1,3 +1,4 @@
+import { QuestionPropertyModel } from "../types/question_property.model";
 type ChartType = "line" | "area" | "doughnut" | "histogram" | "candlestick" | null;
 
 const QUESTION_TYPE_MAPPING: Record<string, ChartType> = {
