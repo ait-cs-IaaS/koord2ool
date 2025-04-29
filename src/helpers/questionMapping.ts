@@ -47,6 +47,21 @@ export function isMultipleChoiceQuestion(question_type: string): boolean {
   return getChartType(question_type) === "area";
 }
 
+function normalizeQuestionType(limeType: string): string {
+  const mapping: Record<string, string> = {
+    T: "longfreetext",
+    S: "shortfreetext",
+    "5": "list_dropdown",
+    Y: "yesno",
+    N: "numerical",
+    M: "multiplechoice",
+    L: "listradio",
+    O: "list_dropdown",
+    "!": "unsupported",
+  };
+  return mapping[limeType] || limeType;
+}
+
 export function isFreeTextQuestion(question_type: string): boolean {
   const textQuestionTypes = [
     "shortfreetext",
@@ -58,12 +73,11 @@ export function isFreeTextQuestion(question_type: string): boolean {
     "multiple_short_text",
     "input_on_demand",
   ];
-
   return textQuestionTypes.includes(question_type.toLowerCase().replace(/\s+/g, "_"));
 }
 
 export function checkQuestionCompatibility(questions: Array<{ type: string } | QuestionPropertyModel> | { status: string }): boolean {
   if (!Array.isArray(questions)) return true;
   if (questions.length === 0) return true;
-  return questions.every((q) => "type" in q && isQuestionTypeSupported(q.type));
+  return questions.some((q) => "type" in q && isQuestionTypeSupported(normalizeQuestionType(q.type)));
 }
