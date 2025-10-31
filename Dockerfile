@@ -1,4 +1,4 @@
-FROM node:22 AS builder
+FROM node:24 AS builder
 ARG VITE_APP_LIMESURVEY_API='${LIMESURVEY_RPC_API}'
 ARG BASE_URI='/__KOORD_BASEURI__/'
 ENV NODE_OPTIONS="--openssl-legacy-provider"
