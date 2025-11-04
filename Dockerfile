@@ -4,7 +4,7 @@ ARG BASE_URI='/__KOORD_BASEURI__/'
 ENV NODE_OPTIONS="--openssl-legacy-provider"
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN npm install -g corepack@latest && corepack enable
+RUN npm install -g corepack@latest && corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /usr/src/koordtool
 COPY . /usr/src/koordtool
 RUN pnpm install --frozen-lockfile &&\

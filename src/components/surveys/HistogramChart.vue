@@ -77,7 +77,7 @@ export default defineComponent({
             return `${tooltipItems[0].label}`;
           },
           label(context: TooltipItem<"bar">) {
-            const count = context.parsed.y;
+            const count = context.parsed.y || 0;
             const percentage = totalResponses.value > 0 ? ((count / totalResponses.value) * 100).toFixed(1) : "0";
 
             return [`Count: ${count} out of ${totalResponses.value}`, `Percentage: ${percentage}%`];

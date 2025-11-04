@@ -2,7 +2,7 @@ import { ResponseModel, FilteredResponse } from "../types/response.model";
 import { ChartData, ChartDataset } from "chart.js";
 import { SurveyModel } from "../types/survey.model";
 import { QuestionModel } from "../types/question.model";
-import { Point } from "chart.js/dist/core/core.controller";
+type Point = { x: number; y: number; tooltip?: string };
 import { CandlestickDataset, CandleStickChartData } from "../helpers/chart-types";
 
 export const responses1: ResponseModel[] = [
