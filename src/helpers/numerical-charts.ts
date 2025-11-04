@@ -1,6 +1,6 @@
 import { ChartData, FinancialDataPoint } from "chart.js";
 import { FilteredResponse, HLResponse } from "../types/response.model";
-import { useSurveyStore } from "../store/surveyStore";
+import { useSurveyStore, type TimeUnit } from "../store/surveyStore";
 import { getQuestionText } from "./chartFunctions";
 import { initializeUserLastResponse, sortResponsesByTime, ChartDataEntry, initializeChartData } from "./shared-chartFunctions";
 
@@ -38,7 +38,11 @@ interface ExtendedHLResponse extends HLResponse {
   values: number[];
   average: number;
   tokens: string[];
+  openValue: number;
+  closeValue: number;
 }
+
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export function getActiveHistogramData(data: FilteredResponse[], questionKey: string): HistogramChartData {
   const store = useSurveyStore();
@@ -127,64 +131,126 @@ function isResponseActive(response: FilteredResponse, targetDate: Date, expirati
 function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[] {
   const store = useSurveyStore();
   const expirationDays = store.settings.expirationTime;
+  const expirationMs = expirationDays * DAY_IN_MS;
+  let timeUnit = store.getTimeStepUnit as TimeUnit;
+  timeUnit = timeUnit === "minute" ? "hour" : timeUnit;
+  const bucketDurationMs = getBucketDuration(timeUnit);
 
   if (data.length === 0) return [];
 
-  const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
+  const numericResponses = sortResponsesByTime(
+    data.filter((response) => typeof response.answer === "string" && !isNaN(Number(response.answer))),
+  );
 
-  const startDate = new Date(sortedData[0].time);
-  startDate.setHours(0, 0, 0, 0);
+  if (numericResponses.length === 0) return [];
 
-  const endDate = new Date(sortedData[sortedData.length - 1].time);
-  endDate.setHours(23, 59, 59, 999);
+  const rangeStart = alignToUnit(store.fromDate, timeUnit);
+  const rangeEndMs = store.untilDate.getTime();
 
-  const aggregatedData: { [key: string]: ExtendedHLResponse } = {};
-  const currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    const dateKey = currentDate.toISOString().split("T")[0];
-    const activeResponses: FilteredResponse[] = [];
-    const activeTokens: Set<string> = new Set();
-
-    for (const response of sortedData) {
-      if (response.time > currentDate) continue;
-
-      if (isResponseActive(response, currentDate, expirationDays)) {
-        const value = Number(response.answer);
-        if (!isNaN(value)) {
-          const existingIndex = activeResponses.findIndex((r) => r.token === response.token);
-          if (existingIndex >= 0) {
-            if (response.time > activeResponses[existingIndex].time) {
-              activeResponses[existingIndex] = response;
-            }
-          } else {
-            activeResponses.push(response);
-            activeTokens.add(response.token);
-          }
-        }
-      }
-    }
-
-    if (activeResponses.length > 0) {
-      const values = activeResponses.map((r) => Number(r.answer)).filter((v) => !isNaN(v));
-
-      if (values.length > 0) {
-        aggregatedData[dateKey] = {
-          token: dateKey,
-          time: new Date(currentDate),
-          lowValue: Math.min(...values),
-          highValue: Math.max(...values),
-          values: values,
-          average: values.reduce((sum, val) => sum + val, 0) / values.length,
-          tokens: Array.from(activeTokens),
-        };
-      }
-    }
-
-    currentDate.setDate(currentDate.getDate() + 1);
+  if (bucketDurationMs <= 0) {
+    return [];
   }
 
-  return Object.values(aggregatedData);
+  const activeByToken = new Map<string, FilteredResponse>();
+  const aggregatedData: ExtendedHLResponse[] = [];
+
+  let responseIndex = 0;
+
+  const rangeStartMs = rangeStart.getTime();
+  if (rangeStartMs > rangeEndMs) {
+    return [];
+  }
+
+  while (responseIndex < numericResponses.length && numericResponses[responseIndex].time.getTime() < rangeStartMs) {
+    activeByToken.set(numericResponses[responseIndex].token, numericResponses[responseIndex]);
+    responseIndex++;
+  }
+
+  for (
+    let bucketStart = new Date(rangeStart);
+    bucketStart.getTime() <= rangeEndMs;
+    bucketStart = new Date(bucketStart.getTime() + bucketDurationMs)
+  ) {
+    const bucketStartMs = bucketStart.getTime();
+    const bucketEndMs = Math.min(bucketStartMs + bucketDurationMs - 1, rangeEndMs);
+    const bucketEnd = new Date(bucketEndMs);
+
+    while (responseIndex < numericResponses.length && numericResponses[responseIndex].time.getTime() <= bucketEndMs) {
+      activeByToken.set(numericResponses[responseIndex].token, numericResponses[responseIndex]);
+      responseIndex++;
+    }
+
+    for (const [token, response] of activeByToken.entries()) {
+      const expiresAt = response.time.getTime() + expirationMs;
+      if (expiresAt < bucketStartMs) {
+        activeByToken.delete(token);
+      }
+    }
+
+    const activeEntries = Array.from(activeByToken.values()).map((response) => ({
+      token: response.token,
+      value: Number(response.answer),
+      time: response.time,
+    }));
+
+    const validEntries = activeEntries.filter((entry) => !isNaN(entry.value));
+
+    if (validEntries.length === 0) {
+      continue;
+    }
+
+    const values = validEntries.map((entry) => entry.value);
+    const sortedByValue = [...values].sort((a, b) => a - b);
+    const sortedByTime = [...validEntries].sort((a, b) => a.time.getTime() - b.time.getTime());
+    const average = values.reduce((sum, val) => sum + val, 0) / values.length;
+
+    const bucketToken = timeUnit === "day" ? bucketEnd.toISOString().split("T")[0] : bucketEnd.toISOString();
+
+    aggregatedData.push({
+      token: bucketToken,
+      time: bucketEnd,
+      lowValue: sortedByValue[0],
+      highValue: sortedByValue[sortedByValue.length - 1],
+      values,
+      average,
+      tokens: validEntries.map((entry) => entry.token),
+      openValue: sortedByTime[0].value,
+      closeValue: sortedByTime[sortedByTime.length - 1].value,
+    });
+  }
+
+  return aggregatedData;
+}
+
+function getBucketDuration(unit: TimeUnit): number {
+  switch (unit) {
+    case "minute":
+      return 60 * 1000;
+    case "hour":
+      return 60 * 60 * 1000;
+    case "day":
+      return DAY_IN_MS;
+    default:
+      return DAY_IN_MS;
+  }
+}
+
+function alignToUnit(date: Date, unit: TimeUnit): Date {
+  const aligned = new Date(date);
+
+  switch (unit) {
+    case "minute":
+      aligned.setSeconds(0, 0);
+      break;
+    case "hour":
+      aligned.setMinutes(0, 0, 0);
+      break;
+    default:
+      aligned.setHours(0, 0, 0, 0);
+      break;
+  }
+
+  return aligned;
 }
 
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
@@ -223,27 +289,25 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
   const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
-    const values = [...item.values].sort((a, b) => a - b);
-    const mid = Math.floor(values.length / 2);
+    console.debug(`Processing date: ${item.time.toISOString()}, values: ${item.values.length}`);
+    const sortedValues = [...item.values].sort((a, b) => a - b);
+    const mid = Math.floor(sortedValues.length / 2);
     let median = 0;
 
-    if (values.length === 0) {
+    if (sortedValues.length === 0) {
       median = 0;
-    } else if (values.length % 2 === 0) {
-      median = (values[mid - 1] + values[mid]) / 2;
+    } else if (sortedValues.length % 2 === 0) {
+      median = (sortedValues[mid - 1] + sortedValues[mid]) / 2;
     } else {
-      median = values[mid];
+      median = sortedValues[mid];
     }
-
-    const open = values[0] || 0;
-    const close = values[values.length - 1] || 0;
 
     const point: ExtendedFinancialDataPoint = {
       x: item.time.getTime(),
-      o: +Number(open).toFixed(1),
+      o: +Number(item.openValue).toFixed(1),
       h: +Number(item.highValue).toFixed(1),
       l: +Number(item.lowValue).toFixed(1),
-      c: +Number(close).toFixed(1),
+      c: +Number(item.closeValue).toFixed(1),
       m: +Number(median).toFixed(1),
       a: +Number(item.average).toFixed(1),
       count: item.tokens.length,
@@ -357,7 +421,7 @@ function generateSteppedChartData(
 
   while (currentTime <= untilDate) {
     const responsesInRange = responses.filter(
-      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 60 * 1000),
+      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 1000),
     );
 
     getBucketsInRange(responsesInRange, uniqueBuckets, buckets);
@@ -579,7 +643,7 @@ function aggregateDataByTimeStep(
   }
 
   const sortedData = [...data].sort((a, b) => a.time.getTime() - b.time.getTime());
-  const stepMilliseconds = stepHours * 60 * 60 * 1000;
+  const stepMilliseconds = stepHours * 60 * 1000;
   const timeGroups: Record<
     string,
     {
@@ -704,7 +768,7 @@ function createOptimalBins(values: number[], maxBins = 10): { min: number; max: 
 
 export function getAverageLineChart(data: FilteredResponse[], questionKey?: string): ChartData<"line"> {
   const store = useSurveyStore();
-  const stepHours = store.settings.step || 24;
+  const stepHours = store.settings.step * 60 || 24;
 
   const aggregatedPoints = aggregateDataByTimeStep(data, stepHours);
 

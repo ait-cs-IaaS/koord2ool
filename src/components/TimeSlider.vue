@@ -21,7 +21,7 @@ export default defineComponent({
 
     const minValue = ref(Math.round(getMidnight(getMinResponseDate.value).getTime()));
     const maxValue = ref(Math.round(getMidnightTomrrow(getMaxResponseDate.value).getTime()));
-    const stepSize = ref(settings.value.step * 3600 * 1000);
+    const stepSize = ref(settings.value.step * 60 * 1000);
 
     function getMidnight(date: Date): Date {
       return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

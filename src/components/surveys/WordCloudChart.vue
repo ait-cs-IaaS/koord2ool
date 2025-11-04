@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, PropType, onMounted, watch, nextTick, onBeforeUnmount } from "vue";
+import { defineComponent, ref, computed, PropType, onMounted, watch, nextTick } from "vue";
 import { eng, deu } from "stopword";
 
 export interface WordData {
@@ -485,10 +485,6 @@ export default defineComponent({
       };
 
       window.addEventListener("resize", handleResize);
-
-      onBeforeUnmount(() => {
-        window.removeEventListener("resize", handleResize);
-      });
     });
 
     watch(

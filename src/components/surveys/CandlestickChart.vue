@@ -8,7 +8,7 @@ import { CandlestickController, CandlestickElement, OhlcController, OhlcElement 
 import { createTypedChart } from "vue-chartjs";
 import { defineComponent, ref, onMounted, nextTick, computed } from "vue";
 import "chartjs-adapter-moment";
-import { candlestickChartOptions } from "./chart-options";
+import { useCandlestickChartOptions } from "./chart-options";
 import { CandlestickPoint } from "../../helpers/chart-types";
 
 const CandleChart = createTypedChart("candlestick", CandlestickElement);
@@ -170,6 +170,7 @@ export default defineComponent({
   },
   setup(props) {
     const renderChart = ref(false);
+    const chartOptions = useCandlestickChartOptions();
     const chartStyle = {
       position: "relative",
       width: "100%",
@@ -192,7 +193,9 @@ export default defineComponent({
       }
     });
 
-    return { chartStyle, renderChart, chartOptions: candlestickChartOptions, chartPlugins, processedChartData };
+    console.debug(processedChartData.value);
+
+    return { chartStyle, renderChart, chartOptions, chartPlugins, processedChartData };
   },
 });
 </script>

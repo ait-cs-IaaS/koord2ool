@@ -47,19 +47,24 @@ const step = {
   title: "Time step",
   options: [
     {
+      text: "15 minutes",
+      value: 15,
+    },
+    {
+      text: "30 minutes",
+      value: 30,
+    },
+    {
       text: "1 hour",
-      icon: "mdi-numeric-1",
-      value: 1,
+      value: 60,
     },
     {
       text: "6 hours",
-      icon: "mdi-numeric-6",
-      value: 6,
+      value: 360,
     },
     {
       text: "24 hours",
-      icon: "mdi-hours-24",
-      value: 24,
+      value: 1440,
     },
   ],
 };

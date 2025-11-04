@@ -10,6 +10,7 @@ import { createPinia, defineStore, type Pinia } from "pinia";
 import { ref, computed } from "vue";
 import { SettingsModel } from "../types/settings.model";
 import { isMultipleChoiceQuestion } from "../helpers/questionMapping";
+export type TimeUnit = "millisecond" | "second" | "minute" | "hour" | "day" | "week" | "month" | "quarter" | "year";
 
 /** Pinia Store */
 const pinia: Pinia = createPinia();
@@ -28,7 +29,7 @@ export const useSurveyStore = defineStore(
     const questions = ref<Record<number, Record<string, QuestionModel>>>({});
     const surveys = ref<Record<number, SurveyModel>>({});
     const settings = ref<SettingsModel>({
-      step: 6,
+      step: 60,
       onlyActive: true,
       timeFormat: "real",
       expirationTime: 7,
@@ -39,6 +40,7 @@ export const useSurveyStore = defineStore(
     const responseRange = ref<number[]>([0, new Date().getTime()]);
     const selectedSurveyID = ref<number | undefined>(undefined);
     const minMaxFromDataset = ref<Record<string, { min: number; max: number }>>({});
+    const pendingRequests = ref(0);
 
     const getSurveys = computed<number[]>(() => Object.values(surveys.value).map((survey) => survey.sid));
 
@@ -141,6 +143,19 @@ export const useSurveyStore = defineStore(
       return new Date(new Date().getTime() - settings.value.expirationTime * 24 * 60 * 60 * 1000);
     });
 
+    const getTimeStepUnit = computed<TimeUnit>(() => {
+      const rangeInMs = untilDate.value.getTime() - fromDate.value.getTime();
+      const halfDayInMs = 12 * 60 * 60 * 1000;
+      const twoDaysInMs = 4 * halfDayInMs;
+      if (rangeInMs < halfDayInMs) {
+        return "minute";
+      }
+      if (rangeInMs <= twoDaysInMs) {
+        return "hour";
+      }
+      return "day";
+    });
+
     const responsesInTimeline = computed<ResponseModel[]>(() => {
       if (typeof selectedSurveyID.value === "undefined") {
         return [] as ResponseModel[];
@@ -150,6 +165,25 @@ export const useSurveyStore = defineStore(
         return fromDate.value <= thisTime && thisTime <= untilDate.value;
       });
     });
+
+    const isLoading = computed(() => pendingRequests.value > 0);
+
+    function beginRequest() {
+      pendingRequests.value += 1;
+    }
+
+    function finishRequest() {
+      pendingRequests.value = Math.max(0, pendingRequests.value - 1);
+    }
+
+    async function trackRequest<T>(callback: () => Promise<T>): Promise<T> {
+      beginRequest();
+      try {
+        return await callback();
+      } finally {
+        finishRequest();
+      }
+    }
 
     function getFilteredResponses(qid: string): FilteredResponse[] {
       return responsesInTimeline.value
@@ -188,8 +222,8 @@ export const useSurveyStore = defineStore(
     }
 
     async function refreshSurveys(): Promise<void> {
-      const surveys = await api.listSurveys();
-      updateSurveyList(surveys);
+      const fetchedSurveys = await trackRequest(() => api.listSurveys());
+      updateSurveyList(fetchedSurveys);
     }
 
     async function refreshSurvey(surveyId: number): Promise<void> {
@@ -209,23 +243,23 @@ export const useSurveyStore = defineStore(
     }
 
     async function refreshQuestions(sid: number): Promise<QuestionModel[]> {
-      const questions = await api.getQuestions(sid);
+      const questions = await trackRequest(() => api.getQuestions(sid));
       await updateQuestions(sid, questions);
       return questions;
     }
 
     async function refreshQuestionProperties(question: QuestionModel): Promise<QuestionModel> {
-      const question_properties = await api.getQuestionProperties(question.qid);
+      const question_properties = await trackRequest(() => api.getQuestionProperties(question.qid));
       return updateQuestionProperties({ question_properties }, question);
     }
 
     async function refreshResponses(sid: number): Promise<void> {
-      responses.value[sid] = await api.getResponses(sid);
+      responses.value[sid] = await trackRequest(() => api.getResponses(sid));
       responseRange.value[1] = maxResponseDate(responses.value[sid]).getTime();
     }
 
     async function refreshParticipants(sid: number): Promise<void> {
-      participants.value[sid] = await api.getParticipants(sid);
+      participants.value[sid] = await trackRequest(() => api.getParticipants(sid));
     }
 
     function updateQuestionProperties(payload: { question_properties: QuestionPropertyModel }, question: QuestionModel): QuestionModel {
@@ -318,6 +352,7 @@ export const useSurveyStore = defineStore(
       surveys.value = {};
       tokenMap.value = {};
       minMaxFromDataset.value = {};
+      pendingRequests.value = 0;
     }
 
     return {
@@ -338,9 +373,11 @@ export const useSurveyStore = defineStore(
       getSettings,
       surveyLinks,
       questionCount,
+      isLoading,
       submitDateMatch,
       getMinResponseDate,
       getMaxResponseDate,
+      getTimeStepUnit,
       fromDate,
       untilDate,
       questionKeys,
@@ -348,6 +385,7 @@ export const useSurveyStore = defineStore(
       getExpireDate,
       minMaxFromDataset,
       responsesInTimeline,
+      pendingRequests,
       setMinMax,
       getQuestionType,
       getFilteredResponses,

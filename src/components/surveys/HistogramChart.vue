@@ -10,11 +10,11 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { Bar } from "vue-chartjs";
-import { Chart as ChartJS, Title, Tooltip, TooltipItem, Legend, BarElement, CategoryScale, LinearScale, ChartData } from "chart.js";
-import { histogramChartOptions } from "./chart-options";
+import { Chart as ChartJS, Title, Tooltip, TooltipItem, Legend, BarElement, CategoryScale, LinearScale } from "chart.js";
+import { useHistogramChartOptions } from "./chart-options";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
-import { HistogramChartData } from "../../helpers/chart-types";
+import { HistogramChartData, toChartJsData, StrictChartData } from "../../helpers/chart-types";
 
 export default defineComponent({
   name: "HistogramChart",
@@ -37,20 +37,18 @@ export default defineComponent({
     const hasData = computed((): boolean => {
       return props.chartjsData?.datasets?.[0]?.data?.length > 0;
     });
+    const baseOptions = useHistogramChartOptions();
 
     const noDataMessage = computed((): string => {
       return props.chartjsData?.title || "Not enough data to display histogram";
     });
 
-    const chartData = computed((): ChartData<"bar"> => {
+    const chartData = computed((): StrictChartData => {
       if (!hasData.value) {
         return { labels: [], datasets: [] };
       }
 
-      return {
-        labels: props.chartjsData.labels || [],
-        datasets: props.chartjsData.datasets,
-      };
+      return toChartJsData(props.chartjsData);
     });
 
     const totalResponses = computed((): number => {
@@ -70,8 +68,7 @@ export default defineComponent({
     });
 
     const chartOptions = computed(() => {
-      const baseOptions = JSON.parse(JSON.stringify(histogramChartOptions));
-      baseOptions.plugins.tooltip = {
+      const tooltip = {
         callbacks: {
           title(tooltipItems: TooltipItem<"bar">[]) {
             return `${tooltipItems[0].label}`;
@@ -84,7 +81,14 @@ export default defineComponent({
           },
         },
       };
-      return baseOptions;
+
+      return {
+        ...baseOptions.value,
+        plugins: {
+          ...(baseOptions.value.plugins ?? {}),
+          tooltip,
+        },
+      };
     });
 
     return {

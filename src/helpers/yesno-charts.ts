@@ -74,7 +74,7 @@ function generateSteppedChartData(
 
   while (currentTime <= untilDate) {
     const responsesInRange = responses.filter(
-      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 60 * 1000),
+      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 1000),
     );
 
     updateCountersForRange(responsesInRange, userLastResponse, counters);

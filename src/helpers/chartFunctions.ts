@@ -162,7 +162,7 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
 
   data.forEach((item) => {
     const lastResponse = aggregatedData.find(
-      (response) => response.token === item.token && response.time.getTime() + step * 60 * 60 * 1000 > item.time.getTime(),
+      (response) => response.token === item.token && response.time.getTime() + step * 60 * 1000 > item.time.getTime(),
     );
 
     if (!lastResponse) {
