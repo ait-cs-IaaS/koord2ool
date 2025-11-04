@@ -10,10 +10,11 @@ COPY . /usr/src/koordtool
 RUN pnpm install --frozen-lockfile &&\
     pnpm run build --base=${BASE_URI}
 
-FROM nginx:stable-alpine
+FROM nginx:mainline
+
 WORKDIR /usr
 ARG BASE_URI=/
-COPY nginx_static.conf /etc/nginx/conf.d/default.conf
+COPY nginx_static.conf.template /etc/nginx/default.conf.template
 
 COPY base_uri_envsubst_entrypoint.sh /docker-entrypoint.d/40-base_uri_envsubst.sh
 COPY api_endpoint_envsubst_entrypoint.sh /docker-entrypoint.d/50-api_endpoint_envsubst.sh

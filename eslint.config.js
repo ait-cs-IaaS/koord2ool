@@ -8,13 +8,13 @@ export default defineConfigWithVueTs(pluginVue.configs["flat/recommended"], vueT
     ecmaVersion: 2022,
     sourceType: "module",
     parserOptions: {
-      project: "./tsconfig.json",
+      projectService: true,
     },
     globals: {
       ...globals.node,
     },
   },
-  files: ["**/*.ts", "**/*.vue"],
+  files: ["src/**/*.ts", "src/**/*.vue"],
   rules: {
     "space-before-function-paren": 0,
     "vue/valid-v-slot": ["error", { allowModifiers: true }],

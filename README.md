@@ -40,21 +40,20 @@ These two variables can also be used as [Build arguments](https://docs.docker.co
 
 ### Build via Docker
 
-**Example**
-```
-docker build --build-arg BASE_URI=/koord2ool/ -t koord2ool .
+```bash
+docker build -t koord2ool .
 ```
 
 ### Build From Source
 
 Koord2ool can also be built from source, following steps are necesarry.
 
-- Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
-- Run `pnpm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
-- Run `pnpm run build`. Generated files are available in the dist folder and can be pushed to the web server.
-- Server files from `dist` folder with any web server (e.g., nginx)
-- Install and Configure LimeSurvey
-- Login with LimeSurvey Credentials
+* Node 16 is required. Node v17+ works but may need `NODE_OPTIONS=--openssl-legacy-provider` set as an env var.
+* Run `pnpm install`.Optionally set `VITE_APP_LIMESURVEY_API` and install dependencies with npm install.
+* Run `pnpm run build`. Generated files are available in the dist folder and can be pushed to the web server.
+* Server files from `dist` folder with any web server (e.g., nginx)
+* Install and Configure LimeSurvey
+* Login with LimeSurvey Credentials
 
 ## LimeSurvey
 
@@ -89,17 +88,15 @@ can be associated with a source.
 If you want to be able to allow users to update their responses, set the following options
 in "Participants settings":
 
-- "Allow multiple responses or update responses with one access code" should be ON, and
-- "Enable participant-based response persistence" should be ON as well, and 
-- Set "Closed-access mode" in the "Survey participants" menu.
+* "Allow multiple responses or update responses with one access code" should be ON, and
+* "Enable participant-based response persistence" should be ON as well, and
+* Set "Closed-access mode" in the "Survey participants" menu.
 
 **Important:** You must turn "Anonymized responses" *off*, and turn "Date stamp" *on*.
 Otherwise, LimeSurvey will not store submission times and sets it to January 1, 1980.
 
 Currently only the following [question types](https://manual.limesurvey.org/Question_types/en) are supported: "yesno", "list_dropdown", "bootstrap_dropdown", "listradio", "numerical"
   "multipleshorttext", "multiplechoice", "shortfreetext", "longfreetext"
-
-
 
 ### Changing a Survey
 
@@ -112,16 +109,16 @@ If you are changing an already active survey, use the following approach:
   1. stop the survey: this will prompt LimeSurvey to move already submitted responses to an archive.
   2. apply changes to the survey as needed.
   3. re-activate the survey. You can now restore previous participant tokens and responses.
-      - you can restore previous participants using the "Survey participants" menu item.
-      - you may be able to restore previous responses by using the "Import responses from a deactivated survey table" menu item.
+      * you can restore previous participants using the "Survey participants" menu item.
+      * you may be able to restore previous responses by using the "Import responses from a deactivated survey table" menu item.
 
 ## Contributors
 
 Have a look at our [Contribution guidelines](https://github.com/ait-cs-IaaS/.github/blob/master/CONTRIBUTING.md) tips on how to contribute.
 
-- **Martin Galusinski**: [inert]
-- **Manuel Warum**: [inert]
-- **Benjamin Akhras**: [active]
+* **Martin Galusinski**: [inert]
+* **Manuel Warum**: [inert]
+* **Benjamin Akhras**: [active]
 
 ### EU Funding
 
