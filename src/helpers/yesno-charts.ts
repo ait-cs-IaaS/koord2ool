@@ -70,17 +70,22 @@ function generateSteppedChartData(
   const store = useSurveyStore();
   const { step } = store.settings;
   const { fromDate, untilDate } = store;
+  const safeStepMinutes = Math.max(step, 1);
+  const stepDurationMs = safeStepMinutes * 60 * 1000;
   const currentTime = new Date(fromDate.getTime());
 
   while (currentTime <= untilDate) {
-    const responsesInRange = responses.filter(
-      (response) => response.time >= currentTime && response.time < new Date(currentTime.getTime() + step * 60 * 1000),
-    );
+    const bucketStartTime = currentTime.getTime();
+    const bucketEndTime = bucketStartTime + stepDurationMs;
+    const responsesInRange = responses.filter((response) => {
+      const responseTime = response.time.getTime();
+      return responseTime >= bucketStartTime && responseTime < bucketEndTime;
+    });
 
     updateCountersForRange(responsesInRange, userLastResponse, counters);
-    addCurrentCountersToChartData(currentTime, uniqueValues, counters, chartData);
+    addCurrentCountersToChartData(new Date(bucketStartTime), uniqueValues, counters, chartData);
 
-    currentTime.setHours(currentTime.getHours() + step);
+    currentTime.setTime(bucketEndTime);
   }
 
   return chartData;
