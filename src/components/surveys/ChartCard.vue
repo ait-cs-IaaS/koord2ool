@@ -106,11 +106,10 @@ export default defineComponent({
     });
 
     const numericChartData = computed(() => {
-      const timestamp = new Date().toISOString();
       const rangeEnd = store.responseRange[1];
       const ud = rangeEnd !== undefined ? new Date(rangeEnd) : store.getMaxResponseDate;
       const fd = store.fromDate;
-      
+
       try {
         return createNumericChartData(props.questionKey, fd, ud);
       } catch (e) {

@@ -135,7 +135,6 @@ export const useSurveyStore = defineStore(
 
     const untilDate = computed<Date>(() => {
       const rangeEnd = responseRange.value[1];
-      const timestamp = new Date().toISOString();
       if (rangeEnd === undefined) {
         const maxDate = getMaxResponseDate.value;
         return maxDate;
@@ -229,9 +228,9 @@ export const useSurveyStore = defineStore(
           ...survey,
           ...(typeof surveys.value[survey.sid] !== "undefined"
             ? {
-              details: surveys.value[survey.sid].details,
-              questions: surveys.value[survey.sid].questions,
-            }
+                details: surveys.value[survey.sid].details,
+                questions: surveys.value[survey.sid].questions,
+              }
             : {}),
         };
       }

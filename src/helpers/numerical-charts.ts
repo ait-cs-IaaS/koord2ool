@@ -235,24 +235,6 @@ function getBucketDuration(unit: TimeUnit): number {
   }
 }
 
-function alignToUnit(date: Date, unit: TimeUnit): Date {
-  const aligned = new Date(date);
-
-  switch (unit) {
-    case "minute":
-      aligned.setSeconds(0, 0);
-      break;
-    case "hour":
-      aligned.setMinutes(0, 0, 0);
-      break;
-    default:
-      aligned.setHours(0, 0, 0, 0);
-      break;
-  }
-
-  return aligned;
-}
-
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
   // TODO: Remove seems to be obsolete
   const store = useSurveyStore();
