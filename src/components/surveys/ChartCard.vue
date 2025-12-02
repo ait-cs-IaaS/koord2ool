@@ -7,7 +7,7 @@
             <v-tooltip location="top">
               <template #activator="{ props }">
                 <span v-bind="props">
-                  <span class="question-id">{{ questionKey }} – </span>
+                  <span class="question-id">{{ questionKey }} â€“ </span>
                   <span class="question-title">{{ questionText }}</span>
                 </span>
               </template>
@@ -106,8 +106,13 @@ export default defineComponent({
     });
 
     const numericChartData = computed(() => {
+      const timestamp = new Date().toISOString();
+      const rangeEnd = store.responseRange[1];
+      const ud = rangeEnd !== undefined ? new Date(rangeEnd) : store.getMaxResponseDate;
+      const fd = store.fromDate;
+      
       try {
-        return createNumericChartData(props.questionKey);
+        return createNumericChartData(props.questionKey, fd, ud);
       } catch (e) {
         console.error("Error preparing candlestick data:", e);
         return { datasets: [] };

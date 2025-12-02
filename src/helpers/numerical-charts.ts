@@ -128,7 +128,7 @@ function isResponseActive(response: FilteredResponse, targetDate: Date, expirati
   return response.time <= targetDate && expirationTime >= targetDate;
 }
 
-function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[] {
+function aggregateActiveResponses(data: FilteredResponse[], fromDate: Date, untilDate: Date): ExtendedHLResponse[] {
   const store = useSurveyStore();
   const expirationDays = store.settings.expirationTime;
   const expirationMs = expirationDays * DAY_IN_MS;
@@ -144,8 +144,8 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
 
   if (numericResponses.length === 0) return [];
 
-  const rangeStart = alignToUnit(store.fromDate, timeUnit);
-  const rangeEndMs = store.untilDate.getTime();
+  const rangeStart = new Date(fromDate);
+  const rangeEndMs = untilDate.getTime();
 
   if (bucketDurationMs <= 0) {
     return [];
@@ -284,12 +284,11 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
   store.setMinMax(minMax, questionKey);
 }
 
-export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
-  const hldata = aggregateActiveResponses(data);
+export function getOHLC(data: FilteredResponse[], questionKey: string, fromDate: Date, untilDate: Date): ChartData<"candlestick"> {
+  const hldata = aggregateActiveResponses(data, fromDate, untilDate);
   const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
-    console.debug(`Processing date: ${item.time.toISOString()}, values: ${item.values.length}`);
     const sortedValues = [...item.values].sort((a, b) => a - b);
     const mid = Math.floor(sortedValues.length / 2);
     let median = 0;

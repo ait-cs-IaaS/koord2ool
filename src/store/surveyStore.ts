@@ -122,7 +122,8 @@ export const useSurveyStore = defineStore(
       if (typeof responses.value[selectedSurveyID.value] === "undefined") {
         return new Date();
       }
-      return maxResponseDate(responses.value[selectedSurveyID.value]);
+      const maxDate = maxResponseDate(responses.value[selectedSurveyID.value]);
+      return maxDate;
     });
 
     const fromDate = computed<Date>(() => {
@@ -133,10 +134,14 @@ export const useSurveyStore = defineStore(
     });
 
     const untilDate = computed<Date>(() => {
-      if (responseRange.value[1] === undefined) {
-        return getMaxResponseDate.value;
+      const rangeEnd = responseRange.value[1];
+      const timestamp = new Date().toISOString();
+      if (rangeEnd === undefined) {
+        const maxDate = getMaxResponseDate.value;
+        return maxDate;
       }
-      return new Date(responseRange.value[1]);
+      const result = new Date(rangeEnd);
+      return result;
     });
 
     const getExpireDate = computed<Date>(() => {
@@ -197,6 +202,18 @@ export const useSurveyStore = defineStore(
         .sort((a, b) => a.time.valueOf() - b.time.valueOf());
     }
 
+    function getAllResponses(qid: string): FilteredResponse[] {
+      return getResponses.value
+        .map((response) => {
+          if (isMultipleChoiceQuestion(getQuestionType(qid))) {
+            const { available_answers } = getQuestions.value[qid];
+            return multipleChoiceResponseMapper(available_answers || qid, response);
+          }
+          return responseMapper(qid, response);
+        })
+        .sort((a, b) => a.time.valueOf() - b.time.valueOf());
+    }
+
     function getQuestionType(qid: string): string {
       const question = getQuestions.value[qid];
       if (question === undefined || question.question_theme_name === undefined) {
@@ -212,9 +229,9 @@ export const useSurveyStore = defineStore(
           ...survey,
           ...(typeof surveys.value[survey.sid] !== "undefined"
             ? {
-                details: surveys.value[survey.sid].details,
-                questions: surveys.value[survey.sid].questions,
-              }
+              details: surveys.value[survey.sid].details,
+              questions: surveys.value[survey.sid].questions,
+            }
             : {}),
         };
       }
@@ -389,6 +406,7 @@ export const useSurveyStore = defineStore(
       setMinMax,
       getQuestionType,
       getFilteredResponses,
+      getAllResponses,
       updateSurveyList,
       refreshSurvey,
       refreshSurveys,

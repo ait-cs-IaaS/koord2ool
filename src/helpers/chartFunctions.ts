@@ -174,7 +174,7 @@ export function aggregateResponses(data: FilteredResponse[]): FilteredResponse[]
   return aggregatedData;
 }
 
-export function createNumericChartData(questionKey: string): ChartData<"candlestick"> {
+export function createNumericChartData(questionKey: string, fromDate: Date, untilDate: Date): ChartData<"candlestick"> {
   const store = useSurveyStore();
 
   if (store.selectedSurveyID === undefined) {
@@ -184,11 +184,11 @@ export function createNumericChartData(questionKey: string): ChartData<"candlest
 
   const question_type = store.getQuestionType(questionKey);
 
-  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+  const allResponses = aggregateResponses(store.getAllResponses(questionKey));
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
-    return getOHLC(filteredResponses, questionKey);
+    return getOHLC(allResponses, questionKey, fromDate, untilDate);
   }
 
   console.debug("Not a numerical question, returning empty dataset");
