@@ -106,12 +106,8 @@ export default defineComponent({
     });
 
     const numericChartData = computed(() => {
-      const rangeEnd = store.responseRange[1];
-      const ud = rangeEnd !== undefined ? new Date(rangeEnd) : store.getMaxResponseDate;
-      const fd = store.fromDate;
-
       try {
-        return createNumericChartData(props.questionKey, fd, ud);
+        return createNumericChartData(props.questionKey);
       } catch (e) {
         console.error("Error preparing candlestick data:", e);
         return { datasets: [] };

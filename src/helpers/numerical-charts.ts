@@ -128,7 +128,7 @@ function isResponseActive(response: FilteredResponse, targetDate: Date, expirati
   return response.time <= targetDate && expirationTime >= targetDate;
 }
 
-function aggregateActiveResponses(data: FilteredResponse[], fromDate: Date, untilDate: Date): ExtendedHLResponse[] {
+function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[] {
   const store = useSurveyStore();
   const expirationDays = store.settings.expirationTime;
   const expirationMs = expirationDays * DAY_IN_MS;
@@ -144,8 +144,8 @@ function aggregateActiveResponses(data: FilteredResponse[], fromDate: Date, unti
 
   if (numericResponses.length === 0) return [];
 
-  const rangeStart = new Date(fromDate);
-  const rangeEndMs = untilDate.getTime();
+  const rangeStart = new Date(store.fromDate);
+  const rangeEndMs = store.untilDate.getTime();
 
   if (bucketDurationMs <= 0) {
     return [];
@@ -266,8 +266,8 @@ export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], ques
   store.setMinMax(minMax, questionKey);
 }
 
-export function getOHLC(data: FilteredResponse[], questionKey: string, fromDate: Date, untilDate: Date): ChartData<"candlestick"> {
-  const hldata = aggregateActiveResponses(data, fromDate, untilDate);
+export function getOHLC(data: FilteredResponse[], questionKey: string): ChartData<"candlestick"> {
+  const hldata = aggregateActiveResponses(data);
   const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
