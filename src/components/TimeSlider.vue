@@ -19,17 +19,9 @@ export default defineComponent({
 
     const { settings, getMinResponseDate, getMaxResponseDate, responseRange } = storeToRefs(store);
 
-    const minValue = ref(Math.round(getMidnight(getMinResponseDate.value).getTime()));
-    const maxValue = ref(Math.round(getMidnightTomrrow(getMaxResponseDate.value).getTime()));
+    const minValue = ref(Math.round(getMinResponseDate.value.getTime()));
+    const maxValue = ref(Math.round(getMaxResponseDate.value.getTime()));
     const stepSize = ref(settings.value.step * 60 * 1000);
-
-    function getMidnight(date: Date): Date {
-      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    }
-
-    function getMidnightTomrrow(date: Date): Date {
-      return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1));
-    }
 
     return {
       responseRange,

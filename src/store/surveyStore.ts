@@ -122,7 +122,8 @@ export const useSurveyStore = defineStore(
       if (typeof responses.value[selectedSurveyID.value] === "undefined") {
         return new Date();
       }
-      return maxResponseDate(responses.value[selectedSurveyID.value]);
+      const maxDate = maxResponseDate(responses.value[selectedSurveyID.value]);
+      return maxDate;
     });
 
     const fromDate = computed<Date>(() => {
@@ -133,10 +134,13 @@ export const useSurveyStore = defineStore(
     });
 
     const untilDate = computed<Date>(() => {
-      if (responseRange.value[1] === undefined) {
-        return getMaxResponseDate.value;
+      const rangeEnd = responseRange.value[1];
+      if (rangeEnd === undefined) {
+        const maxDate = getMaxResponseDate.value;
+        return maxDate;
       }
-      return new Date(responseRange.value[1]);
+      const result = new Date(rangeEnd);
+      return result;
     });
 
     const getExpireDate = computed<Date>(() => {
@@ -187,6 +191,18 @@ export const useSurveyStore = defineStore(
 
     function getFilteredResponses(qid: string): FilteredResponse[] {
       return responsesInTimeline.value
+        .map((response) => {
+          if (isMultipleChoiceQuestion(getQuestionType(qid))) {
+            const { available_answers } = getQuestions.value[qid];
+            return multipleChoiceResponseMapper(available_answers || qid, response);
+          }
+          return responseMapper(qid, response);
+        })
+        .sort((a, b) => a.time.valueOf() - b.time.valueOf());
+    }
+
+    function getAllResponses(qid: string): FilteredResponse[] {
+      return getResponses.value
         .map((response) => {
           if (isMultipleChoiceQuestion(getQuestionType(qid))) {
             const { available_answers } = getQuestions.value[qid];
@@ -389,6 +405,7 @@ export const useSurveyStore = defineStore(
       setMinMax,
       getQuestionType,
       getFilteredResponses,
+      getAllResponses,
       updateSurveyList,
       refreshSurvey,
       refreshSurveys,

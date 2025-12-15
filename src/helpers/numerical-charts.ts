@@ -144,7 +144,7 @@ function aggregateActiveResponses(data: FilteredResponse[]): ExtendedHLResponse[
 
   if (numericResponses.length === 0) return [];
 
-  const rangeStart = alignToUnit(store.fromDate, timeUnit);
+  const rangeStart = new Date(store.fromDate);
   const rangeEndMs = store.untilDate.getTime();
 
   if (bucketDurationMs <= 0) {
@@ -235,24 +235,6 @@ function getBucketDuration(unit: TimeUnit): number {
   }
 }
 
-function alignToUnit(date: Date, unit: TimeUnit): Date {
-  const aligned = new Date(date);
-
-  switch (unit) {
-    case "minute":
-      aligned.setSeconds(0, 0);
-      break;
-    case "hour":
-      aligned.setMinutes(0, 0, 0);
-      break;
-    default:
-      aligned.setHours(0, 0, 0, 0);
-      break;
-  }
-
-  return aligned;
-}
-
 export function setMinMaxFromDataset(filteredResponses: FilteredResponse[], questionKey: string) {
   // TODO: Remove seems to be obsolete
   const store = useSurveyStore();
@@ -289,7 +271,6 @@ export function getOHLC(data: FilteredResponse[], questionKey: string): ChartDat
   const datasets: ExtendedFinancialDataPoint[] = [];
 
   hldata.forEach((item) => {
-    console.debug(`Processing date: ${item.time.toISOString()}, values: ${item.values.length}`);
     const sortedValues = [...item.values].sort((a, b) => a - b);
     const mid = Math.floor(sortedValues.length / 2);
     let median = 0;

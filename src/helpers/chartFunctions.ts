@@ -184,11 +184,11 @@ export function createNumericChartData(questionKey: string): ChartData<"candlest
 
   const question_type = store.getQuestionType(questionKey);
 
-  const filteredResponses = aggregateResponses(store.getFilteredResponses(questionKey));
+  const allResponses = aggregateResponses(store.getAllResponses(questionKey));
   store.updateTokenMap(store.selectedSurveyID);
 
   if (isNumericalQuestion(question_type)) {
-    return getOHLC(filteredResponses, questionKey);
+    return getOHLC(allResponses, questionKey);
   }
 
   console.debug("Not a numerical question, returning empty dataset");

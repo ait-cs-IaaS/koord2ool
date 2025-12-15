@@ -7,7 +7,7 @@
             <v-tooltip location="top">
               <template #activator="{ props }">
                 <span v-bind="props">
-                  <span class="question-id">{{ questionKey }} – </span>
+                  <span class="question-id">{{ questionKey }} â€“ </span>
                   <span class="question-title">{{ questionText }}</span>
                 </span>
               </template>
